@@ -1,5 +1,8 @@
 FROM php:8.2-fpm
 
+# Install the PHP extension installer (handles all dependencies automatically)
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
@@ -23,6 +26,9 @@ RUN docker-php-ext-install \
     gd \
     zip \
     opcache
+
+# Install PHP IMAP extension
+RUN install-php-extensions imap
 
 # Install Redis extension via PECL
 RUN pecl install redis \

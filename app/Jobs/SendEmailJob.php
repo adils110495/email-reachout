@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Mail\OutreachMail;
 use App\Models\Lead;
 use App\Services\AIService;
+use App\Services\ImapService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -42,7 +43,7 @@ class SendEmailJob implements ShouldQueue
      * Execute the queued job.
      * Uses pre-written subject/body when provided; falls back to AI generation.
      */
-    public function handle(AIService $aiService): void
+    public function handle(AIService $aiService, ImapService $imapService): void
     {
         if ($this->lead->status === Lead::STATUS_SENT) {
             Log::info('SendEmailJob: Skipping — already sent', ['lead_id' => $this->lead->id]);
@@ -57,9 +58,19 @@ class SendEmailJob implements ShouldQueue
             $emailBody   = $this->body    ?: $aiService->generateOutreachEmail($this->lead, $senderName, $senderCompany);
             $subjectLine = $this->subject ?: $aiService->generateSubjectLine($this->lead, $senderCompany);
 
+            $mailable = new OutreachMail($this->lead, $emailBody, $subjectLine, $senderName, $senderCompany);
+
             // Send the email
-            Mail::to($this->lead->email)
-                ->send(new OutreachMail($this->lead, $emailBody, $subjectLine, $senderName, $senderCompany));
+            Mail::to($this->lead->email)->send($mailable);
+
+            // Copy to IMAP Sent folder so it appears in the mailbox
+            $imapService->copyToSentFolder(
+                to:        $this->lead->email,
+                subject:   $subjectLine,
+                htmlBody:  $mailable->render(),
+                fromName:  env('MAIL_FROM_NAME', $senderName),
+                fromEmail: env('MAIL_FROM_ADDRESS'),
+            );
 
             // Mark as sent
             $this->lead->update(['status' => Lead::STATUS_SENT]);

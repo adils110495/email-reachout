@@ -9,6 +9,7 @@ use App\Models\Platform;
 use App\Services\AIService;
 use App\Services\EmailExtractorService;
 use App\Services\EmailSenderService;
+use App\Services\ImapService;
 use App\Services\LeadFinderService;
 use App\Services\ScraperService;
 use Illuminate\Http\RedirectResponse;
@@ -251,9 +252,19 @@ class LeadController extends Controller
         $body          = $request->input('body');
 
         try {
+            $mailable = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany);
+
             // Send directly — no queue
-            Mail::to($lead->email)
-                ->send(new OutreachMail($lead, $body, $subject, $senderName, $senderCompany));
+            Mail::to($lead->email)->send($mailable);
+
+            // Copy to IMAP Sent folder
+            app(ImapService::class)->copyToSentFolder(
+                to:        $lead->email,
+                subject:   $subject,
+                htmlBody:  $mailable->render(),
+                fromName:  env('MAIL_FROM_NAME', $senderName),
+                fromEmail: env('MAIL_FROM_ADDRESS'),
+            );
 
             $lead->update(['status' => Lead::STATUS_SENT]);
 

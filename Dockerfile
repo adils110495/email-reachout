@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    libc-client-dev \
+    libkrb5-dev \
     zip \
     unzip \
     && apt-get clean \
@@ -23,6 +25,10 @@ RUN docker-php-ext-install \
     gd \
     zip \
     opcache
+
+# Install PHP IMAP extension (needed to copy sent emails to mailbox)
+RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+    && docker-php-ext-install imap
 
 # Install Redis extension via PECL
 RUN pecl install redis \
