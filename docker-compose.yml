@@ -18,8 +18,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      redis:
-        condition: service_started
     networks:
       - app_network
 
@@ -70,20 +68,6 @@ services:
       - app_network
 
   # ──────────────────────────────────────────────────────────────
-  # Redis (queue + cache)
-  # ──────────────────────────────────────────────────────────────
-  redis:
-    image: redis:7-alpine
-    container_name: ai_client_finder_redis
-    restart: unless-stopped
-    ports:
-      - "${REDIS_PORT_EXTERNAL:-6379}:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - app_network
-
-  # ──────────────────────────────────────────────────────────────
   # phpMyAdmin — MySQL web UI
   # ──────────────────────────────────────────────────────────────
   phpmyadmin:
@@ -118,19 +102,15 @@ services:
     volumes:
       - .:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
-    command: php artisan queue:work redis --queue=emails,default --tries=3 --backoff=30 --sleep=3 --timeout=90
+    command: php artisan queue:work database --queue=emails,default --tries=3 --backoff=30 --sleep=3 --timeout=90
     depends_on:
       mysql:
         condition: service_healthy
-      redis:
-        condition: service_started
     networks:
       - app_network
 
 volumes:
   mysql_data:
-    driver: local
-  redis_data:
     driver: local
 
 networks:

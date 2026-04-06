@@ -30,10 +30,6 @@ RUN docker-php-ext-install \
 RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-install imap
 
-# Install Redis extension via PECL
-RUN pecl install redis \
-    && docker-php-ext-enable redis
-
 # Install Composer
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 

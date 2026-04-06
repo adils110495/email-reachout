@@ -46,4 +46,4 @@ artisan:
 
 ## Start the queue worker manually (already running as the 'queue' service)
 queue:
-	docker compose exec app php artisan queue:work redis --queue=emails,default --tries=3
+	docker compose exec app php artisan queue:work database --queue=emails,default --tries=3
