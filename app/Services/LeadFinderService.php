@@ -16,9 +16,20 @@ class LeadFinderService
      *
      * @return array<int, array{url: string, title: string}>
      */
-    public function find(string $keyword, int $maxResults = 10): array
+    public function find(string $keyword, ?string $country = null, ?string $language = null): array
     {
-        Log::info('LeadFinderService: searching', ['keyword' => $keyword]);
+        $limit = 25;
+
+        // Resolve country/language: input → env → omit (global)
+        $country  = $country  ?: (env('LEAD_COUNTRY',  '') ?: null);
+        $language = $language ?: (env('LEAD_LANGUAGE', '') ?: null);
+
+        Log::info('LeadFinderService: searching', [
+            'keyword'  => $keyword,
+            'limit'    => $limit,
+            'country'  => $country  ?? 'global',
+            'language' => $language ?? 'any',
+        ]);
 
         $apiKey = config('services.serpapi.key');
 
@@ -28,57 +39,72 @@ class LeadFinderService
         }
 
         try {
-            $response = Http::timeout(20)
-                ->get('https://serpapi.com/search', [
-                    'engine'      => 'google',
-                    'q'           => $keyword . ' contact email',
-                    'api_key'     => $apiKey,
-                    'num'         => $maxResults + 5, // fetch a few extra to cover filtered ones
-                    'hl'          => 'en',
-                    'gl'          => 'us',
-                    'output'      => 'json',
-                ]);
+            $baseParams = [
+                'engine'  => 'google',
+                'q'       => $keyword . ' contact email',
+                'api_key' => $apiKey,
+                'num'     => 10, // SerpAPI returns 10 per page
+                'output'  => 'json',
+            ];
 
-            if (! $response->successful()) {
-                Log::error('LeadFinderService: SerpAPI HTTP ' . $response->status(), [
-                    'body' => $response->body(),
-                ]);
-                return [];
-            }
-
-            $data = $response->json();
-
-            // SerpAPI returns organic results in the "organic_results" key
-            $organicResults = $data['organic_results'] ?? [];
-
-            if (empty($organicResults)) {
-                Log::warning('LeadFinderService: SerpAPI returned no organic_results', [
-                    'keyword'  => $keyword,
-                    'response' => array_keys($data),
-                ]);
-                return [];
-            }
+            // Only add gl/hl if explicitly configured — omitting means global
+            if ($country)  $baseParams['gl'] = strtolower($country);
+            if ($language) $baseParams['hl'] = strtolower($language);
 
             $leads = [];
+            $start = 0;
 
-            foreach ($organicResults as $result) {
-                $url   = trim($result['link'] ?? '');
-                $title = trim($result['title'] ?? '');
+            // Paginate through SerpAPI pages until we have 25 leads
+            while (count($leads) < $limit) {
+                $params = array_merge($baseParams, ['start' => $start]);
 
-                if (empty($url) || ! str_starts_with($url, 'http')) {
-                    continue;
+                $response = Http::timeout(20)
+                    ->get('https://serpapi.com/search', $params);
+
+                if (! $response->successful()) {
+                    Log::error('LeadFinderService: SerpAPI HTTP ' . $response->status(), [
+                        'body' => $response->body(),
+                    ]);
+                    break;
                 }
 
-                if ($this->isSkippable($url)) {
-                    continue;
+                $data           = $response->json();
+                $organicResults = $data['organic_results'] ?? [];
+
+                if (empty($organicResults)) {
+                    Log::warning('LeadFinderService: SerpAPI returned no organic_results', [
+                        'keyword' => $keyword,
+                        'start'   => $start,
+                    ]);
+                    break;
                 }
 
-                $leads[] = [
-                    'url'   => rtrim($url, '/'),
-                    'title' => $title ?: (parse_url($url, PHP_URL_HOST) ?? $url),
-                ];
+                foreach ($organicResults as $result) {
+                    $url   = trim($result['link'] ?? '');
+                    $title = trim($result['title'] ?? '');
 
-                if (count($leads) >= $maxResults) {
+                    if (empty($url) || ! str_starts_with($url, 'http')) {
+                        continue;
+                    }
+
+                    if ($this->isSkippable($url)) {
+                        continue;
+                    }
+
+                    $leads[] = [
+                        'url'   => rtrim($url, '/'),
+                        'title' => $title ?: (parse_url($url, PHP_URL_HOST) ?? $url),
+                    ];
+
+                    if (count($leads) >= $limit) {
+                        break;
+                    }
+                }
+
+                $start += 10;
+
+                // SerpAPI free plan max ~100 results; stop if no more pages
+                if (count($organicResults) < 10) {
                     break;
                 }
             }

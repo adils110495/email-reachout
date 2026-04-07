@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\ScrapeLeadEmailJob;
 use App\Mail\OutreachMail;
 use App\Models\Lead;
+use App\Models\LeadEmail;
 use App\Models\Platform;
 use App\Services\AIService;
 use App\Services\EmailExtractorService;
@@ -34,11 +35,11 @@ class LeadController extends Controller
      */
     public function index(Request $request): View
     {
-        $perPage = in_array((int) $request->query('per_page'), [10, 20, 50, 100])
+        $perPage = in_array((int) $request->query('per_page'), [10, 25, 50, 100])
             ? (int) $request->query('per_page')
-            : 10;
+            : 25;
 
-        $query = Lead::with('platform')->latest();
+        $query = Lead::with('platform')->orderBy('id', 'desc');
 
         $validStatuses = ['new', 'sent', 'failed', 'replied'];
         if ($request->filled('status') && in_array($request->status, $validStatuses)) {
@@ -85,8 +86,12 @@ class LeadController extends Controller
 
         $keyword = $request->input('keyword');
 
-        // 1. Fetch results from SerpAPI (fast — single HTTP call)
-        $results = $this->leadFinder->find($keyword);
+        // 1. Fetch results from SerpAPI — pass env-configured country/language/limit
+        $results = $this->leadFinder->find(
+            keyword:  $keyword,
+            country:  env('LEAD_COUNTRY',  null) ?: null,
+            language: env('LEAD_LANGUAGE', null) ?: null,
+        );
 
         $newLeadsCount = 0;
         $googlePlatform = Platform::where('name', 'Google')->first();
@@ -122,6 +127,33 @@ class LeadController extends Controller
     public function show(int $id): \Illuminate\Http\JsonResponse
     {
         return response()->json(Lead::with('platform')->findOrFail($id));
+    }
+
+    public function downloadAttachment(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $path         = $request->query('path');
+        $originalName = $request->query('name');
+
+        abort_if(!$path, 400);
+
+        $fullPath = storage_path('app/' . $path);
+        abort_if(!file_exists($fullPath), 404, 'Attachment not found.');
+
+        return response()->download($fullPath, $originalName);
+    }
+
+    public function sentEmail(int $id): \Illuminate\Http\JsonResponse
+    {
+        $lead      = Lead::findOrFail($id);
+        $leadEmail = LeadEmail::where('lead_id', $id)
+                              ->where('status', 'sent')
+                              ->latest()
+                              ->first();
+
+        return response()->json([
+            'lead'  => $lead->only(['id', 'company_name', 'email']),
+            'email' => $leadEmail,
+        ]);
     }
 
     /**
@@ -230,8 +262,10 @@ class LeadController extends Controller
     public function sendEmail(Request $request, int $id): RedirectResponse
     {
         $request->validate([
-            'subject' => ['required', 'string', 'max:255'],
-            'body'    => ['required', 'string'],
+            'subject'       => ['required', 'string', 'max:255'],
+            'body'          => ['required', 'string'],
+            'attachments'   => ['nullable', 'array'],
+            'attachments.*' => ['file', 'max:10240'], // 10MB per file
         ]);
 
         $lead = Lead::findOrFail($id);
@@ -251,30 +285,74 @@ class LeadController extends Controller
         $subject       = $request->input('subject');
         $body          = $request->input('body');
 
+        // Store attachments permanently under lead-attachments/{lead_id}/
+        $attachmentMeta = [];
+        $attachments    = []; // [['path' => fullPath, 'name' => originalName], ...]
+
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $originalName = $file->getClientOriginalName();
+                $storedPath   = $file->store("lead-attachments/{$lead->id}", 'local');
+                $fullPath     = storage_path('app/' . $storedPath);
+
+                $attachments[]    = ['path' => $fullPath, 'name' => $originalName];
+                $attachmentMeta[] = [
+                    'name' => $originalName,
+                    'path' => $storedPath,
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType(),
+                ];
+            }
+        }
+
         try {
-            $mailable = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany);
+            $mailable = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany, emailAttachments: $attachments);
 
             // Send directly — no queue
             Mail::to($lead->email)->send($mailable);
 
-            // Copy to IMAP Sent folder
+            // Copy to IMAP Sent folder (with same attachments + original names)
             app(ImapService::class)->copyToSentFolder(
-                to:        $lead->email,
-                subject:   $subject,
-                htmlBody:  $mailable->render(),
-                fromName:  env('MAIL_FROM_NAME', $senderName),
-                fromEmail: env('MAIL_FROM_ADDRESS'),
+                to:          $lead->email,
+                subject:     $subject,
+                htmlBody:    $mailable->render(),
+                fromName:    env('MAIL_FROM_NAME', $senderName),
+                fromEmail:   env('MAIL_FROM_ADDRESS'),
+                attachments: $attachments,
             );
 
             $lead->update(['status' => Lead::STATUS_SENT]);
 
-            Log::info('sendEmail: sent directly', ['lead_id' => $lead->id, 'to' => $lead->email]);
+            // Save email record with attachment metadata
+            LeadEmail::create([
+                'lead_id'     => $lead->id,
+                'subject'     => $subject,
+                'body'        => $body,
+                'attachments' => !empty($attachmentMeta) ? json_encode($attachmentMeta) : null,
+                'status'      => 'sent',
+                'sent_at'     => now(),
+            ]);
+
+            Log::info('sendEmail: sent directly', [
+                'lead_id'     => $lead->id,
+                'to'          => $lead->email,
+                'attachments' => count($attachmentMeta),
+            ]);
 
             return redirect()->route('leads.index')
                 ->with('success', "Email sent successfully to \"{$lead->company_name}\".");
 
         } catch (\Throwable $e) {
             $lead->update(['status' => Lead::STATUS_FAILED]);
+
+            LeadEmail::create([
+                'lead_id'     => $lead->id,
+                'subject'     => $subject,
+                'body'        => $body,
+                'attachments' => !empty($attachmentMeta) ? json_encode($attachmentMeta) : null,
+                'status'      => 'failed',
+                'sent_at'     => now(),
+            ]);
 
             Log::error('sendEmail: failed', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
 

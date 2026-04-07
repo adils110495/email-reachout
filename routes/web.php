@@ -29,6 +29,12 @@ Route::post('/send-email/{id}', [LeadController::class, 'sendEmail'])->name('lea
 // View single lead (JSON — for modal)
 Route::get('/leads/{id}', [LeadController::class, 'show'])->name('leads.show');
 
+// Show sent email details (JSON)
+Route::get('/leads/{id}/sent-email', [LeadController::class, 'sentEmail'])->name('leads.sent-email');
+
+// Download attachment
+Route::get('/leads/attachment/download', [LeadController::class, 'downloadAttachment'])->name('leads.attachment.download');
+
 // Edit & update single lead
 Route::get('/leads/{id}/edit', [LeadController::class, 'edit'])->name('leads.edit');
 Route::put('/leads/{id}', [LeadController::class, 'update'])->name('leads.update');

@@ -158,7 +158,7 @@ unset($__errorArgs, $__bag); ?>
                         <th scope="col" style="width:40px">
                             <input type="checkbox" class="form-check-input" id="selectAll" title="Select all">
                         </th>
-                        <th scope="col" class="sortable" data-col="0">#
+                        <th scope="col" class="sortable" data-col="0">S.No
                             <i class="bi bi-chevron-expand sort-icon text-muted ms-1"></i>
                         </th>
                         <th scope="col" class="sortable" data-col="1">Company
@@ -192,7 +192,7 @@ unset($__errorArgs, $__bag); ?>
                             <input type="checkbox" class="form-check-input row-check" value="<?php echo e($lead->id); ?>">
                         </td>
 
-                        <td class="text-muted small" data-val="<?php echo e($lead->id); ?>"><?php echo e($lead->id); ?></td>
+                        <td class="text-muted small" data-val="<?php echo e($lead->id); ?>"><?php echo e(($leads->currentPage() - 1) * $leads->perPage() + $loop->iteration); ?></td>
 
                         <td data-val="<?php echo e(strtolower($lead->company_name)); ?>">
                             <span class="fw-semibold"><?php echo e($lead->company_name); ?></span>
@@ -284,6 +284,18 @@ unset($__errorArgs, $__bag); ?>
                                     </li>
 
                                     
+                                    <?php if($lead->status === 'sent'): ?>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <button type="button"
+                                                class="dropdown-item btn-show-email"
+                                                data-id="<?php echo e($lead->id); ?>">
+                                                <i class="bi bi-envelope-open me-2 text-success"></i>Show Email
+                                            </button>
+                                        </li>
+                                    <?php endif; ?>
+
+                                    
                                     
                                     <?php if($lead->email && in_array($lead->status, ['new', 'failed'])): ?>
                                         <li><hr class="dropdown-divider"></li>
@@ -350,8 +362,8 @@ unset($__errorArgs, $__bag); ?>
                     <div class="d-flex align-items-center gap-2">
                         <label class="text-muted small mb-0 text-nowrap">Rows per page:</label>
                         <select id="perPageSelect" class="form-select form-select-sm" style="width:75px">
-                            <?php $__currentLoopData = [10, 20, 50, 100]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $size): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($size); ?>" <?php echo e(request('per_page', 10) == $size ? 'selected' : ''); ?>>
+                            <?php $__currentLoopData = [10, 25, 50, 100]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $size): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($size); ?>" <?php echo e(request('per_page', 25) == $size ? 'selected' : ''); ?>>
                                     <?php echo e($size); ?>
 
                                 </option>
@@ -389,7 +401,7 @@ unset($__errorArgs, $__bag); ?>
                 <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
             </div>
 
-            <form id="composeForm" method="POST">
+            <form id="composeForm" method="POST" enctype="multipart/form-data">
                 <?php echo csrf_field(); ?>
 
                 
@@ -427,16 +439,43 @@ unset($__errorArgs, $__bag); ?>
                 </div>
 
                 
+                <div id="attachmentList" class="px-3 pb-1 d-flex flex-wrap gap-2" style="min-height:0;"></div>
+
+                
                 <div class="px-3 py-2 border-top d-flex align-items-center justify-content-between bg-light">
-                    <button type="submit" class="btn btn-primary btn-sm px-4">
-                        <i class="bi bi-send-fill me-1"></i>Send
-                    </button>
-                    <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none" data-bs-dismiss="modal">
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm px-4">
+                            <i class="bi bi-send-fill me-1"></i>Send
+                        </button>
+                        
+                        <label for="attachmentInput" class="btn btn-sm btn-light border mb-0" title="Attach files" style="cursor:pointer;">
+                            <i class="bi bi-paperclip"></i>
+                        </label>
+                        <input type="file" id="attachmentInput" name="attachments[]" multiple class="d-none" accept="*/*">
+                    </div>
+                    <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none" data-bs-dismiss="modal" id="discardBtn">
                         <i class="bi bi-trash me-1"></i>Discard
                     </button>
                 </div>
 
             </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="showEmailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#404040;">
+                <h5 class="modal-title text-white fw-semibold small">
+                    <i class="bi bi-envelope-open me-2"></i>Sent Email
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0" id="showEmailBody">
+                <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+            </div>
         </div>
     </div>
 </div>
@@ -532,6 +571,35 @@ unset($__errorArgs, $__bag); ?>
     th.sort-desc .sort-icon::before { content: "\f229"; } /* bi-chevron-down */
     th.sort-asc  .sort-icon,
     th.sort-desc .sort-icon { color: #0d6efd !important; }
+
+    /* ── Gmail-style attachment chips ── */
+    .attach-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f1f3f4;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 4px 8px 4px 6px;
+        font-size: .8rem;
+        color: #202124;
+        max-width: 180px;
+        cursor: default;
+    }
+    .attach-chip .attach-icon { font-size: 1rem; flex-shrink: 0; }
+    .attach-chip .attach-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .attach-chip .attach-size { color: #5f6368; white-space: nowrap; flex-shrink: 0; }
+    .attach-chip .attach-remove {
+        cursor: pointer;
+        color: #5f6368;
+        font-size: .85rem;
+        flex-shrink: 0;
+        line-height: 1;
+        padding: 0 2px;
+        border-radius: 50%;
+    }
+    .attach-chip .attach-remove:hover { background: #dadce0; color: #202124; }
+    .attach-chip.attach-error { border-color: #dc3545; background: #fff5f5; color: #dc3545; }
 </style>
 <?php $__env->stopPush(); ?>
 
@@ -766,6 +834,86 @@ document.querySelectorAll('.btn-compose').forEach(function (btn) {
     });
 });
 
+// ── Show Sent Email Modal ─────────────────────────────────────
+document.querySelectorAll('.btn-show-email').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const id    = this.dataset.id;
+        const modal = new bootstrap.Modal(document.getElementById('showEmailModal'));
+        document.getElementById('showEmailBody').innerHTML =
+            '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+        modal.show();
+
+        fetch('/leads/' + id + '/sent-email', { headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(function (data) {
+                const email = data.email;
+                const lead  = data.lead;
+                let attachments = [];
+                if (email && email.attachments) {
+                    attachments = typeof email.attachments === 'string'
+                        ? JSON.parse(email.attachments)
+                        : email.attachments;
+                    if (!Array.isArray(attachments)) attachments = [];
+                }
+
+                if (!email) {
+                    document.getElementById('showEmailBody').innerHTML =
+                        '<div class="text-center text-muted py-5"><i class="bi bi-inbox display-5 d-block mb-3"></i>No sent email found.</div>';
+                    return;
+                }
+
+                // Build attachment chips
+                const FILE_ICONS = {
+                    'pdf': '#ea4335', 'doc': '#4285f4', 'docx': '#4285f4',
+                    'xls': '#34a853', 'xlsx': '#34a853', 'ppt': '#fbbc05', 'pptx': '#fbbc05',
+                    'zip': '#757575', 'rar': '#757575', 'jpg': '#4285f4', 'jpeg': '#4285f4',
+                    'png': '#4285f4', 'gif': '#4285f4', 'mp4': '#ea4335', 'mp3': '#ea4335',
+                };
+                function fmtSize(b) {
+                    if (b < 1024) return b + ' B';
+                    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+                    return (b/1048576).toFixed(1) + ' MB';
+                }
+
+                let attachHtml = '';
+                if (attachments.length > 0) {
+                    attachHtml = '<div class="px-3 pb-3 d-flex flex-wrap gap-2">';
+                    attachments.forEach(function (att) {
+                        const ext      = att.name.split('.').pop().toLowerCase();
+                        const color    = FILE_ICONS[ext] || '#5f6368';
+                        const dlUrl    = '/leads/attachment/download?path=' + encodeURIComponent(att.path) + '&name=' + encodeURIComponent(att.name);
+                        attachHtml += `
+                            <a href="${dlUrl}" download="${att.name}" class="attach-chip text-decoration-none"
+                               title="Download ${att.name}" style="cursor:pointer;">
+                                <i class="bi bi-file-earmark-fill attach-icon" style="color:${color}"></i>
+                                <span class="attach-name">${att.name}</span>
+                                <span class="attach-size">${fmtSize(att.size)}</span>
+                                <i class="bi bi-download ms-1 text-muted" style="font-size:.7rem;"></i>
+                            </a>`;
+                    });
+                    attachHtml += '</div>';
+                }
+
+                document.getElementById('showEmailBody').innerHTML = `
+                    <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center bg-light">
+                        <span class="text-muted small" style="width:55px">To</span>
+                        <span class="fw-semibold small">${lead.email}</span>
+                    </div>
+                    <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center">
+                        <span class="text-muted small" style="width:55px">Subject</span>
+                        <span class="fw-semibold">${email.subject}</span>
+                    </div>
+                    <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center">
+                        <span class="text-muted small" style="width:55px">Sent</span>
+                        <span class="small text-muted">${new Date(email.sent_at).toLocaleString()}</span>
+                    </div>
+                    <div class="px-3 py-3" style="min-height:120px;white-space:pre-wrap;font-size:.92rem;line-height:1.7;">${email.body}</div>
+                    ${attachments.length > 0 ? '<div class="border-top px-3 pt-2 pb-1 text-muted small"><i class="bi bi-paperclip me-1"></i>' + attachments.length + ' attachment' + (attachments.length > 1 ? 's' : '') + '</div>' + attachHtml : ''}
+                `;
+            });
+    });
+});
+
 // ── View Modal ────────────────────────────────────────────────
 document.querySelectorAll('.btn-view').forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -842,6 +990,133 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
             });
     });
 });
+
+// ── Gmail-style Attachment Upload ─────────────────────────────
+(function () {
+    const MAX_SIZE  = 10 * 1024 * 1024; // 10 MB per file
+    const MAX_FILES = 10;
+    const input     = document.getElementById('attachmentInput');
+    const list      = document.getElementById('attachmentList');
+    const form      = document.getElementById('composeForm');
+    const sendBtn   = form.querySelector('[type="submit"]');
+    let   files     = []; // master array of File objects
+
+    const FILE_ICONS = {
+        'pdf':  { icon: 'bi-file-earmark-pdf-fill',  color: '#ea4335' },
+        'doc':  { icon: 'bi-file-earmark-word-fill',  color: '#4285f4' },
+        'docx': { icon: 'bi-file-earmark-word-fill',  color: '#4285f4' },
+        'xls':  { icon: 'bi-file-earmark-excel-fill', color: '#34a853' },
+        'xlsx': { icon: 'bi-file-earmark-excel-fill', color: '#34a853' },
+        'ppt':  { icon: 'bi-file-earmark-ppt-fill',   color: '#fbbc05' },
+        'pptx': { icon: 'bi-file-earmark-ppt-fill',   color: '#fbbc05' },
+        'zip':  { icon: 'bi-file-earmark-zip-fill',   color: '#757575' },
+        'rar':  { icon: 'bi-file-earmark-zip-fill',   color: '#757575' },
+        'jpg':  { icon: 'bi-file-earmark-image-fill', color: '#4285f4' },
+        'jpeg': { icon: 'bi-file-earmark-image-fill', color: '#4285f4' },
+        'png':  { icon: 'bi-file-earmark-image-fill', color: '#4285f4' },
+        'gif':  { icon: 'bi-file-earmark-image-fill', color: '#4285f4' },
+        'mp4':  { icon: 'bi-file-earmark-play-fill',  color: '#ea4335' },
+        'mp3':  { icon: 'bi-file-earmark-music-fill', color: '#ea4335' },
+    };
+
+    function formatSize(bytes) {
+        if (bytes < 1024)    return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function getIcon(name) {
+        const ext = name.split('.').pop().toLowerCase();
+        return FILE_ICONS[ext] || { icon: 'bi-file-earmark-fill', color: '#5f6368' };
+    }
+
+    function renderChips() {
+        list.innerHTML = '';
+        files.forEach(function (file, idx) {
+            const isTooBig = file.size > MAX_SIZE;
+            const ic   = getIcon(file.name);
+            const chip = document.createElement('div');
+            chip.className = 'attach-chip' + (isTooBig ? ' attach-error' : '');
+            chip.title     = file.name + (isTooBig ? ' — Exceeds 10 MB limit' : '');
+            chip.innerHTML = `
+                <i class="bi ${ic.icon} attach-icon" style="color:${isTooBig ? '#dc3545' : ic.color}"></i>
+                <span class="attach-name">${file.name}</span>
+                <span class="attach-size">${formatSize(file.size)}</span>
+                <span class="attach-remove" data-idx="${idx}" title="Remove">&#x2715;</span>
+            `;
+            list.appendChild(chip);
+        });
+
+        list.querySelectorAll('.attach-remove').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                files.splice(parseInt(this.dataset.idx), 1);
+                renderChips();
+            });
+        });
+    }
+
+    // File picker change
+    input.addEventListener('change', function () {
+        Array.from(this.files).forEach(function (file) {
+            const dup = files.some(f => f.name === file.name && f.size === file.size);
+            if (!dup && files.length < MAX_FILES) {
+                files.push(file);
+            }
+        });
+        this.value = ''; // reset picker so same file can be re-added after removal
+        renderChips();
+    });
+
+    // Clear on discard / modal close
+    function clearAttachments() {
+        files = [];
+        list.innerHTML = '';
+        input.value = '';
+    }
+    document.getElementById('discardBtn').addEventListener('click', clearAttachments);
+    document.getElementById('composeModal').addEventListener('hidden.bs.modal', clearAttachments);
+
+    // Intercept submit — build FormData manually so files array is used
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const oversized = files.filter(f => f.size > MAX_SIZE);
+        if (oversized.length) {
+            alert('Please remove files that exceed 10 MB:\n' + oversized.map(f => f.name).join('\n'));
+            return;
+        }
+
+        const fd = new FormData(form);
+        // Remove any stale attachment entries from FormData
+        fd.delete('attachments[]');
+        // Append all tracked files
+        files.forEach(function (file) {
+            fd.append('attachments[]', file, file.name);
+        });
+
+        // Show sending state
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending…';
+
+        fetch(form.action, {
+            method:   'POST',
+            body:     fd,
+            redirect: 'follow',
+        })
+        .then(function (res) {
+            if (res.ok || res.redirected) {
+                window.location.href = res.redirected ? res.url : '/';
+            } else {
+                throw new Error('Server error: ' + res.status);
+            }
+        })
+        .catch(function (err) {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="bi bi-send-fill me-1"></i>Send';
+            alert('Failed to send email. Please try again.');
+        });
+    });
+}());
 </script>
 <?php $__env->stopPush(); ?>
 
