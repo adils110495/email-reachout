@@ -304,6 +304,7 @@ unset($__errorArgs, $__bag); ?>
                                                 class="dropdown-item btn-compose"
                                                 data-id="<?php echo e($lead->id); ?>"
                                                 data-name="<?php echo e(addslashes($lead->company_name)); ?>"
+                                                data-website="<?php echo e($lead->website); ?>"
                                                 data-to="<?php echo e($lead->email); ?>">
                                                 <?php if($lead->status === 'failed'): ?>
                                                     <i class="bi bi-arrow-repeat me-2 text-danger"></i>Retry Email
@@ -430,12 +431,12 @@ unset($__errorArgs, $__bag); ?>
 
                 
                 <div class="px-1">
-                    <textarea name="body" id="compose_body"
+                    <div id="compose_body"
+                        contenteditable="true"
                         class="form-control border-0 shadow-none"
-                        rows="12"
-                        style="resize:vertical;font-size:.92rem;line-height:1.6;"
-                        placeholder="Write your message here…"
-                        required></textarea>
+                        style="min-height:240px;max-height:400px;overflow-y:auto;font-size:.92rem;line-height:1.6;outline:none;"
+                        data-placeholder="Write your message here…"></div>
+                    <textarea name="body" id="compose_body_hidden" class="d-none" required></textarea>
                 </div>
 
                 
@@ -557,6 +558,13 @@ unset($__errorArgs, $__bag); ?>
 <?php $__env->startPush('styles'); ?>
 <style>
     #leadsTable tbody tr.d-none { display: none !important; }
+
+    /* Placeholder text for contenteditable body */
+    #compose_body:empty:before {
+        content: attr(data-placeholder);
+        color: #aaa;
+        pointer-events: none;
+    }
 
     /* Sortable column headers */
     th.sortable {
@@ -800,30 +808,79 @@ fetch('/api/templates', { headers: { 'Accept': 'application/json' } })
         });
     });
 
-// When a template is selected — populate subject + body
+// Current lead context (set when compose button is clicked)
+let currentLeadId      = null;
+let currentClientName  = '';  // updated by background scrape
+let currentLeadWebsite = '';
+
+const senderName    = <?php echo json_encode($senderName, 15, 512) ?>;
+const senderCompany = <?php echo json_encode($senderCompany, 15, 512) ?>;
+
+function applyPlaceholders(text) {
+    return text
+        .replace(/\[Client Name\]/gi,       currentClientName)
+        .replace(/\[Company Name\]/gi,       currentClientName)
+        .replace(/\[Your Company Name\]/gi,  senderCompany)
+        .replace(/\[Your Name\]/gi,          senderName)
+        .replace(/\[Sender Name\]/gi,        senderName);
+}
+
+// When a template is selected — populate subject + body with placeholders replaced
 document.getElementById('compose_template').addEventListener('change', function () {
     const tpl = cachedTemplates.find(t => t.id == this.value);
     if (! tpl) return;
-    document.getElementById('compose_subject').value = tpl.subject;
-    // Strip HTML tags for the plain textarea body
-    const div = document.createElement('div');
-    div.innerHTML = tpl.body;
-    document.getElementById('compose_body').value = div.innerText || div.textContent;
+
+    document.getElementById('compose_subject').value = applyPlaceholders(tpl.subject);
+
+    // Render HTML directly into the contenteditable div (preserves bold, lists, etc.)
+    document.getElementById('compose_body').innerHTML = applyPlaceholders(tpl.body);
 });
+
+// Scrape website in background and silently update client name + any open template body
+function scrapeContactInBackground(leadId, fallbackName) {
+    fetch('/leads/' + leadId + '/scrape-contact', { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(function (data) {
+            if (! data.client_name) return;
+            const oldName = currentClientName;
+            currentClientName = data.client_name;
+
+            // If a template is already selected and the old placeholder name is still present, update it
+            if (oldName && oldName !== currentClientName) {
+                const subjectEl = document.getElementById('compose_subject');
+                const bodyEl    = document.getElementById('compose_body');
+                const re = new RegExp(oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                subjectEl.value  = subjectEl.value.replace(re, currentClientName);
+                bodyEl.innerHTML = bodyEl.innerHTML.replace(re, currentClientName);
+            }
+        })
+        .catch(function () { /* silent fail */ });
+}
 
 // ── Compose Modal (Gmail-style) ───────────────────────────────
 document.querySelectorAll('.btn-compose').forEach(function (btn) {
     btn.addEventListener('click', function () {
-        const id   = this.dataset.id;
-        const to   = this.dataset.to;
-        const name = this.dataset.name;
+        const id      = this.dataset.id;
+        const to      = this.dataset.to;
+        const name    = this.dataset.name;
+        const website = this.dataset.website || '';
+
+        currentLeadId      = id;
+        currentClientName  = name;
+        currentLeadWebsite = website;
 
         document.getElementById('composeModalTitle').textContent = 'New Message — ' + name;
         document.getElementById('compose_to').value              = to;
         document.getElementById('compose_subject').value         = '';
-        document.getElementById('compose_body').value            = '';
+        document.getElementById('compose_body').innerHTML        = '';
+        document.getElementById('compose_body_hidden').value     = '';
         document.getElementById('compose_template').value        = '';
         document.getElementById('composeForm').action            = '/send-email/' + id;
+
+        // Scrape website in background to get real company name
+        if (website) {
+            scrapeContactInBackground(id, name);
+        }
 
         new bootstrap.Modal(document.getElementById('composeModal')).show();
         // Focus subject so user can start typing immediately
@@ -1079,6 +1136,15 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
     // Intercept submit — build FormData manually so files array is used
     form.addEventListener('submit', function (e) {
         e.preventDefault();
+
+        // Sync contenteditable body HTML → hidden textarea before FormData is built
+        const bodyHtml = document.getElementById('compose_body').innerHTML.trim();
+        document.getElementById('compose_body_hidden').value = bodyHtml;
+
+        if (! bodyHtml || bodyHtml === '<br>') {
+            alert('Please write a message before sending.');
+            return;
+        }
 
         const oversized = files.filter(f => f.size > MAX_SIZE);
         if (oversized.length) {

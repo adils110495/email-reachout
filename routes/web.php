@@ -23,6 +23,9 @@ Route::post('/leads', [LeadController::class, 'store'])->name('leads.store');
 // Compose modal — fetch AI-generated subject + body (JSON)
 Route::get('/leads/{id}/compose', [LeadController::class, 'compose'])->name('leads.compose');
 
+// Scrape lead website in background to get real company/contact name
+Route::get('/leads/{id}/scrape-contact', [LeadController::class, 'scrapeContact'])->name('leads.scrape-contact');
+
 // Send outreach email (accepts subject + body from compose modal)
 Route::post('/send-email/{id}', [LeadController::class, 'sendEmail'])->name('leads.send-email');
 

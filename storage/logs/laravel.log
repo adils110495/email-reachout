@@ -1,0 +1,70 @@
+[2026-04-20 06:29:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency/contact","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency/contact` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 
+[2026-04-20 06:29:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency/contact-us","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency/contact-us` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 
+[2026-04-20 06:29:55] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency/about","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency/about` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 
+[2026-04-20 06:29:56] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency/about-us","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency/about-us` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 
+[2026-04-20 06:29:56] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency/team","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency/team` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 

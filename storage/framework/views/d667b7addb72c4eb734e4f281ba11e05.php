@@ -1,4 +1,4 @@
-<?php $__env->startSection('title', 'Email Templates — Settings'); ?>
+<?php $__env->startSection('title', 'Email Templates - Settings'); ?>
 
 <?php $__env->startSection('content'); ?>
 

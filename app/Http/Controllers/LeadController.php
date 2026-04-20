@@ -49,7 +49,10 @@ class LeadController extends Controller
         $leads     = $query->paginate($perPage)->withQueryString();
         $platforms = Platform::active()->orderBy('name')->get();
 
-        return view('leads.index', compact('leads', 'platforms'));
+        $senderName    = env('SENDER_NAME', 'Sales Team');
+        $senderCompany = env('SENDER_COMPANY', 'Our Company');
+
+        return view('leads.index', compact('leads', 'platforms', 'senderName', 'senderCompany'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -234,6 +237,42 @@ class LeadController extends Controller
         $count = Lead::whereIn('id', $request->ids)->update(['status' => $request->status]);
 
         return redirect()->route('leads.index')->with('success', "{$count} lead(s) updated to \"{$request->status}\".");
+    }
+
+    /**
+     * Scrape the lead's website in background to extract the real company name.
+     */
+    public function scrapeContact(int $id): \Illuminate\Http\JsonResponse
+    {
+        $lead = Lead::findOrFail($id);
+
+        if (empty($lead->website)) {
+            return response()->json(['client_name' => $lead->company_name]);
+        }
+
+        try {
+            $html = $this->scraper->fetch($lead->website);
+
+            // Try og:site_name first (most reliable)
+            if (preg_match('/<meta[^>]+property=["\']og:site_name["\'][^>]+content=["\'](.*?)["\']/i', $html, $m)) {
+                $name = trim(html_entity_decode($m[1], ENT_QUOTES));
+                if ($name) return response()->json(['client_name' => $name]);
+            }
+
+            // Try <title> tag — strip common suffixes
+            if (preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $m)) {
+                $title = trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES));
+                // Remove everything after " - ", " | ", " – "
+                $title = preg_split('/\s*[\-\|–]\s*/', $title)[0];
+                $title = trim($title);
+                if ($title) return response()->json(['client_name' => $title]);
+            }
+
+            // Fallback to stored company name
+            return response()->json(['client_name' => $lead->company_name]);
+        } catch (\Throwable $e) {
+            return response()->json(['client_name' => $lead->company_name]);
+        }
     }
 
     /**

@@ -17,7 +17,9 @@
         <label class="form-label fw-semibold">Body <span class="text-danger">*</span></label>
 
         {{-- Quill rich text editor --}}
-        <div id="quill-editor" style="min-height:150px;height:150px;border:1px solid #dee2e6;border-radius:.375rem;background:#fff;"></div>
+        <div id="quill-wrapper" style="border:1px solid #dee2e6;border-radius:.375rem;background:#fff;overflow:hidden;resize:vertical;min-height:220px;">
+            <div id="quill-editor" style="height:100%;min-height:180px;"></div>
+        </div>
 
         {{-- Hidden textarea that holds the HTML for form submission --}}
         <textarea name="body" id="body-input" class="d-none @error('body') is-invalid @enderror">{{ old('body', $template->body ?? '') }}</textarea>
