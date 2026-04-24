@@ -13,7 +13,7 @@
 
 <div class="card border-0 shadow-sm rounded-3 d-flex flex-column" style="height:calc(100vh - 160px);">
     <div class="card-body p-4 overflow-auto flex-grow-1">
-        <form method="POST" action="{{ route('templates.store') }}" id="templateForm">
+        <form method="POST" action="{{ route('templates.store') }}" id="templateForm" enctype="multipart/form-data">
             @csrf
             @include('templates._form')
         </form>

@@ -419,7 +419,7 @@
                         class="form-control border-0 shadow-none"
                         style="min-height:240px;max-height:400px;overflow-y:auto;font-size:.92rem;line-height:1.6;outline:none;"
                         data-placeholder="Write your message here…"></div>
-                    <textarea name="body" id="compose_body_hidden" class="d-none" required></textarea>
+                    <textarea name="body" id="compose_body_hidden" class="d-none"></textarea>
                 </div>
 
                 {{-- Attachment previews --}}
@@ -816,6 +816,9 @@ document.getElementById('compose_template').addEventListener('change', function 
 
     // Render HTML directly into the contenteditable div (preserves bold, lists, etc.)
     document.getElementById('compose_body').innerHTML = applyPlaceholders(tpl.body);
+
+    // Load template attachments into compose modal
+    window.setTemplateAttachments(tpl.attachments || []);
 });
 
 // Scrape website in background and silently update client name + any open template body
@@ -1038,7 +1041,8 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
     const list      = document.getElementById('attachmentList');
     const form      = document.getElementById('composeForm');
     const sendBtn   = form.querySelector('[type="submit"]');
-    let   files     = []; // master array of File objects
+    let   files              = []; // user-uploaded File objects
+    let   templateAttachments = []; // [{name, path, size}] from template
 
     const FILE_ICONS = {
         'pdf':  { icon: 'bi-file-earmark-pdf-fill',  color: '#ea4335' },
@@ -1071,6 +1075,24 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
 
     function renderChips() {
         list.innerHTML = '';
+
+        // Template attachments (server-side, shown with a tpl badge)
+        templateAttachments.forEach(function (att, idx) {
+            const ic   = getIcon(att.name);
+            const chip = document.createElement('div');
+            chip.className = 'attach-chip';
+            chip.title     = att.name + ' (from template)';
+            chip.innerHTML = `
+                <i class="bi ${ic.icon} attach-icon" style="color:${ic.color}"></i>
+                <span class="attach-name">${att.name}</span>
+                <span class="attach-size">${formatSize(att.size)}</span>
+                <span class="badge bg-secondary ms-1" style="font-size:.6rem;">tpl</span>
+                <span class="attach-remove" data-tpl-idx="${idx}" title="Remove">&#x2715;</span>
+            `;
+            list.appendChild(chip);
+        });
+
+        // User-uploaded files
         files.forEach(function (file, idx) {
             const isTooBig = file.size > MAX_SIZE;
             const ic   = getIcon(file.name);
@@ -1086,7 +1108,14 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
             list.appendChild(chip);
         });
 
-        list.querySelectorAll('.attach-remove').forEach(function (btn) {
+        list.querySelectorAll('.attach-remove[data-tpl-idx]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                templateAttachments.splice(parseInt(this.dataset.tplIdx), 1);
+                renderChips();
+            });
+        });
+
+        list.querySelectorAll('.attach-remove[data-idx]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 files.splice(parseInt(this.dataset.idx), 1);
                 renderChips();
@@ -1108,10 +1137,17 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
 
     // Clear on discard / modal close
     function clearAttachments() {
-        files = [];
-        list.innerHTML = '';
-        input.value = '';
+        files              = [];
+        templateAttachments = [];
+        list.innerHTML     = '';
+        input.value        = '';
     }
+
+    // Called from template-change handler (outside IIFE scope via window)
+    window.setTemplateAttachments = function (atts) {
+        templateAttachments = atts || [];
+        renderChips();
+    };
     document.getElementById('discardBtn').addEventListener('click', clearAttachments);
     document.getElementById('composeModal').addEventListener('hidden.bs.modal', clearAttachments);
 
@@ -1119,11 +1155,11 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        // Sync contenteditable body HTML → hidden textarea before FormData is built
-        const bodyHtml = document.getElementById('compose_body').innerHTML.trim();
-        document.getElementById('compose_body_hidden').value = bodyHtml;
+        // Sync contenteditable body text → hidden textarea before FormData is built
+        const bodyText = document.getElementById('compose_body').innerText.trim();
+        document.getElementById('compose_body_hidden').value = bodyText;
 
-        if (! bodyHtml || bodyHtml === '<br>') {
+        if (! bodyText) {
             alert('Please write a message before sending.');
             return;
         }
@@ -1137,9 +1173,14 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
         const fd = new FormData(form);
         // Remove any stale attachment entries from FormData
         fd.delete('attachments[]');
-        // Append all tracked files
+        // Append user-uploaded files
         files.forEach(function (file) {
             fd.append('attachments[]', file, file.name);
+        });
+        // Append template attachment paths (server-side files)
+        templateAttachments.forEach(function (att) {
+            fd.append('template_attachment_paths[]', att.path);
+            fd.append('template_attachment_names[]', att.name);
         });
 
         // Show sending state

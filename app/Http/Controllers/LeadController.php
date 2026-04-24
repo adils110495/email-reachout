@@ -301,10 +301,14 @@ class LeadController extends Controller
     public function sendEmail(Request $request, int $id): RedirectResponse
     {
         $request->validate([
-            'subject'       => ['required', 'string', 'max:255'],
-            'body'          => ['required', 'string'],
-            'attachments'   => ['nullable', 'array'],
-            'attachments.*' => ['file', 'max:10240'], // 10MB per file
+            'subject'                    => ['required', 'string', 'max:255'],
+            'body'                       => ['required', 'string'],
+            'attachments'                => ['nullable', 'array'],
+            'attachments.*'              => ['file', 'max:10240'],
+            'template_attachment_paths'  => ['nullable', 'array'],
+            'template_attachment_paths.*'=> ['string'],
+            'template_attachment_names'  => ['nullable', 'array'],
+            'template_attachment_names.*'=> ['string'],
         ]);
 
         $lead = Lead::findOrFail($id);
@@ -341,6 +345,18 @@ class LeadController extends Controller
                     'size' => $file->getSize(),
                     'mime' => $file->getMimeType(),
                 ];
+            }
+        }
+
+        // Template attachments (already stored server-side)
+        $tplPaths = $request->input('template_attachment_paths', []);
+        $tplNames = $request->input('template_attachment_names', []);
+        foreach ($tplPaths as $i => $storedPath) {
+            $fullPath     = storage_path('app/' . $storedPath);
+            $originalName = $tplNames[$i] ?? basename($storedPath);
+            if (file_exists($fullPath)) {
+                $attachments[]    = ['path' => $fullPath, 'name' => $originalName];
+                $attachmentMeta[] = ['name' => $originalName, 'path' => $storedPath, 'size' => filesize($fullPath), 'mime' => mime_content_type($fullPath)];
             }
         }
 

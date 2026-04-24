@@ -1,5 +1,10 @@
 <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<style>
+    #quill-wrapper .ql-toolbar { border: none; border-bottom: 1px solid #dee2e6; border-radius: 0; }
+    #quill-wrapper .ql-container { border: none; font-size: .92rem; height: calc(100% - 42px); }
+    #quill-wrapper .ql-editor { height: 100%; overflow-y: auto; }
+</style>
 <script>
     const quill = new Quill('#quill-editor', {
         theme: 'snow',

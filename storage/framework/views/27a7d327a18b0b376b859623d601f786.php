@@ -11,7 +11,7 @@
 
 <div class="card border-0 shadow-sm rounded-3 d-flex flex-column" style="height:calc(100vh - 160px);">
     <div class="card-body p-4 overflow-auto flex-grow-1">
-        <form method="POST" action="<?php echo e(route('templates.store')); ?>" id="templateForm">
+        <form method="POST" action="<?php echo e(route('templates.store')); ?>" id="templateForm" enctype="multipart/form-data">
             <?php echo csrf_field(); ?>
             <?php echo $__env->make('templates._form', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         </form>

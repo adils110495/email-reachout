@@ -72,5 +72,5 @@ Route::delete('/settings/platforms/{id}',  [PlatformController::class, 'destroy'
 
 // Templates JSON for compose modal dropdown
 Route::get('/api/templates', fn() => response()->json(
-    \App\Models\EmailTemplate::select('id','name','subject','body')->where('status', 'active')->latest()->get()
+    \App\Models\EmailTemplate::select('id','name','subject','body','attachments')->where('status', 'active')->latest()->get()
 ))->name('api.templates');
