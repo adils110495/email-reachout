@@ -156,17 +156,38 @@
         
 
         <div class="footer-contact-info">
-            <div>Shop No. 25, Modipuram, Meerut, Uttar Pradesh - 250110, India</div>
-            <div>
-                <a href="mailto:<?php echo e(config('mail.from.address')); ?>"><?php echo e(config('mail.from.address')); ?></a>
-                &nbsp;|&nbsp;
-                <a href="tel:+918864939301">+91 88649 39301</a>
-                &nbsp;|&nbsp;
-                <a href="tel:+918439913891">+91 84399 13891</a>
-            </div>
-            <div>
-                <a href="http://heservices.in/" style="color:#4361ee; text-decoration:underline;">heservices.in</a>
-            </div>
+            <?php if($address): ?>
+                <div><?php echo e($address->address); ?></div>
+                <div>
+                    <a href="mailto:<?php echo e($address->email); ?>"><?php echo e($address->email); ?></a>
+                    &nbsp;|&nbsp;
+                    <a href="tel:<?php echo e($address->phone); ?>"><?php echo e($address->phone); ?></a>
+                    <?php if($address->alternate_phone): ?>
+                        &nbsp;|&nbsp;
+                        <a href="tel:<?php echo e($address->alternate_phone); ?>"><?php echo e($address->alternate_phone); ?></a>
+                    <?php endif; ?>
+                </div>
+                <?php if($address->website): ?>
+                    <div>
+                        <a href="<?php echo e($address->website); ?>" style="color:#4361ee; text-decoration:underline;">
+                            <?php echo e(parse_url($address->website, PHP_URL_HOST) ?: $address->website); ?>
+
+                        </a>
+                    </div>
+                <?php endif; ?>
+            <?php else: ?>
+                <div>Shop No. 25, Modipuram, Meerut, Uttar Pradesh - 250110, India</div>
+                <div>
+                    <a href="mailto:<?php echo e(config('mail.from.address')); ?>"><?php echo e(config('mail.from.address')); ?></a>
+                    &nbsp;|&nbsp;
+                    <a href="tel:+918864939301">+91 88649 39301</a>
+                    &nbsp;|&nbsp;
+                    <a href="tel:+918439913891">+91 84399 13891</a>
+                </div>
+                <div>
+                    <a href="http://heservices.in/" style="color:#4361ee; text-decoration:underline;">heservices.in</a>
+                </div>
+            <?php endif; ?>
         </div>
 
         <hr class="footer-divider-line">

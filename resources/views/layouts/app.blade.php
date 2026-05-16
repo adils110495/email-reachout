@@ -69,6 +69,16 @@
                             <i class="bi bi-grid me-2 text-success"></i>Platforms
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('categories.index') }}">
+                            <i class="bi bi-tag me-2 text-warning"></i>Categories
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('addresses.index') }}">
+                            <i class="bi bi-geo-alt me-2 text-danger"></i>Addresses
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

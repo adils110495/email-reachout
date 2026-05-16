@@ -22,11 +22,17 @@ class Lead extends Model
         'linkedin',
         'status',
         'platform_id',
+        'category_id',
     ];
 
     public function platform()
     {
         return $this->belongsTo(\App\Models\Platform::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(\App\Models\Category::class);
     }
 
     protected $casts = [

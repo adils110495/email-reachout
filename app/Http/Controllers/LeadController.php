@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Jobs\ScrapeLeadEmailJob;
 use App\Mail\OutreachMail;
+use App\Models\Address;
+use App\Models\Category;
 use App\Models\Lead;
 use App\Models\LeadEmail;
 use App\Models\Platform;
@@ -39,20 +41,31 @@ class LeadController extends Controller
             ? (int) $request->query('per_page')
             : 25;
 
-        $query = Lead::with('platform')->orderBy('id', 'desc');
+        $query = Lead::with(['platform', 'category'])->orderBy('id', 'desc');
 
         $validStatuses = ['new', 'sent', 'failed', 'replied'];
         if ($request->filled('status') && in_array($request->status, $validStatuses)) {
             $query->where('status', $request->status);
         }
 
-        $leads     = $query->paginate($perPage)->withQueryString();
-        $platforms = Platform::active()->orderBy('name')->get();
+        if ($request->filled('category') && is_numeric($request->category)) {
+            $query->where('category_id', (int) $request->category);
+        }
+
+        $leads      = $query->paginate($perPage)->withQueryString();
+        $platforms  = Platform::active()->orderBy('name')->get();
+        $categories = Category::active()->orderBy('name')->get();
+        $addresses  = Address::active()->orderBy('id')->get();
+
+        $activeCategory = $request->input('category');
+        $activeCatObj   = ($activeCategory && is_numeric($activeCategory))
+            ? $categories->firstWhere('id', (int) $activeCategory)
+            : null;
 
         $senderName    = env('SENDER_NAME', 'Sales Team');
         $senderCompany = env('SENDER_COMPANY', 'Our Company');
 
-        return view('leads.index', compact('leads', 'platforms', 'senderName', 'senderCompany'));
+        return view('leads.index', compact('leads', 'platforms', 'categories', 'addresses', 'activeCategory', 'activeCatObj', 'senderName', 'senderCompany'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -63,7 +76,10 @@ class LeadController extends Controller
             'email'        => ['nullable', 'email', 'max:255'],
             'linkedin'     => ['nullable', 'url', 'max:255'],
             'platform_id'  => ['nullable', 'exists:platforms,id'],
+            'category_id'  => ['nullable', 'exists:categories,id'],
         ]);
+
+        $raw = $request->input('category_id');
 
         Lead::create([
             'company_name' => $request->company_name,
@@ -72,6 +88,7 @@ class LeadController extends Controller
             'linkedin'     => $request->linkedin,
             'status'       => 'new',
             'platform_id'  => $request->platform_id,
+            'category_id'  => ($raw !== null && $raw !== '') ? (int) $raw : null,
         ]);
 
         return redirect()->route('leads.index')->with('success', 'Lead added successfully.');
@@ -84,10 +101,12 @@ class LeadController extends Controller
     public function search(Request $request): RedirectResponse
     {
         $request->validate([
-            'keyword' => ['required', 'string', 'min:2', 'max:200'],
+            'keyword'         => ['required', 'string', 'min:2', 'max:200'],
+            'search_category' => ['required', 'exists:categories,id'],
         ]);
 
-        $keyword = $request->input('keyword');
+        $keyword    = $request->input('keyword');
+        $categoryId = (int) $request->input('search_category');
 
         // 1. Fetch results from SerpAPI — pass env-configured country/language/limit
         $results = $this->leadFinder->find(
@@ -112,6 +131,7 @@ class LeadController extends Controller
                 'email'        => null,
                 'status'       => Lead::STATUS_NEW,
                 'platform_id'  => $googlePlatform?->id,
+                'category_id'  => $categoryId,
             ]);
 
             // 3. Dispatch background job to scrape email (non-blocking)
@@ -120,7 +140,7 @@ class LeadController extends Controller
             $newLeadsCount++;
         }
 
-        return redirect()->route('leads.index')
+        return redirect()->route('leads.index', ['category' => $categoryId])
             ->with('success', "Found {$newLeadsCount} new leads for \"{$keyword}\". Emails are being extracted in the background.");
     }
 
@@ -129,7 +149,7 @@ class LeadController extends Controller
      */
     public function show(int $id): \Illuminate\Http\JsonResponse
     {
-        return response()->json(Lead::with('platform')->findOrFail($id));
+        return response()->json(Lead::with(['platform', 'category'])->findOrFail($id));
     }
 
     public function downloadAttachment(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
@@ -164,7 +184,7 @@ class LeadController extends Controller
      */
     public function edit(int $id): \Illuminate\Http\JsonResponse
     {
-        return response()->json(Lead::with('platform')->findOrFail($id));
+        return response()->json(Lead::with(['platform', 'category'])->findOrFail($id));
     }
 
     /**
@@ -181,11 +201,18 @@ class LeadController extends Controller
             'linkedin'     => ['nullable', 'url', 'max:255'],
             'status'       => ['required', 'in:new,sent,failed,replied'],
             'platform_id'  => ['nullable', 'exists:platforms,id'],
+            'category_id'  => ['nullable', 'exists:categories,id'],
         ]);
 
         $lead->update($data);
 
-        return redirect()->route('leads.index')->with('success', "Lead \"{$lead->company_name}\" updated.");
+        $redirectBack = $request->input('_redirect_back', '');
+        $query = [];
+        if ($redirectBack) {
+            parse_str(ltrim($redirectBack, '?'), $query);
+        }
+
+        return redirect()->route('leads.index', $query)->with('success', "Lead \"{$lead->company_name}\" updated.");
     }
 
     /**
@@ -203,12 +230,17 @@ class LeadController extends Controller
     /**
      * Delete a single lead.
      */
-    public function destroy(int $id): RedirectResponse
+    public function destroy(Request $request, int $id): RedirectResponse
     {
         $lead = Lead::findOrFail($id);
         $lead->delete();
 
-        return redirect()->route('leads.index')->with('success', "Lead deleted.");
+        $query = [];
+        if ($redirectBack = $request->input('_redirect_back', '')) {
+            parse_str(ltrim($redirectBack, '?'), $query);
+        }
+
+        return redirect()->route('leads.index', $query)->with('success', "Lead deleted.");
     }
 
     /**
@@ -220,7 +252,12 @@ class LeadController extends Controller
 
         $count = Lead::whereIn('id', $request->ids)->delete();
 
-        return redirect()->route('leads.index')->with('success', "{$count} lead(s) deleted.");
+        $query = [];
+        if ($redirectBack = $request->input('_redirect_back', '')) {
+            parse_str(ltrim($redirectBack, '?'), $query);
+        }
+
+        return redirect()->route('leads.index', $query)->with('success', "{$count} lead(s) deleted.");
     }
 
     /**
@@ -303,6 +340,7 @@ class LeadController extends Controller
         $request->validate([
             'subject'                    => ['required', 'string', 'max:255'],
             'body'                       => ['required', 'string'],
+            'address_id'                 => ['nullable', 'exists:addresses,id'],
             'attachments'                => ['nullable', 'array'],
             'attachments.*'              => ['file', 'max:10240'],
             'template_attachment_paths'  => ['nullable', 'array'],
@@ -313,13 +351,18 @@ class LeadController extends Controller
 
         $lead = Lead::findOrFail($id);
 
+        $redirectQuery = [];
+        if ($redirectBack = $request->input('_redirect_back', '')) {
+            parse_str(ltrim($redirectBack, '?'), $redirectQuery);
+        }
+
         if (! $lead->hasEmail()) {
-            return redirect()->route('leads.index')
+            return redirect()->route('leads.index', $redirectQuery)
                 ->with('error', "Lead \"{$lead->company_name}\" has no email address.");
         }
 
         if ($lead->status === Lead::STATUS_SENT) {
-            return redirect()->route('leads.index')
+            return redirect()->route('leads.index', $redirectQuery)
                 ->with('error', "Email already sent to \"{$lead->company_name}\".");
         }
 
@@ -327,6 +370,7 @@ class LeadController extends Controller
         $senderCompany = env('SENDER_COMPANY', 'Our Company');
         $subject       = $request->input('subject');
         $body          = $request->input('body');
+        $address       = $request->filled('address_id') ? Address::find((int) $request->input('address_id')) : null;
 
         // Store attachments permanently under lead-attachments/{lead_id}/
         $attachmentMeta = [];
@@ -361,7 +405,7 @@ class LeadController extends Controller
         }
 
         try {
-            $mailable = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany, emailAttachments: $attachments);
+            $mailable = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany, emailAttachments: $attachments, address: $address);
 
             // Send directly — no queue
             Mail::to($lead->email)->send($mailable);
@@ -394,7 +438,7 @@ class LeadController extends Controller
                 'attachments' => count($attachmentMeta),
             ]);
 
-            return redirect()->route('leads.index')
+            return redirect()->route('leads.index', $redirectQuery)
                 ->with('success', "Email sent successfully to \"{$lead->company_name}\".");
 
         } catch (\Throwable $e) {
@@ -411,7 +455,7 @@ class LeadController extends Controller
 
             Log::error('sendEmail: failed', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);
 
-            return redirect()->route('leads.index')
+            return redirect()->route('leads.index', $redirectQuery)
                 ->with('error', "Failed to send email: " . $e->getMessage());
         }
     }

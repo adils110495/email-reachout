@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AddressController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PlatformController;
@@ -69,6 +71,18 @@ Route::get('/settings/platforms',          [PlatformController::class, 'index'])
 Route::post('/settings/platforms',         [PlatformController::class, 'store'])->name('platforms.store');
 Route::put('/settings/platforms/{id}',     [PlatformController::class, 'update'])->name('platforms.update');
 Route::delete('/settings/platforms/{id}',  [PlatformController::class, 'destroy'])->name('platforms.destroy');
+
+// Categories CRUD
+Route::get('/settings/categories',         [CategoryController::class, 'index'])->name('categories.index');
+Route::post('/settings/categories',        [CategoryController::class, 'store'])->name('categories.store');
+Route::put('/settings/categories/{id}',    [CategoryController::class, 'update'])->name('categories.update');
+Route::delete('/settings/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+// Addresses CRUD
+Route::get('/settings/addresses',          [AddressController::class, 'index'])->name('addresses.index');
+Route::post('/settings/addresses',         [AddressController::class, 'store'])->name('addresses.store');
+Route::put('/settings/addresses/{id}',     [AddressController::class, 'update'])->name('addresses.update');
+Route::delete('/settings/addresses/{id}',  [AddressController::class, 'destroy'])->name('addresses.destroy');
 
 // Templates JSON for compose modal dropdown
 Route::get('/api/templates', fn() => response()->json(

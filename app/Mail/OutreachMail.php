@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Address;
 use App\Models\Lead;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -15,15 +16,17 @@ class OutreachMail extends Mailable
     use Queueable, SerializesModels;
 
     /**
-     * @param array $emailAttachments  [['path' => '/absolute/path', 'name' => 'original.pdf'], ...]
+     * @param array        $emailAttachments  [['path' => '/absolute/path', 'name' => 'original.pdf'], ...]
+     * @param Address|null $address           Optional sender address for dynamic footer
      */
     public function __construct(
-        public readonly Lead   $lead,
-        public readonly string $emailBody,
-        public readonly string $subjectLine,
-        public readonly string $senderName,
-        public readonly string $senderCompany,
-        public readonly array  $emailAttachments = [],
+        public readonly Lead     $lead,
+        public readonly string   $emailBody,
+        public readonly string   $subjectLine,
+        public readonly string   $senderName,
+        public readonly string   $senderCompany,
+        public readonly array    $emailAttachments = [],
+        public readonly ?Address $address = null,
     ) {}
 
     public function envelope(): Envelope

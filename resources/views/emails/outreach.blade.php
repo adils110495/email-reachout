@@ -156,17 +156,37 @@
         
 
         <div class="footer-contact-info">
-            <div>Shop No. 25, Modipuram, Meerut, Uttar Pradesh - 250110, India</div>
-            <div>
-                <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>
-                &nbsp;|&nbsp;
-                <a href="tel:+918864939301">+91 88649 39301</a>
-                &nbsp;|&nbsp;
-                <a href="tel:+918439913891">+91 84399 13891</a>
-            </div>
-            <div>
-                <a href="http://heservices.in/" style="color:#4361ee; text-decoration:underline;">heservices.in</a>
-            </div>
+            @if($address)
+                <div>{{ $address->address }}</div>
+                <div>
+                    <a href="mailto:{{ $address->email }}">{{ $address->email }}</a>
+                    &nbsp;|&nbsp;
+                    <a href="tel:{{ $address->phone }}">{{ $address->phone }}</a>
+                    @if($address->alternate_phone)
+                        &nbsp;|&nbsp;
+                        <a href="tel:{{ $address->alternate_phone }}">{{ $address->alternate_phone }}</a>
+                    @endif
+                </div>
+                @if($address->website)
+                    <div>
+                        <a href="{{ $address->website }}" style="color:#4361ee; text-decoration:underline;">
+                            {{ parse_url($address->website, PHP_URL_HOST) ?: $address->website }}
+                        </a>
+                    </div>
+                @endif
+            @else
+                <div>Shop No. 25, Modipuram, Meerut, Uttar Pradesh - 250110, India</div>
+                <div>
+                    <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>
+                    &nbsp;|&nbsp;
+                    <a href="tel:+918864939301">+91 88649 39301</a>
+                    &nbsp;|&nbsp;
+                    <a href="tel:+918439913891">+91 84399 13891</a>
+                </div>
+                <div>
+                    <a href="http://heservices.in/" style="color:#4361ee; text-decoration:underline;">heservices.in</a>
+                </div>
+            @endif
         </div>
 
         <hr class="footer-divider-line">

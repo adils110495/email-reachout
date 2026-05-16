@@ -1,219 +1,627 @@
-[2026-04-24 06:23:06] local.DEBUG: ImapService: Connecting to mailbox {"mailbox":"{imap.hostinger.com:993/imap/ssl/novalidate-cert}INBOX.Sent","username":"info@heservices.in"} 
-[2026-04-24 06:23:11] local.INFO: ImapService: Email copied to Sent folder {"to":"nazimsaifi0033@gmail.com","subject":"Grow Your Business with Our Marketing Solutions","folder":"INBOX.Sent","attachments":0} 
-[2026-04-24 06:23:11] local.INFO: sendEmail: sent directly {"lead_id":78,"to":"nazimsaifi0033@gmail.com","attachments":0} 
-[2026-04-24 06:25:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+[2026-05-16 12:47:24] local.INFO: LeadFinderService: searching {"keyword":"Web Design","limit":25,"country":"global","language":"any"} 
+[2026-05-16 12:47:32] local.INFO: LeadFinderService: done {"found":25} 
+[2026-05-16 12:47:55] local.INFO: LeadFinderService: searching {"keyword":"Software Development","limit":25,"country":"global","language":"any"} 
+[2026-05-16 12:48:06] local.INFO: LeadFinderService: done {"found":25} 
+[2026-05-16 12:48:18] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":125,"email":"sales@bizinforusa.com"} 
+[2026-05-16 12:48:22] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":126,"email":"aparna.epiceasyeats@wearelit.co"} 
+[2026-05-16 12:48:25] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":127,"email":"info@usdsoftware.com"} 
+[2026-05-16 12:48:27] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":128,"email":"team@sdi.la"} 
+[2026-05-16 12:48:28] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212` resulted in a `403 Forbidden` response:
+<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/htm (truncated...)
 "} 
-[2026-04-24 06:25:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/contact","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/contact` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+[2026-05-16 12:48:29] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/contact","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/contact` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\">
+    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
 "} 
-[2026-04-24 06:25:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/contact-us","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/contact-us` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+[2026-05-16 12:48:30] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/contact-us","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/contact-us` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\">
+    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
 "} 
-[2026-04-24 06:25:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/about","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/about` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+[2026-05-16 12:48:31] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/about","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/about` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\">
+    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
 "} 
-[2026-04-24 06:25:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/about-us","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/about-us` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+[2026-05-16 12:48:32] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/about-us","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/about-us` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\">
+    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
 "} 
-[2026-04-24 06:25:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/team","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/team` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+[2026-05-16 12:48:33] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/team","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/team` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\">
+    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
 "} 
-[2026-04-24 06:25:30] local.DEBUG: ImapService: Connecting to mailbox {"mailbox":"{imap.hostinger.com:993/imap/ssl/novalidate-cert}INBOX.Sent","username":"info@heservices.in"} 
-[2026-04-24 06:25:35] local.INFO: ImapService: Email copied to Sent folder {"to":"nazimsaifi0033@gmail.com","subject":"Grow Your Business with Our Marketing Solutions","folder":"INBOX.Sent","attachments":1} 
-[2026-04-24 06:25:36] local.INFO: sendEmail: sent directly {"lead_id":78,"to":"nazimsaifi0033@gmail.com","attachments":1} 
-[2026-04-24 06:38:59] local.ERROR: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attachments' in 'field list' (Connection: mysql, SQL: update `email_templates` set `attachments` = [{"name":"email-logo.png","path":"template-attachments\/3\/VtDuIoYqRbRy81Mkn9CwJUMq2hOhhiSWjQDaqlX5.png","size":21425},{"name":"download.pdf","path":"template-attachments\/3\/aDjkCzzsKp4yoZ4twFz4VHkZYpPwM0anzLqDhbEj.pdf","size":159991}], `email_templates`.`updated_at` = 2026-04-24 06:38:58 where `id` = 3) {"exception":"[object] (Illuminate\\Database\\QueryException(code: 42S22): SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attachments' in 'field list' (Connection: mysql, SQL: update `email_templates` set `attachments` = [{\"name\":\"email-logo.png\",\"path\":\"template-attachments\\/3\\/VtDuIoYqRbRy81Mkn9CwJUMq2hOhhiSWjQDaqlX5.png\",\"size\":21425},{\"name\":\"download.pdf\",\"path\":\"template-attachments\\/3\\/aDjkCzzsKp4yoZ4twFz4VHkZYpPwM0anzLqDhbEj.pdf\",\"size\":159991}], `email_templates`.`updated_at` = 2026-04-24 06:38:58 where `id` = 3) at /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php:825)
-[stacktrace]
-#0 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(779): Illuminate\\Database\\Connection->runQueryCallback('update `email_t...', Array, Object(Closure))
-#1 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(584): Illuminate\\Database\\Connection->run('update `email_t...', Array, Object(Closure))
-#2 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(536): Illuminate\\Database\\Connection->affectingStatement('update `email_t...', Array)
-#3 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3830): Illuminate\\Database\\Connection->update('update `email_t...', Array)
-#4 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(1175): Illuminate\\Database\\Query\\Builder->update(Object(Illuminate\\Support\\Collection))
-#5 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1239): Illuminate\\Database\\Eloquent\\Builder->update(Array)
-#6 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1156): Illuminate\\Database\\Eloquent\\Model->performUpdate(Object(Illuminate\\Database\\Eloquent\\Builder))
-#7 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1014): Illuminate\\Database\\Eloquent\\Model->save(Array)
-#8 /var/www/html/app/Http/Controllers/EmailTemplateController.php(80): Illuminate\\Database\\Eloquent\\Model->update(Array)
-#9 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(47): App\\Http\\Controllers\\EmailTemplateController->update(Object(Illuminate\\Http\\Request), 3)
-#10 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\EmailTemplateController), 'update')
-#11 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Route.php(212): Illuminate\\Routing\\Route->runController()
-#12 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(808): Illuminate\\Routing\\Route->run()
-#13 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
-#14 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#15 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#16 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(88): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#17 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#18 /var/www/html/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#19 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\View\\Middleware\\ShareErrorsFromSession->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#20 /var/www/html/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#21 /var/www/html/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate\\Session\\Middleware\\StartSession->handleStatefulRequest(Object(Illuminate\\Http\\Request), Object(Illuminate\\Session\\Store), Object(Closure))
-#22 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Session\\Middleware\\StartSession->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#23 /var/www/html/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#24 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#25 /var/www/html/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(75): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#26 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Cookie\\Middleware\\EncryptCookies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#27 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#28 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
-#29 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
-#30 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
-#31 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
-#32 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(201): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
-#33 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
-#34 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#35 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#36 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#37 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#38 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#39 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#40 /var/www/html/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#41 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#42 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#43 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#44 /var/www/html/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(49): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#45 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#46 /var/www/html/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#47 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#48 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#49 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#50 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#51 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
-#52 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
-#53 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
-#54 /var/www/html/public/index.php(12): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
-#55 {main}
+[2026-05-16 12:48:33] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":129,"website":"https://contactout.com/company/Software-Developer-8212"} 
+[2026-05-16 12:48:42] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":130,"email":"contact@salezshark.com"} 
+[2026-05-16 12:48:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list` resulted in a `403 Forbidden` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\" />
+    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
+"} 
+[2026-05-16 12:48:46] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/contact","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/contact` resulted in a `403 Forbidden` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\" />
+    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
+"} 
+[2026-05-16 12:48:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/contact-us","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/contact-us` resulted in a `403 Forbidden` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\" />
+    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
+"} 
+[2026-05-16 12:48:49] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/about","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/about` resulted in a `403 Forbidden` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\" />
+    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
+"} 
+[2026-05-16 12:48:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/about-us","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/about-us` resulted in a `403 Forbidden` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\" />
+    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
+"} 
+[2026-05-16 12:48:51] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/team","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/team` resulted in a `403 Forbidden` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\" />
+    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
+"} 
+[2026-05-16 12:48:51] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":131,"website":"http://www.aventionmedia.com/role-base/software-engineers-email-list"} 
+[2026-05-16 12:48:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/contact","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/contact` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
+"} 
+[2026-05-16 12:48:56] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/contact-us","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/contact-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
+"} 
+[2026-05-16 12:48:57] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/about","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/about` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
+"} 
+[2026-05-16 12:48:58] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/about-us","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/about-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
+"} 
+[2026-05-16 12:48:59] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/team","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/team` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
+"} 
+[2026-05-16 12:48:59] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":132,"website":"https://www.contact-software.com/en/about-us/contact-locations"} 
+[2026-05-16 12:49:03] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/contact","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/contact` resulted in a `404 Not Found` response:
 
-[previous exception] [object] (PDOException(code: 42S22): SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attachments' in 'field list' at /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php:592)
-[stacktrace]
-#0 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(592): PDO->prepare('update `email_t...')
-#1 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(812): Illuminate\\Database\\Connection->Illuminate\\Database\\{closure}('update `email_t...', Array)
-#2 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(779): Illuminate\\Database\\Connection->runQueryCallback('update `email_t...', Array, Object(Closure))
-#3 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(584): Illuminate\\Database\\Connection->run('update `email_t...', Array, Object(Closure))
-#4 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Connection.php(536): Illuminate\\Database\\Connection->affectingStatement('update `email_t...', Array)
-#5 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(3830): Illuminate\\Database\\Connection->update('update `email_t...', Array)
-#6 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php(1175): Illuminate\\Database\\Query\\Builder->update(Object(Illuminate\\Support\\Collection))
-#7 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1239): Illuminate\\Database\\Eloquent\\Builder->update(Array)
-#8 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1156): Illuminate\\Database\\Eloquent\\Model->performUpdate(Object(Illuminate\\Database\\Eloquent\\Builder))
-#9 /var/www/html/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php(1014): Illuminate\\Database\\Eloquent\\Model->save(Array)
-#10 /var/www/html/app/Http/Controllers/EmailTemplateController.php(80): Illuminate\\Database\\Eloquent\\Model->update(Array)
-#11 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php(47): App\\Http\\Controllers\\EmailTemplateController->update(Object(Illuminate\\Http\\Request), 3)
-#12 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Route.php(266): Illuminate\\Routing\\ControllerDispatcher->dispatch(Object(Illuminate\\Routing\\Route), Object(App\\Http\\Controllers\\EmailTemplateController), 'update')
-#13 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Route.php(212): Illuminate\\Routing\\Route->runController()
-#14 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(808): Illuminate\\Routing\\Route->run()
-#15 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Routing\\Router->Illuminate\\Routing\\{closure}(Object(Illuminate\\Http\\Request))
-#16 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php(51): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#17 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Routing\\Middleware\\SubstituteBindings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#18 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/VerifyCsrfToken.php(88): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#19 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#20 /var/www/html/vendor/laravel/framework/src/Illuminate/View/Middleware/ShareErrorsFromSession.php(49): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#21 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\View\\Middleware\\ShareErrorsFromSession->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#22 /var/www/html/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(121): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#23 /var/www/html/vendor/laravel/framework/src/Illuminate/Session/Middleware/StartSession.php(64): Illuminate\\Session\\Middleware\\StartSession->handleStatefulRequest(Object(Illuminate\\Http\\Request), Object(Illuminate\\Session\\Store), Object(Closure))
-#24 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Session\\Middleware\\StartSession->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#25 /var/www/html/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/AddQueuedCookiesToResponse.php(37): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#26 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Cookie\\Middleware\\AddQueuedCookiesToResponse->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#27 /var/www/html/vendor/laravel/framework/src/Illuminate/Cookie/Middleware/EncryptCookies.php(75): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#28 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Cookie\\Middleware\\EncryptCookies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#29 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#30 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(807): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
-#31 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(786): Illuminate\\Routing\\Router->runRouteWithinStack(Object(Illuminate\\Routing\\Route), Object(Illuminate\\Http\\Request))
-#32 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(750): Illuminate\\Routing\\Router->runRoute(Object(Illuminate\\Http\\Request), Object(Illuminate\\Routing\\Route))
-#33 /var/www/html/vendor/laravel/framework/src/Illuminate/Routing/Router.php(739): Illuminate\\Routing\\Router->dispatchToRoute(Object(Illuminate\\Http\\Request))
-#34 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(201): Illuminate\\Routing\\Router->dispatch(Object(Illuminate\\Http\\Request))
-#35 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(170): Illuminate\\Foundation\\Http\\Kernel->Illuminate\\Foundation\\Http\\{closure}(Object(Illuminate\\Http\\Request))
-#36 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#37 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/ConvertEmptyStringsToNull.php(31): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#38 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\ConvertEmptyStringsToNull->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#39 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TransformsRequest.php(21): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#40 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/TrimStrings.php(51): Illuminate\\Foundation\\Http\\Middleware\\TransformsRequest->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#41 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\TrimStrings->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#42 /var/www/html/vendor/laravel/framework/src/Illuminate/Http/Middleware/ValidatePostSize.php(27): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#43 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\ValidatePostSize->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#44 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/PreventRequestsDuringMaintenance.php(110): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#45 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\PreventRequestsDuringMaintenance->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#46 /var/www/html/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php(49): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#47 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\HandleCors->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#48 /var/www/html/vendor/laravel/framework/src/Illuminate/Http/Middleware/TrustProxies.php(58): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#49 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Http\\Middleware\\TrustProxies->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#50 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Middleware/InvokeDeferredCallbacks.php(22): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#51 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(209): Illuminate\\Foundation\\Http\\Middleware\\InvokeDeferredCallbacks->handle(Object(Illuminate\\Http\\Request), Object(Closure))
-#52 /var/www/html/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php(127): Illuminate\\Pipeline\\Pipeline->Illuminate\\Pipeline\\{closure}(Object(Illuminate\\Http\\Request))
-#53 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(176): Illuminate\\Pipeline\\Pipeline->then(Object(Closure))
-#54 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php(145): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
-#55 /var/www/html/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1220): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
-#56 /var/www/html/public/index.php(12): Illuminate\\Foundation\\Application->handleRequest(Object(Illuminate\\Http\\Request))
-#57 {main}
-"} 
-[2026-04-24 06:41:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design` resulted in a `403 Forbidden` response:
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
+  <head>
+    <meta charset=\"utf-8\" />
+<link  (truncated...)
 "} 
-[2026-04-24 06:41:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/contact","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/contact` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:04] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/contact-us","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/contact-us` resulted in a `404 Not Found` response:
+
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
+  <head>
+    <meta charset=\"utf-8\" />
+<link  (truncated...)
 "} 
-[2026-04-24 06:41:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/contact-us","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/contact-us` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:06] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/about","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/about` resulted in a `404 Not Found` response:
+
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
+  <head>
+    <meta charset=\"utf-8\" />
+<link  (truncated...)
 "} 
-[2026-04-24 06:41:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/about","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/about` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:07] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/about-us","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/about-us` resulted in a `404 Not Found` response:
+
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
+  <head>
+    <meta charset=\"utf-8\" />
+<link  (truncated...)
 "} 
-[2026-04-24 06:41:49] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/about-us","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/about-us` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:10] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/team","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/team` resulted in a `404 Not Found` response:
+
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
+  <head>
+    <meta charset=\"utf-8\" />
+<link  (truncated...)
 "} 
-[2026-04-24 06:41:49] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/team","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/team` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:10] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":133,"website":"https://www.rocketsoftware.com/en-us/contact"} 
+[2026-05-16 12:49:15] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":134,"email":"sales@thomsondata.com"} 
+[2026-05-16 12:49:16] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/contact","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/contact` resulted in a `404 Not Found` response:
+<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
+"} 
+[2026-05-16 12:49:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/contact-us","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/contact-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
+"} 
+[2026-05-16 12:49:18] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/about","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/about` resulted in a `404 Not Found` response:
+<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
+"} 
+[2026-05-16 12:49:19] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/about-us","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/about-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
+"} 
+[2026-05-16 12:49:20] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/team","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/team` resulted in a `404 Not Found` response:
+<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
+"} 
+[2026-05-16 12:49:20] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":135,"website":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach"} 
+[2026-05-16 12:49:22] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/contact","error":"Client error: `GET https://www.jetbrains.com/company/contacts/contact` resulted in a `404 Not Found` response:
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\">
+<head>
+        <!-- Optimizely -->
+<script type=\"text/javascript\">
+    window.o (truncated...)
 "} 
-[2026-04-24 06:42:04] local.DEBUG: ImapService: Connecting to mailbox {"mailbox":"{imap.hostinger.com:993/imap/ssl/novalidate-cert}INBOX.Sent","username":"info@heservices.in"} 
-[2026-04-24 06:42:09] local.INFO: ImapService: Email copied to Sent folder {"to":"nazimsaifi0033@gmail.com","subject":"Grow Your Business with Our Marketing Solutions","folder":"INBOX.Sent","attachments":3} 
-[2026-04-24 06:42:09] local.INFO: sendEmail: sent directly {"lead_id":78,"to":"nazimsaifi0033@gmail.com","attachments":3} 
-[2026-04-24 06:43:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:22] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/contact-us","error":"Client error: `GET https://www.jetbrains.com/company/contacts/contact-us` resulted in a `404 Not Found` response:
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\">
+<head>
+        <!-- Optimizely -->
+<script type=\"text/javascript\">
+    window.o (truncated...)
 "} 
-[2026-04-24 06:43:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/contact","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/contact` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:22] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/about","error":"Client error: `GET https://www.jetbrains.com/company/contacts/about` resulted in a `404 Not Found` response:
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\">
+<head>
+        <!-- Optimizely -->
+<script type=\"text/javascript\">
+    window.o (truncated...)
 "} 
-[2026-04-24 06:43:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/contact-us","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/contact-us` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:22] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/about-us","error":"Client error: `GET https://www.jetbrains.com/company/contacts/about-us` resulted in a `404 Not Found` response:
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\">
+<head>
+        <!-- Optimizely -->
+<script type=\"text/javascript\">
+    window.o (truncated...)
 "} 
-[2026-04-24 06:43:18] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/about","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/about` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/team","error":"Client error: `GET https://www.jetbrains.com/company/contacts/team` resulted in a `404 Not Found` response:
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en\">
+<head>
+        <!-- Optimizely -->
+<script type=\"text/javascript\">
+    window.o (truncated...)
 "} 
-[2026-04-24 06:43:18] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/about-us","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/about-us` resulted in a `403 Forbidden` response:
+[2026-05-16 12:49:23] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":136,"website":"https://www.jetbrains.com/company/contacts"} 
+[2026-05-16 12:49:28] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/contact","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/contact` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:29] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/contact-us","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/contact-us` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:30] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/about","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/about` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:31] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/about-us","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/about-us` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:32] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/team","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/team` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:32] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":137,"email":"reach@campaignlake.com"} 
+[2026-05-16 12:49:38] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:39] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact-us","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact-us` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:40] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:41] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about-us","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about-us` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:43] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/team","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/team` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:49:43] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":138,"email":"reach@esalesclub.com"} 
+[2026-05-16 12:52:32] local.INFO: LeadFinderService: searching {"keyword":"Software Development","limit":25,"country":"global","language":"any"} 
+[2026-05-16 12:52:38] local.INFO: LeadFinderService: done {"found":25} 
+[2026-05-16 12:52:44] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:52:44] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact-us","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact-us` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:52:44] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:52:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about-us","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about-us` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:52:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/team","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/team` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<head>
+\t<meta charset=\"UTF-8\">
+\t<meta name=\"viewport (truncated...)
+"} 
+[2026-05-16 12:52:45] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":140,"email":"reach@esalesclub.com"} 
+[2026-05-16 12:53:56] local.INFO: LeadFinderService: searching {"keyword":"Web Development","limit":25,"country":"global","language":"any"} 
+[2026-05-16 12:54:10] local.INFO: LeadFinderService: done {"found":25} 
+[2026-05-16 12:54:17] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":141,"website":"https://builder.aws.com/content/31c6EGIZUe9a5eLwMKBv2TuDn2l/contact-form-making-your-website-interactive"} 
+[2026-05-16 12:54:28] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://gawebdev.com/get-in-touch/contact","error":"Client error: `GET https://gawebdev.com/get-in-touch/contact` resulted in a `404 Not Found` response:
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en-US\" class=\"html_stretched responsive av-preloader-disabled  html_header_top html_logo_cen (truncated...)
 "} 
-[2026-04-24 06:43:18] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wishdesk.com/blog/contact-page-web-design/team","error":"Client error: `GET https://wishdesk.com/blog/contact-page-web-design/team` resulted in a `403 Forbidden` response:
+[2026-05-16 12:54:31] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://gawebdev.com/get-in-touch/contact-us","error":"Client error: `GET https://gawebdev.com/get-in-touch/contact-us` resulted in a `404 Not Found` response:
 <!DOCTYPE html>
-<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->
-<!--[if IE 7]>    <html class (truncated...)
+<html lang=\"en-US\" class=\"html_stretched responsive av-preloader-disabled  html_header_top html_logo_cen (truncated...)
 "} 
+[2026-05-16 12:54:35] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":142,"email":"hello@gawebdev.com"} 
+[2026-05-16 12:54:38] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":143,"website":"https://www.crafted.email"} 
+[2026-05-16 12:54:42] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":144,"website":"https://webdevstudios.com/contact"} 
+[2026-05-16 12:54:44] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/contact","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/contact` resulted in a `404 Not Found` response:
+<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
+"} 
+[2026-05-16 12:54:47] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/contact-us","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/contact-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
+"} 
+[2026-05-16 12:54:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/about","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/about` resulted in a `404 Not Found` response:
+<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
+"} 
+[2026-05-16 12:54:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/about-us","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/about-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
+"} 
+[2026-05-16 12:54:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/team","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/team` resulted in a `404 Not Found` response:
+<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
+"} 
+[2026-05-16 12:54:48] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":145,"email":"john.doe@company.com"} 
+[2026-05-16 12:54:52] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/contact","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/contact` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 
+[2026-05-16 12:54:52] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/contact-us","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/contact-us` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 
+[2026-05-16 12:54:53] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/about","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/about` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 
+[2026-05-16 12:54:53] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/about-us","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/about-us` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 
+[2026-05-16 12:54:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/team","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/team` resulted in a `404 Not Found` response:
+
+
+
+
+
+\t
+\t\t\t\t\t
+\t<!DOCTYPE html>
+\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
+\t\t<head>
+\t\t\t\t\t\t\t\t\t\t\t\t\t
+<meta charset= (truncated...)
+"} 
+[2026-05-16 12:54:54] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":146,"email":"projects@toward.studio"} 
+[2026-05-16 12:54:57] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":147,"website":"https://htmlboutique.com/email-development"} 
+[2026-05-16 12:55:01] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":148,"email":"mrn-developer@mrnwebdesigns.com"} 
+[2026-05-16 12:55:02] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/contact","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/contact` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+
+<!-- 
+  © 2026 Wandzilak Web Design Studio
+  wandzilakwebdesign.com | All rights rese (truncated...)
+"} 
+[2026-05-16 12:55:02] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/contact-us","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/contact-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+
+<!-- 
+  © 2026 Wandzilak Web Design Studio
+  wandzilakwebdesign.com | All rights rese (truncated...)
+"} 
+[2026-05-16 12:55:02] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/about","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/about` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+
+<!-- 
+  © 2026 Wandzilak Web Design Studio
+  wandzilakwebdesign.com | All rights rese (truncated...)
+"} 
+[2026-05-16 12:55:02] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/about-us","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/about-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+
+<!-- 
+  © 2026 Wandzilak Web Design Studio
+  wandzilakwebdesign.com | All rights rese (truncated...)
+"} 
+[2026-05-16 12:55:03] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/team","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/team` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+
+<!-- 
+  © 2026 Wandzilak Web Design Studio
+  wandzilakwebdesign.com | All rights rese (truncated...)
+"} 
+[2026-05-16 12:55:03] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":149,"email":"info@wandzilakwebdesign.com"} 
+[2026-05-16 12:55:06] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:55:07] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:55:07] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:55:07] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:55:08] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/team","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/team` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:55:08] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":150,"email":"info@dsngrid.com"} 
+[2026-05-16 12:55:24] local.DEBUG: ImapService: Connecting to mailbox {"mailbox":"{imap.hostinger.com:993/imap/ssl/novalidate-cert}INBOX.Sent","username":"info@heservices.in"} 
+[2026-05-16 12:55:30] local.INFO: ImapService: Email copied to Sent folder {"to":"nazimsaifi0033@gmail.com","subject":"Grow Your Business with Our Marketing Solutions","folder":"INBOX.Sent","attachments":1} 
+[2026-05-16 12:55:30] local.INFO: sendEmail: sent directly {"lead_id":139,"to":"nazimsaifi0033@gmail.com","attachments":1} 
+[2026-05-16 12:55:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:55:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:55:46] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:55:46] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:55:46] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/team","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/team` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:57:53] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:57:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:57:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:57:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:57:55] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/team","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/team` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\" />
+    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+"} 
+[2026-05-16 12:58:17] local.DEBUG: ImapService: Connecting to mailbox {"mailbox":"{imap.hostinger.com:993/imap/ssl/novalidate-cert}INBOX.Sent","username":"info@heservices.in"} 
+[2026-05-16 12:58:23] local.INFO: ImapService: Email copied to Sent folder {"to":"nazimsaifi0033@gmail.com","subject":"Grow Your Business with Our Marketing Solutions","folder":"INBOX.Sent","attachments":1} 
+[2026-05-16 12:58:23] local.INFO: sendEmail: sent directly {"lead_id":139,"to":"nazimsaifi0033@gmail.com","attachments":1} 
