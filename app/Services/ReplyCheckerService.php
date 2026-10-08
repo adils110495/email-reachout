@@ -36,14 +36,14 @@ class ReplyCheckerService
         $marked   = 0;
 
         foreach ($pending as $email) {
-            $leadAddress = strtolower((string) $email->lead?->email);
+            // A reply may come from any address the lead has, not just the primary.
+            $leadAddresses = array_map('strtolower', $email->lead?->email_list ?? []);
 
             foreach ($messages as $message) {
                 $byHeader = $email->message_id
                     && str_contains($message['in_reply_to'] . ' ' . $message['references'], $email->message_id);
 
-                $byAddress = $leadAddress !== ''
-                    && $message['from'] === $leadAddress
+                $byAddress = in_array($message['from'], $leadAddresses, true)
                     && $message['date']->gte($email->sent_at);
 
                 if ($byHeader || $byAddress) {

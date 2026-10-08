@@ -62,6 +62,18 @@ return [
                 ],
 
                 [
+                    'label'  => 'GMB Leads',
+                    'route'  => 'gmb-leads.index',
+                    'active' => ['gmb-leads.*'],
+                    'icon'   => 'bi-geo-alt',
+                ],
+                [
+                    'label'  => 'Cash Leads',
+                    'route'  => 'cash-leads.index',
+                    'active' => ['cash-leads.*'],
+                    'icon'   => 'bi-cash-coin',
+                ],
+                [
                     'label'  => 'Email Activity',
                     'route'  => 'email-activity.index',
                     'active' => ['email-activity.*'],

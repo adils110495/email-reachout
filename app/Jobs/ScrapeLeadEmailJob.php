@@ -25,6 +25,9 @@ class ScrapeLeadEmailJob implements ShouldQueue
      */
     private const SCRAPE_BUDGET = 45.0;
 
+    /** Most addresses kept per lead. */
+    private const MAX_EMAILS = 10;
+
     public function __construct(public readonly Lead $lead) {}
 
     public function handle(ScraperService $scraper, EmailExtractorService $extractor): void
@@ -38,11 +41,15 @@ class ScrapeLeadEmailJob implements ShouldQueue
         $emails = $extractor->extract($html);
 
         if (! empty($emails)) {
-            $this->lead->update(['email' => $emails[0]]);
+            // Keep every address found (capped, so one noisy page cannot flood
+            // the lead); the first becomes the primary `email`.
+            $emails = array_slice($emails, 0, self::MAX_EMAILS);
 
-            Log::info('ScrapeLeadEmailJob: email found', [
+            $this->lead->update(['emails' => $emails]);
+
+            Log::info('ScrapeLeadEmailJob: emails found', [
                 'lead_id' => $this->lead->id,
-                'email'   => $emails[0],
+                'emails'  => $emails,
             ]);
         } else {
             Log::debug('ScrapeLeadEmailJob: no email found', [

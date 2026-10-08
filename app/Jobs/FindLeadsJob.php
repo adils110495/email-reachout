@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\AppNotification;
 use App\Models\Lead;
 use App\Models\Platform;
 use App\Services\LeadFinderService;
@@ -73,6 +74,14 @@ class FindLeadsJob implements ShouldQueue
             $newLeadsCount++;
         }
 
+        AppNotification::raise(
+            'success',
+            'Lead search complete',
+            "\"{$this->keyword}\": {$newLeadsCount} new lead" . ($newLeadsCount === 1 ? '' : 's') . ' added'
+                . ($newLeadsCount > 0 ? ' (emails are being extracted in the background).' : '.'),
+            route('leads.index', ['category' => $this->categoryId], false),
+        );
+
         Log::info('FindLeadsJob: search complete', [
             'keyword'     => $this->keyword,
             'category_id' => $this->categoryId,
@@ -88,5 +97,7 @@ class FindLeadsJob implements ShouldQueue
             'category_id' => $this->categoryId,
             'error'       => $e->getMessage(),
         ]);
+
+        AppNotification::raise('error', 'Lead search failed', "\"{$this->keyword}\": {$e->getMessage()}");
     }
 }

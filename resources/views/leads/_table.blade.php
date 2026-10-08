@@ -55,7 +55,7 @@
                 <tbody>
                     @foreach($leads as $lead)
                     <tr data-id="{{ $lead->id }}"
-                        data-search="{{ strtolower($lead->company_name . ' ' . $lead->email . ' ' . $lead->website . ' ' . $lead->status) }}">
+                        data-search="{{ strtolower($lead->company_name . ' ' . implode(' ', $lead->email_list) . ' ' . $lead->website . ' ' . $lead->status) }}">
 
                         {{-- Checkbox --}}
                         <td>
@@ -80,9 +80,12 @@
                             </a>
                         </td>
 
-                        <td data-val="{{ strtolower($lead->email ?? '') }}">
-                            @if($lead->email)
-                                <a href="mailto:{{ $lead->email }}" class="text-primary">{{ $lead->email }}</a>
+                        <td data-val="{{ strtolower(implode(',', $lead->email_list)) }}">
+                            @if($lead->email_list)
+                                {{-- Every address, comma separated; the first is the one emails are sent to. --}}
+                                @foreach($lead->email_list as $address)
+                                    <a href="mailto:{{ $address }}" class="text-primary">{{ $address }}</a>@if(! $loop->last), @endif
+                                @endforeach
                             @else
                                 <span class="fst-italic">Not found</span>
                             @endif
@@ -175,7 +178,8 @@
                                                 data-id="{{ $lead->id }}"
                                                 data-name="{{ addslashes($lead->company_name) }}"
                                                 data-website="{{ $lead->website }}"
-                                                data-to="{{ $lead->email }}">
+                                                data-to="{{ $lead->email }}"
+                                                data-emails="{{ json_encode($lead->email_list) }}">
                                                 @if($lead->status === 'failed')
                                                     <i class="bi bi-arrow-repeat me-2 text-danger"></i>Retry Email
                                                 @else
@@ -198,6 +202,16 @@
                                             </form>
                                         </li>
                                     @endif
+
+                                    {{-- Cash Lead: we expect this one to turn into a paying customer --}}
+                                    <li>
+                                        <form method="POST" action="{{ route('cash-leads.from-lead', $lead->id) }}">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Cash Lead
+                                            </button>
+                                        </form>
+                                    </li>
 
                                     {{-- Delete --}}
                                     <li>

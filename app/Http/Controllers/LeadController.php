@@ -90,7 +90,8 @@ class LeadController extends Controller
         $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
             'website'      => ['required', 'url', 'max:255'],
-            'email'        => ['nullable', 'email', 'max:255'],
+            'emails'       => ['nullable', 'array', 'max:20'],
+            'emails.*'     => ['nullable', 'email', 'max:255'],
             'linkedin'     => ['nullable', 'url', 'max:255'],
             'platform_id'  => ['nullable', 'exists:platforms,id'],
             'category_id'  => ['nullable', 'exists:categories,id'],
@@ -101,7 +102,8 @@ class LeadController extends Controller
         Lead::create([
             'company_name' => $request->company_name,
             'website'      => $request->website,
-            'email'        => $request->email,
+            // Lead::saving() derives the primary `email` from the first of these.
+            'emails'       => Lead::normalizeEmails($request->input('emails', [])),
             'linkedin'     => $request->linkedin,
             'status'       => 'new',
             'platform_id'  => $request->platform_id,
@@ -115,7 +117,7 @@ class LeadController extends Controller
      * Search for leads using a keyword via SerpAPI.
      * Leads are saved instantly; email scraping runs in the background queue.
      */
-    public function search(Request $request): RedirectResponse
+    public function search(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $request->validate([
             'keyword'         => ['required', 'string', 'min:2', 'max:200'],
@@ -135,9 +137,14 @@ class LeadController extends Controller
             language:   env('LEAD_LANGUAGE', null) ?: null,
         )->onQueue('default');
 
+        // The page submits this by fetch() and stays put; the notification
+        // bell reports the result.
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true]);
+        }
+
         return redirect()->route('leads.index', ['category' => $categoryId])
-            ->with('success', "Searching for \"{$keyword}\" in the background. New leads will appear here as they are found.")
-            ->with('search_queued', true);
+            ->with('success', "Searching for \"{$keyword}\" in the background. New leads will appear here as they are found.");
     }
 
     /**
@@ -193,12 +200,16 @@ class LeadController extends Controller
         $data = $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
             'website'      => ['required', 'url', 'max:255'],
-            'email'        => ['nullable', 'email', 'max:255'],
+            'emails'       => ['nullable', 'array', 'max:20'],
+            'emails.*'     => ['nullable', 'email', 'max:255'],
             'linkedin'     => ['nullable', 'url', 'max:255'],
             'status'       => ['required', 'in:new,sent,failed,replied'],
             'platform_id'  => ['nullable', 'exists:platforms,id'],
             'category_id'  => ['nullable', 'exists:categories,id'],
         ]);
+
+        // Always written, even when empty: clearing every chip must clear the lead's emails.
+        $data['emails'] = Lead::normalizeEmails($request->input('emails', []));
 
         $lead->update($data);
 
@@ -340,6 +351,7 @@ class LeadController extends Controller
             'subject'                    => ['required', 'string', 'max:255'],
             'body'                       => ['required', 'string'],
             'address_id'                 => ['nullable', 'exists:addresses,id'],
+            'to_email'                   => ['nullable', 'email', 'max:255'],
             'attachments'                => ['nullable', 'array'],
             'attachments.*'              => ['file', 'max:10240'],
             'template_attachment_paths'  => ['nullable', 'array'],
@@ -363,6 +375,17 @@ class LeadController extends Controller
         if ($lead->status === Lead::STATUS_SENT) {
             return redirect()->route('leads.index', $redirectQuery)
                 ->with('error', "Email already sent to \"{$lead->company_name}\".");
+        }
+
+        // The compose dropdown picks which of the lead's addresses to write to.
+        // It must be one the lead actually has - never trust the posted value.
+        $recipient = strtolower((string) $request->input('to_email', ''));
+
+        if ($recipient === '') {
+            $recipient = $lead->email;
+        } elseif (! in_array($recipient, array_map('strtolower', $lead->email_list), true)) {
+            return redirect()->route('leads.index', $redirectQuery)
+                ->with('error', "\"{$recipient}\" is not one of this lead's email addresses.");
         }
 
         $senderName    = env('SENDER_NAME', 'Sales Team');
@@ -416,14 +439,14 @@ class LeadController extends Controller
             $mailable = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany, emailAttachments: $attachments, address: $address, trackingToken: $trackingToken, messageId: $messageId);
 
             // Send directly — no queue
-            Mail::to($lead->email)->send($mailable);
+            Mail::to($recipient)->send($mailable);
 
             // Copy to IMAP Sent folder (with same attachments + original names).
             // Rendered WITHOUT the pixel, otherwise opening the Sent folder would count as an open.
             $sentCopy = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany, emailAttachments: $attachments, address: $address);
 
             app(ImapService::class)->copyToSentFolder(
-                to:          $lead->email,
+                to:          $recipient,
                 subject:     $subject,
                 htmlBody:    $sentCopy->render(),
                 fromName:    $mailConfig->fromName($senderName),
@@ -447,7 +470,7 @@ class LeadController extends Controller
 
             Log::info('sendEmail: sent directly', [
                 'lead_id'     => $lead->id,
-                'to'          => $lead->email,
+                'to'          => $recipient,
                 'attachments' => count($attachmentMeta),
             ]);
 
@@ -486,7 +509,7 @@ class LeadController extends Controller
                 $lead->id,
                 $lead->company_name,
                 $lead->website,
-                $lead->email,
+                implode(', ', $lead->email_list),
                 $lead->linkedin,
                 $lead->status,
                 $lead->created_at->toDateTimeString(),

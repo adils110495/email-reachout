@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Concerns\FiltersRequests;
+use App\Http\Controllers\Concerns\SavesFinderResults;
+use App\Jobs\FinderSearchJob;
 use App\Models\Category;
 use App\Models\EmailVerification;
 use App\Models\FinderResult;
-use App\Models\Lead;
-use App\Models\Platform;
 use App\Services\EmailFinderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,7 +32,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class FinderController extends Controller
 {
-    use ExportsCsv, FiltersRequests;
+    use ExportsCsv, FiltersRequests, SavesFinderResults;
 
     public function __construct(private readonly EmailFinderService $finder) {}
 
@@ -85,8 +85,9 @@ class FinderController extends Controller
     }
 
     /**
-     * Run a live lookup. Returns JSON so the page can show loading / empty /
-     * error states without a round trip.
+     * Queue a live lookup. A domain search can take up to a minute (it reads the
+     * site and follows its links), so FinderSearchJob does the work and raises
+     * a notification; the results land in the Finder Results table.
      */
     public function search(Request $request): JsonResponse
     {
@@ -109,74 +110,14 @@ class FinderController extends Controller
             ], 422);
         }
 
-        try {
-            $result = $validated['mode'] === 'person'
-                ? $this->finder->findByPerson((string) $validated['name'], $domain)
-                : $this->finder->findByDomain($domain);
-        } catch (\Throwable $e) {
-            report($e);
+        FinderSearchJob::dispatch(
+            mode:       $validated['mode'],
+            domain:     $domain,
+            name:       (string) ($validated['name'] ?? ''),
+            categoryId: isset($validated['category_id']) ? (int) $validated['category_id'] : null,
+        )->onQueue('default');
 
-            return response()->json([
-                'ok'      => false,
-                'message' => 'The lookup could not be completed. Please try again.',
-            ], 500);
-        }
-
-        // A domain search reaches the network; say so when it came back empty,
-        // because "site unreachable" and "site has no email" are different
-        // problems for the user.
-        $scraped = $result['scraped'] ?? true;
-
-        // A domain search found a real, published address - file it against the
-        // company's lead straight away rather than making the user press Save
-        // for the result they just asked for.
-        //
-        // Deliberately only the best NON-guessed candidate:
-        //   * guessed  - a person search produces patterns, not confirmed
-        //                addresses. Storing one would put an unverified address
-        //                into the outreach list, which is how bounces happen.
-        //   * only one - every candidate here belongs to the same company, and
-        //                a lead is keyed on its website. Saving all five would
-        //                just overwrite the same row five times.
-        $saved = null;
-        $best  = $result['candidates'][0] ?? null;
-
-        if ($best && ! $best['guessed']) {
-            $saved = $this->saveLead(
-                $result['domain'],
-                $best['email'],
-                $result['company'] ?? null,
-                isset($validated['category_id']) ? (int) $validated['category_id'] : null,
-            );
-        }
-
-        // Record every candidate, not just the one that became a lead. A lead
-        // holds one address per company, so without this the other four found on
-        // the same site - and every person-search guess - would be thrown away
-        // the moment the results panel is closed.
-        $this->recordResults($result, $validated['mode'], $saved);
-
-        return response()->json([
-            'ok'         => true,
-            'mode'       => $validated['mode'],
-            'domain'     => $result['domain'],
-            'company'    => $result['company'] ?? null,
-            'person'     => $result['person'] ?? null,
-            'scraped'    => $scraped,
-            'saved'      => $saved,
-            'candidates' => array_map(static fn (array $c) => [
-                'email'   => $c['email'],
-                'status'  => $c['status'],
-                'score'   => $c['score'],
-                'reason'  => $c['reason'],
-                'source'  => $c['source'],
-                'guessed' => $c['guessed'],
-                'type'    => $c['type'],
-                'pattern' => $c['pattern'],
-                'role'    => (bool) ($c['checks']['role'] ?? false),
-                'free'    => (bool) ($c['checks']['free'] ?? false),
-            ], $result['candidates']),
-        ]);
+        return response()->json(['ok' => true, 'queued' => true]);
     }
 
     /**
@@ -214,98 +155,6 @@ class FinderController extends Controller
             ->update(['lead_id' => $saved['lead_id']]);
 
         return response()->json($saved);
-    }
-
-    /**
-     * Write every candidate from one search into the Finder's own table.
-     *
-     * Keyed on (domain, email): searching the same company again refreshes each
-     * address's score and verdict rather than stacking duplicate rows.
-     *
-     * @param  array<string,mixed>       $result  what EmailFinderService returned
-     * @param  array<string,mixed>|null  $saved   the lead created, if any
-     */
-    private function recordResults(array $result, string $mode, ?array $saved): void
-    {
-        $savedEmail = $saved ? strtolower((string) $saved['email']) : null;
-
-        foreach ($result['candidates'] as $candidate) {
-            // lead_id is deliberately absent here. Writing it on every refresh
-            // would clear the link on an address the user saved during an
-            // earlier search - re-running a search must not un-save anything.
-            $row = FinderResult::updateOrCreate(
-                [
-                    'domain' => $result['domain'],
-                    'email'  => $candidate['email'],
-                ],
-                [
-                    'mode'    => $mode,
-                    'person'  => $result['person'] ?? null,
-                    'company' => $result['company'] ?? null,
-                    'status'  => $candidate['status'],
-                    'score'   => $candidate['score'],
-                    'reason'  => $candidate['reason'],
-                    'source'  => $candidate['source'],
-                    'guessed' => $candidate['guessed'],
-                    'type'    => $candidate['type'],
-                    'pattern' => $candidate['pattern'],
-                ],
-            );
-
-            if ($saved && $savedEmail === strtolower($candidate['email'])) {
-                $row->update(['lead_id' => $saved['lead_id']]);
-            }
-        }
-    }
-
-    /**
-     * Record one discovered address against its company's lead.
-     *
-     * Shared by the explicit Save button and the automatic save that follows a
-     * domain search, so both behave identically: one lead per website, and an
-     * address the user already has is never overwritten.
-     *
-     * @return array{ok:bool, created:bool, lead_id:int, email:string, message:string}
-     */
-    private function saveLead(string $domain, string $email, ?string $companyName, ?int $categoryId): array
-    {
-        $website = 'https://'.$domain;
-
-        $lead = Lead::where('website', $website)
-            ->orWhere('website', $website.'/')
-            ->first();
-
-        if ($lead) {
-            // Never clobber an address the user already has on the lead.
-            if (empty($lead->email)) {
-                $lead->update(['email' => $email]);
-            }
-
-            return [
-                'ok'      => true,
-                'created' => false,
-                'lead_id' => $lead->id,
-                'email'   => $lead->email,
-                'message' => "Lead already existed - updated \"{$lead->company_name}\".",
-            ];
-        }
-
-        $lead = Lead::create([
-            'company_name' => $companyName ?: $domain,
-            'website'      => $website,
-            'email'        => $email,
-            'status'       => Lead::STATUS_NEW,
-            'platform_id'  => Platform::where('name', 'Google')->value('id'),
-            'category_id'  => $categoryId ?: null,
-        ]);
-
-        return [
-            'ok'      => true,
-            'created' => true,
-            'lead_id' => $lead->id,
-            'email'   => $lead->email,
-            'message' => "Saved \"{$lead->company_name}\" to your leads.",
-        ];
     }
 
     /** Export the current filtered result set. */

@@ -280,7 +280,7 @@ class VerifierController extends Controller
             'reason'  => $result['reason'],
             'checks'  => $result['checks'],
             'source'  => $source,
-            'lead_id' => Lead::where('email', $result['email'])->value('id'),
+            'lead_id' => Lead::holdingAddress($result['email'])->value('id'),
         ]);
     }
 

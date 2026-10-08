@@ -51,7 +51,7 @@
                 <tbody>
                     <?php $__currentLoopData = $leads; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lead): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr data-id="<?php echo e($lead->id); ?>"
-                        data-search="<?php echo e(strtolower($lead->company_name . ' ' . $lead->email . ' ' . $lead->website . ' ' . $lead->status)); ?>">
+                        data-search="<?php echo e(strtolower($lead->company_name . ' ' . implode(' ', $lead->email_list) . ' ' . $lead->website . ' ' . $lead->status)); ?>">
 
                         
                         <td>
@@ -78,9 +78,12 @@
                             </a>
                         </td>
 
-                        <td data-val="<?php echo e(strtolower($lead->email ?? '')); ?>">
-                            <?php if($lead->email): ?>
-                                <a href="mailto:<?php echo e($lead->email); ?>" class="text-primary"><?php echo e($lead->email); ?></a>
+                        <td data-val="<?php echo e(strtolower(implode(',', $lead->email_list))); ?>">
+                            <?php if($lead->email_list): ?>
+                                
+                                <?php $__currentLoopData = $lead->email_list; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $address): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <a href="mailto:<?php echo e($address); ?>" class="text-primary"><?php echo e($address); ?></a><?php if(! $loop->last): ?>, <?php endif; ?>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             <?php else: ?>
                                 <span class="fst-italic">Not found</span>
                             <?php endif; ?>
@@ -174,7 +177,8 @@
                                                 data-id="<?php echo e($lead->id); ?>"
                                                 data-name="<?php echo e(addslashes($lead->company_name)); ?>"
                                                 data-website="<?php echo e($lead->website); ?>"
-                                                data-to="<?php echo e($lead->email); ?>">
+                                                data-to="<?php echo e($lead->email); ?>"
+                                                data-emails="<?php echo e(json_encode($lead->email_list)); ?>">
                                                 <?php if($lead->status === 'failed'): ?>
                                                     <i class="bi bi-arrow-repeat me-2 text-danger"></i>Retry Email
                                                 <?php else: ?>
@@ -197,6 +201,16 @@
                                             </form>
                                         </li>
                                     <?php endif; ?>
+
+                                    
+                                    <li>
+                                        <form method="POST" action="<?php echo e(route('cash-leads.from-lead', $lead->id)); ?>">
+                                            <?php echo csrf_field(); ?>
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Cash Lead
+                                            </button>
+                                        </form>
+                                    </li>
 
                                     
                                     <li>

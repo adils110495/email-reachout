@@ -66,6 +66,7 @@ unset($__errorArgs, $__bag); ?>
                             </button>
                         </div>
                     </div>
+                    <div class="text-danger fs-13 mt-2 d-none" id="searchError"></div>
                 </form>
             </div>
         </div>
@@ -264,9 +265,9 @@ unset($__errorArgs, $__bag); ?>
                 
                 <div class="border-bottom px-3 py-2 d-flex align-items-center gap-2">
                     <span class="fs-13 compose-label">To</span>
-                    <input type="email" name="to_display" id="compose_to"
-                        class="form-control form-control-sm border-0 shadow-none bg-transparent fw-semibold"
-                        readonly>
+                    
+                    <select name="to_email" id="compose_to"
+                        class="form-select form-select-sm border-0 shadow-none bg-transparent fw-semibold"></select>
                 </div>
 
                 
@@ -388,8 +389,22 @@ unset($__errorArgs, $__bag); ?>
                             <input type="url" name="linkedin" id="edit_linkedin" class="form-control" placeholder="https://linkedin.com/company/...">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" id="edit_email" class="form-control">
+                            <label class="form-label">Emails</label>
+                            
+                            <input type="hidden" name="emails[]" value="">
+                            <select name="emails[]" id="edit_emails" class="form-select js-email-tags" multiple
+                                    data-placeholder="Type an email and press Enter"></select>
+                            
+                            <div class="d-flex align-items-center gap-2 mt-2 fs-13">
+                                <span class="text-muted">Main email:</span>
+                                <strong id="edit_main_label">—</strong>
+                                <button type="button" class="btn btn-link btn-sm p-0 d-none" id="edit_main_pencil" title="Change main email">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </div>
+                            <div class="mt-1 d-none" id="edit_main_picker">
+                                <select id="edit_main_select" class="form-select form-select-sm" aria-label="Main email"></select>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Category</label>
@@ -457,8 +472,14 @@ unset($__errorArgs, $__bag); ?>
                             <input type="url" name="linkedin" class="form-control" placeholder="https://linkedin.com/company/...">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" placeholder="contact@example.com">
+                            <label class="form-label">Emails</label>
+                            <select name="emails[]" id="add_emails" class="form-select js-email-tags" multiple
+                                    data-placeholder="contact@example.com — press Enter to add more">
+                                <?php $__currentLoopData = (array) old('emails', []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $oldEmail): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php if($oldEmail): ?><option value="<?php echo e($oldEmail); ?>" selected><?php echo e($oldEmail); ?></option><?php endif; ?>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                            <div class="form-text">Add as many as you like. The first one is used for sending.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Category</label>
@@ -568,30 +589,6 @@ function loadLeads(url, { push = true, quiet = false } = {}) {
 window.addEventListener('popstate', function () {
     loadLeads(window.location.href, { push: false });
 });
-
-<?php if(session('search_queued')): ?>
-// A Find Leads search was just queued. Poll quietly so the rows the worker
-// creates show up on their own; stop as soon as the total grows, or give up
-// after POLL_MAX tries so this never runs forever.
-(function () {
-    const POLL_EVERY = 3000;
-    const POLL_MAX   = 12;
-
-    const startTotal = parseInt(leadsWrap()?.dataset.total || '0', 10);
-    let   attempts   = 0;
-
-    const timer = setInterval(function () {
-        attempts++;
-
-        loadLeads(window.location.href, { push: false, quiet: true });
-
-        const now = parseInt(leadsWrap()?.dataset.total || '0', 10);
-        if (now > startTotal || attempts >= POLL_MAX) {
-            clearInterval(timer);
-        }
-    }, POLL_EVERY);
-}());
-<?php endif; ?>
 
 // Pagination links (inside the swapped region) load over AJAX.
 document.addEventListener('click', function (e) {
@@ -714,20 +711,168 @@ jQuery(function ($) {
     });
 });
 
-// ── Spinner on search submit ──────────────────────────────────
-document.getElementById('searchForm').addEventListener('submit', function (e) {
-    const cat = document.getElementById('search_category').value;
-    if (!cat) {
-        e.preventDefault();
-        document.getElementById('search_category').classList.add('is-invalid');
-        document.getElementById('search_category').focus();
-        return;
+// ── Multiple emails per lead ──────────────────────────────────
+// Every address of a lead (falls back to the single `email` of older rows).
+function emailsOf(lead) {
+    return lead.emails && lead.emails.length ? lead.emails : (lead.email ? [lead.email] : []);
+}
+
+// Select2 in "tags" mode: type an address and press Enter / comma / space to add
+// it, click the x on a chip to drop it. Only well-formed addresses are accepted.
+const EMAIL_RE = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;
+
+function initEmailTags(select) {
+    const $ = window.jQuery;
+    if (! $ || ! $.fn.select2 || select.dataset.tagsReady) return;
+
+    $(select).select2({
+        width: '100%',
+        tags: true,
+        multiple: true,
+        tokenSeparators: [',', ' ', ';'],
+        placeholder: select.dataset.placeholder || '',
+        selectOnClose: true, // a typed address is kept when the box loses focus
+        dropdownParent: $(select).closest('.modal'),
+        createTag: function (params) {
+            const term = (params.term || '').trim().toLowerCase();
+            return EMAIL_RE.test(term) ? { id: term, text: term } : null;
+        },
+    });
+
+    select.dataset.tagsReady = '1';
+}
+
+// Replace the chips with this list.
+function setEmailTags(select, emails) {
+    initEmailTags(select);
+
+    select.innerHTML = '';
+    emails.forEach(function (address) {
+        select.appendChild(new Option(address, address, true, true));
+    });
+    window.jQuery(select).trigger('change');
+}
+
+// ── Main email (Edit modal) ───────────────────────────────────
+// The first selected address is the main one: messages go to it by default.
+// The pencil lets the user pick another; that address is moved to the front.
+(function () {
+    const select = document.getElementById('edit_emails');
+    const label  = document.getElementById('edit_main_label');
+    const pencil = document.getElementById('edit_main_pencil');
+    const picker = document.getElementById('edit_main_picker');
+    const pick   = document.getElementById('edit_main_select');
+
+    function selected() {
+        return Array.from(select.selectedOptions).map(o => o.value);
     }
-    document.getElementById('search_category').classList.remove('is-invalid');
-    document.getElementById('spinner').classList.remove('d-none');
-    document.getElementById('btnIcon').classList.add('d-none');
-    document.getElementById('findBtn').disabled = true;
+
+    // Keep the label, pencil and picker in step with the chips.
+    function refresh() {
+        const list = selected();
+
+        label.textContent = list[0] || '—';
+        pencil.classList.toggle('d-none', list.length < 2); // nothing to choose between
+        if (list.length < 2) picker.classList.add('d-none');
+
+        pick.innerHTML = '';
+        list.forEach(function (address, i) {
+            pick.appendChild(new Option(address, address, i === 0, i === 0));
+        });
+    }
+
+    window.jQuery(select).on('change', refresh);
+
+    pencil.addEventListener('click', function () {
+        picker.classList.toggle('d-none');
+    });
+
+    pick.addEventListener('change', function () {
+        const chosen = Array.from(select.options).find(o => o.value === pick.value);
+        if (! chosen) return;
+
+        select.insertBefore(chosen, select.firstChild); // first = main
+        window.jQuery(select).trigger('change');
+        picker.classList.add('d-none');
+    });
+
+    document.getElementById('editModal').addEventListener('hidden.bs.modal', function () {
+        picker.classList.add('d-none');
+    });
+})();
+
+document.getElementById('addLeadModal').addEventListener('shown.bs.modal', function () {
+    initEmailTags(document.getElementById('add_emails'));
 });
+document.getElementById('editModal').addEventListener('shown.bs.modal', function () {
+    initEmailTags(document.getElementById('edit_emails'));
+});
+
+// ── Find Leads: runs in the background ────────────────────────
+// Submitted by fetch so the page does not reload. Find stays disabled while the
+// job runs; the notification poller announces the end ('app:notification'),
+// which re-enables it and refreshes the table.
+(function () {
+    const form    = document.getElementById('searchForm');
+    const btn     = document.getElementById('findBtn');
+    const spinner = document.getElementById('spinner');
+    const icon    = document.getElementById('btnIcon');
+    const errBox  = document.getElementById('searchError');
+    let failsafe  = null;
+
+    function setBusy(on) {
+        btn.disabled = on;
+        spinner.classList.toggle('d-none', ! on);
+        icon.classList.toggle('d-none', on);
+        window.clearTimeout(failsafe);
+        // Never leave the button locked forever if the notification is missed.
+        if (on) failsafe = window.setTimeout(function () { setBusy(false); }, 180000);
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        errBox.classList.add('d-none');
+
+        const cat = document.getElementById('search_category');
+        if (! cat.value) {
+            cat.classList.add('is-invalid');
+            cat.focus();
+            return;
+        }
+        cat.classList.remove('is-invalid');
+
+        setBusy(true);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(form),
+        })
+            .then(function (r) {
+                if (r.ok) {
+                    document.getElementById('keyword').value = '';
+                    return; // stay busy until the job's notification arrives
+                }
+                return r.json().catch(function () { return {}; }).then(function (data) {
+                    errBox.textContent = data.errors ? Object.values(data.errors)[0][0] : (data.message || 'Could not start the search.');
+                    errBox.classList.remove('d-none');
+                    setBusy(false);
+                });
+            })
+            .catch(function () {
+                errBox.textContent = 'Could not start the search. Please try again.';
+                errBox.classList.remove('d-none');
+                setBusy(false);
+            });
+    });
+
+    document.addEventListener('app:notification', function (e) {
+        if (! /^Lead search/.test(e.detail.title || '')) return;
+
+        setBusy(false);
+        loadLeads(window.location.href, { push: false, quiet: true });
+    });
+})();
 
 // ── Live table filter (keyup) ─────────────────────────────────
 document.getElementById('tableFilter').addEventListener('keyup', function () {
@@ -869,7 +1014,15 @@ document.addEventListener('click', function (event) {
         currentLeadWebsite = website;
 
         document.getElementById('composeModalTitle').textContent = 'New Message — ' + name;
-        document.getElementById('compose_to').value              = to;
+        const toSelect = document.getElementById('compose_to');
+        let   addresses = [];
+        try { addresses = JSON.parse(btn.dataset.emails || '[]'); } catch (e) { addresses = []; }
+        if (! addresses.length && to) addresses = [to];
+
+        toSelect.innerHTML = '';
+        addresses.forEach(function (address, i) {
+            toSelect.appendChild(new Option(address + (i === 0 && addresses.length > 1 ? '  (main)' : ''), address, i === 0, i === 0));
+        });
         document.getElementById('compose_subject').value         = '';
         document.getElementById('compose_body').innerHTML        = '';
         document.getElementById('compose_body_hidden').value     = '';
@@ -1024,8 +1177,8 @@ document.addEventListener('click', function (event) {
                         </div>
                         <div class="col-md-6">
                             <p class="fs-13 mb-1">Email</p>
-                            ${lead.email
-                                ? `<a href="mailto:${lead.email}" class="text-primary">${lead.email}</a>`
+                            ${emailsOf(lead).length
+                                ? emailsOf(lead).map(a => `<a href="mailto:${a}" class="text-primary">${a}</a>`).join(', ')
                                 : '<span class="fst-italic">Not found</span>'}
                         </div>
                         <div class="col-md-6">
@@ -1054,7 +1207,7 @@ document.addEventListener('click', function (event) {
                 document.getElementById('editForm').action = leadRoute(leadRoutes.update, lead.id);
                 document.getElementById('edit_company_name').value  = lead.company_name || '';
                 document.getElementById('edit_website').value       = lead.website      || '';
-                document.getElementById('edit_email').value         = lead.email        || '';
+                setEmailTags(document.getElementById('edit_emails'), emailsOf(lead));
                 document.getElementById('edit_linkedin').value      = lead.linkedin     || '';
                 document.getElementById('edit_status').value        = lead.status       || 'new';
                 document.getElementById('edit_platform_id').value   = lead.platform_id  || '';

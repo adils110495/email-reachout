@@ -2,13 +2,16 @@
 
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\BulkController;
+use App\Http\Controllers\CashLeadController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailActivityController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FinderController;
+use App\Http\Controllers\GmbLeadController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MailSettingController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\VerifierController;
@@ -48,6 +51,25 @@ Route::get('/bulks/{id}/export',      [BulkController::class, 'export'])->name('
 Route::post('/bulks/{id}/cancel',     [BulkController::class, 'cancel'])->name('bulks.cancel')->whereNumber('id');
 Route::post('/bulks/{id}/retry',      [BulkController::class, 'retry'])->name('bulks.retry')->whereNumber('id');
 Route::delete('/bulks/{id}',          [BulkController::class, 'destroy'])->name('bulks.destroy')->whereNumber('id');
+
+// Cash Leads — leads we expect to turn into paying customers
+Route::get('/cash-leads',                  [CashLeadController::class, 'index'])->name('cash-leads.index');
+Route::get('/cash-leads/export',           [CashLeadController::class, 'export'])->name('cash-leads.export');
+Route::post('/cash-leads',                 [CashLeadController::class, 'store'])->name('cash-leads.store');
+Route::put('/cash-leads/{id}',             [CashLeadController::class, 'update'])->name('cash-leads.update')->whereNumber('id');
+Route::delete('/cash-leads/{id}',          [CashLeadController::class, 'destroy'])->name('cash-leads.destroy')->whereNumber('id');
+Route::post('/cash-leads/from-lead/{id}',  [CashLeadController::class, 'fromLead'])->name('cash-leads.from-lead')->whereNumber('id');
+Route::post('/cash-leads/from-gmb/{id}',   [CashLeadController::class, 'fromGmb'])->name('cash-leads.from-gmb')->whereNumber('id');
+
+// Notifications — raised by background jobs, polled by the header bell
+Route::get('/notifications',        [NotificationController::class, 'index'])->name('notifications.index');
+Route::post('/notifications/read',  [NotificationController::class, 'read'])->name('notifications.read');
+
+// GMB Leads — businesses with a Google Business Profile but no website
+Route::get('/gmb-leads',             [GmbLeadController::class, 'index'])->name('gmb-leads.index');
+Route::get('/gmb-leads/export',      [GmbLeadController::class, 'export'])->name('gmb-leads.export');
+Route::post('/gmb-leads/search',     [GmbLeadController::class, 'search'])->name('gmb-leads.search');
+Route::delete('/gmb-leads/{id}',     [GmbLeadController::class, 'destroy'])->name('gmb-leads.destroy')->whereNumber('id');
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');

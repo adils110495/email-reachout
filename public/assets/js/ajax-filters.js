@@ -159,9 +159,9 @@
 
         // Server-side search. Debounced so a typed word costs one request, not
         // one per keystroke; the in-flight abort in load() covers the rest.
-        const serverSearch = root.querySelector('input[data-search-param]');
-
-        if (serverSearch) {
+        // Any number of inputs may carry data-search-param (e.g. the Min / Max
+        // boxes of a range filter); each one is bound on its own.
+        root.querySelectorAll('input[data-search-param]').forEach(function (serverSearch) {
             let timer = null;
 
             serverSearch.addEventListener('input', function () {
@@ -178,7 +178,7 @@
                 window.clearTimeout(timer);
                 setParam(serverSearch.dataset.searchParam, serverSearch.value.trim());
             });
-        }
+        });
 
         // Pagination links live inside .ajax-content and are replaced on every
         // swap, so bind by delegation on the region that survives it.

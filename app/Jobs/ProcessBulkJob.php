@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\AppNotification;
 use App\Models\Bulk;
 use App\Models\BulkItem;
 use App\Models\EmailVerification;
@@ -132,6 +133,13 @@ class ProcessBulkJob implements ShouldQueue
             'completed_at' => now(),
         ]);
 
+        AppNotification::raise(
+            'success',
+            'Bulk run complete',
+            "\"{$bulk->name}\": {$bulk->successful_records} of {$bulk->total_records} succeeded, {$bulk->failed_records} failed.",
+            route('bulks.show', $bulk->id, false),
+        );
+
         Log::info('ProcessBulkJob: bulk complete', [
             'bulk_id'    => $bulk->id,
             'type'       => $bulk->type,
@@ -148,7 +156,7 @@ class ProcessBulkJob implements ShouldQueue
 
         // Link back to the lead holding this address, when there is one, so the
         // history shows which lead a result belongs to.
-        $leadId = Lead::where('email', $result['email'])->value('id');
+        $leadId = Lead::holdingAddress($result['email'])->value('id');
 
         EmailVerification::create([
             'email'   => $result['email'],
@@ -300,5 +308,7 @@ class ProcessBulkJob implements ShouldQueue
             'error'        => $e->getMessage(),
             'completed_at' => now(),
         ]);
+
+        AppNotification::raise('error', 'Bulk run failed', $e->getMessage(), route('bulks.show', $this->bulkId, false));
     }
 }

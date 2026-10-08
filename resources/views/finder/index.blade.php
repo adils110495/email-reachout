@@ -275,22 +275,6 @@
         icon.classList.toggle('d-none', on);
     }
 
-    // Progress hints shown while a domain search works through the site.
-    var hintTimers = [];
-
-    function clearHints() {
-        hintTimers.forEach(window.clearTimeout);
-        hintTimers = [];
-    }
-
-    function showHint(text) {
-        const hintEl = document.getElementById('finderSlowHint');
-        if (! hintEl) return;
-
-        hintEl.textContent = text;
-        hintEl.classList.remove('d-none');
-    }
-
     function render(html) {
         panel.innerHTML = html;
         panel.classList.remove('d-none');
@@ -306,97 +290,23 @@
         );
     }
 
-    function colourFor(status) {
-        if (status === 'valid')   return 'success';
-        if (status === 'invalid') return 'danger';
-        if (status === 'risky')   return 'warning';
-        return 'secondary';
-    }
-
-    // ── Results ──────────────────────────────────────────────────────────────
-    function renderResults(data) {
-        if (! data.candidates.length) {
-            if (data.mode === 'domain' && ! data.scraped) {
-                renderState('bi-wifi-off', 'That website could not be reached',
-                    'It may be offline, blocking automated requests, or the domain may be wrong.');
-            } else {
-                renderState('bi-inbox', 'No addresses found',
-                    'Nothing is published on this site. Try a person search if you know who you are looking for.');
-            }
-            return;
-        }
-
-        const heading = data.mode === 'person'
-            ? esc(data.person) + ' at ' + esc(data.domain)
-            : (data.company ? esc(data.company) + ' · ' + esc(data.domain) : esc(data.domain));
-
-        const savedEmail = data.saved ? String(data.saved.email).toLowerCase() : null;
-
-        const rows = data.candidates.map(function (c) {
-            const alreadySaved = savedEmail === String(c.email).toLowerCase();
-            const badges = [
-                '<span class="badge badge-' + colourFor(c.status) + ' light">' + esc(c.status) + '</span>',
-                c.guessed ? '<span class="badge badge-secondary light">guessed</span>' : '',
-                c.role    ? '<span class="badge badge-dark light">generic</span>' : '',
-                c.pattern ? '<span class="badge badge-primary light">' + esc(c.pattern) + '</span>' : '',
-            ].join(' ');
-
-            return '' +
-                '<div class="result-row">' +
-                    '<div class="result-main">' +
-                        '<div class="result-addr">' + esc(c.email) + '</div>' +
-                        '<div class="fs-13 text-muted">' + esc(c.reason) + '</div>' +
-                        '<div class="mt-1 d-flex flex-wrap gap-1">' + badges + '</div>' +
-                    '</div>' +
-                    '<div class="d-flex align-items-center gap-3 flex-shrink-0">' +
-                        '<div class="text-end">' +
-                            '<div class="fs-13 text-muted mb-1">' + esc(c.score) + '%</div>' +
-                            '<div class="score-meter" style="width:4.5rem">' +
-                                '<span class="bg-' + colourFor(c.status) + '" style="width:' + esc(c.score) + '%"></span>' +
-                            '</div>' +
-                        '</div>' +
-                        (alreadySaved
-                            ? '<button type="button" class="btn btn-sm btn-success" disabled>' +
-                                  '<i class="bi bi-check-lg me-1"></i>Saved' +
-                              '</button>'
-                            : '<button type="button" class="btn btn-sm btn-primary js-save-lead" ' +
-                                      'data-email="' + esc(c.email) + '">' +
-                                  '<i class="bi bi-plus-lg me-1"></i>Save' +
-                              '</button>') +
-                    '</div>' +
-                '</div>';
-        }).join('');
-
-        // Says what was filed automatically, so "Saved" on a row the user never
-        // pressed is explained rather than surprising.
-        const savedNote = data.saved
-            ? '<div class="alert alert-success d-flex align-items-start gap-2 py-2 mb-3" role="alert">' +
-                  '<i class="bi bi-check-circle-fill mt-1"></i>' +
-                  '<div class="fs-13">' + esc(data.saved.message) + '</div>' +
-              '</div>'
-            : '';
-
-        render('' +
-            '<div class="result-panel">' +
-                '<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">' +
-                    '<div>' +
-                        '<div class="result-email">' + heading + '</div>' +
-                        '<div class="fs-13 text-muted">' + data.candidates.length + ' address(es), best match first.</div>' +
-                    '</div>' +
-                '</div>' +
-                savedNote +
-                rows +
-            '</div>');
-
-        // Company name is carried into the saved lead when the site provided one.
-        panel.dataset.domain  = data.domain;
-        panel.dataset.company = data.company || '';
-    }
-
     // ── Submit ───────────────────────────────────────────────────────────────
+    // The lookup runs on the queue. The page does not reload: Find stays
+    // disabled until the job's notification arrives ('app:notification'), then
+    // the Finder Results table below is refreshed with what was found.
+    let failsafe = null;
+
+    function setBusy(on) {
+        setLoading(on);
+        window.clearTimeout(failsafe);
+        // Never leave the button locked forever if the notification is missed.
+        if (on) failsafe = window.setTimeout(function () { setLoading(false); }, 180000);
+    }
+
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         clearErrors();
+        panel.classList.add('d-none');
 
         const mode   = modeInput.value;
         const domain = domainIn.value.trim();
@@ -412,27 +322,7 @@
             return;
         }
 
-        setLoading(true);
-        render('<div class="inline-loading flex-column text-center">' +
-                   '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Searching…</span></div>' +
-                   '<span>' + (mode === 'person' ? 'Working out likely addresses…' : 'Scanning the website…') + '</span>' +
-                   '<span class="fs-13 d-none" id="finderSlowHint"></span>' +
-               '</div>');
-
-        // A domain search reads the homepage, then the contact/careers paths,
-        // then follows the links those pages contain - up to a minute on a slow
-        // site. Say so, rather than leaving a bare spinner that looks stuck.
-        clearHints();
-
-        if (mode === 'domain') {
-            hintTimers.push(window.setTimeout(function () {
-                showHint('Checking the contact and careers pages…');
-            }, 7000));
-
-            hintTimers.push(window.setTimeout(function () {
-                showHint('Following links on the pages found so far. This can take up to a minute.');
-            }, 20000));
-        }
+        setBusy(true);
 
         fetch(searchUrl, {
             method: 'POST',
@@ -453,30 +343,33 @@
         })
             .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
             .then(function (res) {
-                if (! res.ok || ! res.body.ok) {
-                    // 422 from validation carries Laravel's errors bag.
-                    const message = res.body.message
-                        || (res.body.errors && Object.values(res.body.errors)[0][0])
-                        || 'The lookup could not be completed.';
-                    renderState('bi-exclamation-triangle', 'Search failed', message);
-                    return;
+                if (res.ok && res.body.ok) {
+                    domainIn.value = '';
+                    nameInput.value = '';
+                    return; // stay busy until the notification arrives
                 }
 
-                renderResults(res.body);
-
-                // The search filed a lead of its own - show it in the table below.
-                refreshResultsTable();
+                // 422 from validation carries Laravel's errors bag.
+                const message = res.body.message
+                    || (res.body.errors && Object.values(res.body.errors)[0][0])
+                    || 'The lookup could not be started.';
+                renderState('bi-exclamation-triangle', 'Search failed', message);
+                setBusy(false);
             })
             .catch(function () {
                 renderState('bi-wifi-off', 'Connection problem',
                     'The request did not reach the server. Check your connection and try again.');
-            })
-            .finally(function () {
-                // Cancel any hint still pending - the panel has been replaced.
-                clearHints();
-                setLoading(false);
+                setBusy(false);
             });
     });
+
+    document.addEventListener('app:notification', function (e) {
+        if (! /^Finder search/.test(e.detail.title || '')) return;
+
+        setBusy(false);
+        refreshResultsTable();
+    });
+
 
     // ── Save an address as a lead ────────────────────────────────────────────
     function saveLead(btn, payload) {
@@ -515,19 +408,6 @@
                 }, 2500);
             });
     }
-
-    // Result panel buttons. Delegated: rebuilt on every search.
-    panel.addEventListener('click', function (e) {
-        const btn = e.target.closest('.js-save-lead');
-        if (! btn) return;
-
-        saveLead(btn, {
-            email:        btn.dataset.email,
-            domain:       panel.dataset.domain,
-            company_name: panel.dataset.company,
-            category_id:  categorySelect ? categorySelect.value : null,
-        });
-    });
 
     // Results table buttons. Delegated on the region, which survives the AJAX
     // swap that replaces the rows.
