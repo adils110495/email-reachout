@@ -1,6 +1,7 @@
 @if ($paginator->hasPages())
 <nav aria-label="Pagination">
-    <ul class="pagination pagination-sm mb-0">
+    {{-- Theme pagination style (assets/css/style.css): gutter + primary variant --}}
+    <ul class="pagination pagination-sm pagination-gutter pagination-primary no-bg mb-0">
 
         {{-- Previous --}}
         @if ($paginator->onFirstPage())

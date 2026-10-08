@@ -41,4 +41,23 @@ return [
         'key' => env('SERPAPI_KEY'),
     ],
 
+    // Email verification (Verifier / Bulks modules).
+    //
+    // The SMTP probe holds a real RCPT TO conversation with the recipient's
+    // mail server, which is the only way to confirm a mailbox exists. It is off
+    // by default because most hosts block outbound port 25 — with it blocked
+    // every address would come back "unknown". Enable it only where port 25 is
+    // open, and keep smtp_from on a domain you control: the probe identifies
+    // itself with that address.
+    'email_verifier' => [
+        'smtp'         => filter_var(env('VERIFY_SMTP_PROBE', false), FILTER_VALIDATE_BOOLEAN),
+        'smtp_timeout' => (int) env('VERIFY_SMTP_TIMEOUT', 8),
+        'smtp_from'    => env('VERIFY_SMTP_FROM', env('MAIL_FROM_ADDRESS')),
+        // Seconds a domain's DNS answer is reused for. One day keeps a bulk run
+        // of 5,000 addresses down to one lookup per distinct domain.
+        'cache_ttl'    => (int) env('VERIFY_CACHE_TTL', 86400),
+        // Hard ceiling on rows accepted from one CSV upload.
+        'bulk_max_rows' => (int) env('VERIFY_BULK_MAX_ROWS', 5000),
+    ],
+
 ];

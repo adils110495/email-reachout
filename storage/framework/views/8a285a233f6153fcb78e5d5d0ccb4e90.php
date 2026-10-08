@@ -1,33 +1,42 @@
 <?php $__env->startSection('title', 'AI Client Finder - Leads'); ?>
+<?php $__env->startSection('page-title', 'Leads'); ?>
+
+<?php $__env->startSection('breadcrumb'); ?>
+    <li class="breadcrumb-item active" aria-current="page">Leads</li>
+<?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
 
 
-<div class="card search-card mb-4">
-    <div class="card-body p-4">
-        <h5 class="card-title mb-3">
-            <i class="bi bi-search me-2 text-primary"></i>Find New Leads
-        </h5>
-        <form action="<?php echo e(route('leads.search')); ?>" method="POST" id="searchForm">
-            <?php echo csrf_field(); ?>
-            <div class="row g-3 align-items-start">
-                
-                <div class="col-12 col-md-3">
-                    <select name="search_category" id="search_category" class="form-select form-select-lg" required>
-                        <option value="">-- Select Category --</option>
-                        <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($cat->id); ?>" <?php echo e((string)old('search_category') === (string)$cat->id ? 'selected' : ''); ?>>
-                                <?php echo e($cat->name); ?>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header py-3">
+                <h4 class="card-title"><i class="bi bi-search me-2 text-primary"></i>Find New Leads</h4>
+            </div>
+            <div class="card-body">
+                <form action="<?php echo e(route('leads.search')); ?>" method="POST" id="searchForm">
+                    <?php echo csrf_field(); ?>
+                    <div class="row g-3 align-items-start">
+                        
+                        <div class="col-12 col-md-3">
+                            <label class="form-label">Category</label>
+                            <select name="search_category" id="search_category" class="form-select" required>
+                                <option value="">-- Select Category --</option>
+                                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($cat->id); ?>" <?php echo e((string)old('search_category') === (string)$cat->id ? 'selected' : ''); ?>>
+                                        <?php echo e($cat->name); ?>
 
-                            </option>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </select>
-                </div>
-                
-                <div class="col-12 col-md-6">
-                    <input
-                        type="text" name="keyword" id="keyword"
-                        class="form-control form-control-lg <?php $__errorArgs = ['keyword'];
+                                    </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Keyword</label>
+                            <input
+                                type="text" name="keyword" id="keyword"
+                                class="form-control <?php $__errorArgs = ['keyword'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -35,10 +44,10 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>"
-                        placeholder="e.g. web design agency London, plumbing company Manchester"
-                        value="<?php echo e(old('keyword')); ?>" required minlength="2" maxlength="200" autofocus
-                    >
-                    <?php $__errorArgs = ['keyword'];
+                                placeholder="e.g. web design agency London, plumbing company Manchester"
+                                value="<?php echo e(old('keyword')); ?>" required minlength="2" maxlength="200" autofocus
+                            >
+                            <?php $__errorArgs = ['keyword'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -46,390 +55,77 @@ $message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                    <div class="form-text">Enter a keyword leads will appear instantly, emails extracted in the background.</div>
-                </div>
-                
-                <div class="col-12 col-md-3">
-                    <button type="submit" class="btn btn-primary btn-lg w-100" id="findBtn">
-                        <span class="spinner-border spinner-border-sm d-none me-1" id="spinner"></span>
-                        <i class="bi bi-lightning-charge-fill me-1" id="btnIcon"></i>Find Leads
-                    </button>
-                </div>
+                            <div class="form-text">Enter a keyword leads will appear instantly, emails extracted in the background.</div>
+                        </div>
+                        
+                        <div class="col-12 col-md-3">
+                            <label class="form-label d-none d-md-block">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100" id="findBtn">
+                                <span class="spinner-border spinner-border-sm d-none me-1" id="spinner"></span>
+                                <i class="bi bi-lightning-charge-fill me-1" id="btnIcon"></i>Find Leads
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
 
-<div class="card border-0 shadow-sm rounded-3">
-
-    
-    <div class="card-header bg-white py-3">
-        <div class="row g-2 align-items-center">
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
 
             
-            <div class="col-auto">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-people-fill me-2 text-secondary"></i>Leads
-                    <span class="badge bg-secondary ms-1"><?php echo e($activeCategory ? $leads->total() : 0); ?></span>
-                </h6>
-            </div>
-
-            
-            <div class="col-auto">
-                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addLeadModal">
-                    <i class="bi bi-plus-lg me-1"></i>Add Lead
-                </button>
-            </div>
-
-            
-            <div class="col">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-light border-end-0">
-                        <i class="bi bi-funnel"></i>
-                    </span>
-                    <input
-                        type="text" id="tableFilter"
-                        class="form-control border-start-0 bg-light"
-                        placeholder="Filter by company, email, website, status…"
-                    >
+            <div class="card-header py-3 d-sm-flex d-block align-items-center justify-content-between">
+                <div class="clearfix">
+                    <h4 class="card-title">
+                        <i class="bi bi-people-fill me-2 text-primary"></i>Leads
+                        <span id="leadsCount" class="badge badge-primary light ms-1"><?php echo e($activeCategory ? $leads->total() : 0); ?></span>
+                    </h4>
                 </div>
-            </div>
-
-            
-            <?php
-                $activeStatus = request('status');
-            ?>
-            <div class="col-auto d-flex gap-1 align-items-center flex-wrap">
-
-                
-                <?php $__currentLoopData = ['new' => ['cls' => 'badge-new', 'label' => 'New'], 'sent' => ['cls' => 'badge-sent', 'label' => 'Sent'], 'failed' => ['cls' => 'badge-failed', 'label' => 'Failed'], 'replied' => ['cls' => 'badge-replied', 'label' => 'Replied']]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s => $cfg): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <?php
-                        $isActive = $activeStatus === $s;
-                        $params   = request()->except(['status', 'page']);
-                        $url      = $isActive
-                            ? url()->current() . (count($params) ? '?' . http_build_query($params) : '')
-                            : url()->current() . '?' . http_build_query(array_merge($params, ['status' => $s, 'page' => 1]));
-                    ?>
-                    <a href="<?php echo e($url); ?>"
-                       class="badge <?php echo e($cfg['cls']); ?> text-white text-decoration-none"
-                       style="<?php echo e($isActive ? 'outline:2px solid currentColor;outline-offset:2px;' : ''); ?>"
-                       title="<?php echo e($isActive ? 'Clear filter' : 'Filter by '.$cfg['label']); ?>">
-                        <?php echo e($cfg['label']); ?>
-
+                <div class="clearfix">
+                    <a href="<?php echo e(route('leads.export')); ?>" class="btn btn-light btn-sm m-1">
+                        <i class="bi bi-download me-1"></i>Export CSV
                     </a>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-
-                
-                <?php if($categories->isNotEmpty()): ?>
-                <div class="dropdown">
-                    <button class="btn btn-sm <?php echo e($activeCatObj ? 'btn-warning' : 'btn-outline-secondary'); ?> dropdown-toggle py-0 px-2"
-                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-tag me-1"></i><?php echo e($activeCatObj ? $activeCatObj->name : 'Category'); ?>
-
+                    <button class="btn btn-primary btn-sm m-1" data-bs-toggle="modal" data-bs-target="#addLeadModal">
+                        <i class="bi bi-plus-lg me-1"></i>Add Lead
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width:200px;max-height:260px;overflow-y:auto;">
-                        <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <?php
-                                $isCatActive = (int)$activeCategory === $cat->id;
-                                $catParams   = request()->except(['category', 'page']);
-                                $catUrl      = $isCatActive
-                                    ? url()->current() . (count($catParams) ? '?' . http_build_query($catParams) : '')
-                                    : url()->current() . '?' . http_build_query(array_merge($catParams, ['category' => $cat->id, 'page' => 1]));
-                            ?>
-                            <li>
-                                <a class="dropdown-item small <?php echo e($isCatActive ? 'active' : ''); ?>"
-                                   href="<?php echo e($catUrl); ?>">
-                                    <?php echo e($cat->name); ?>
-
-                                </a>
-                            </li>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                        <?php if($activeCatObj): ?>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item small text-danger"
-                                   href="<?php echo e(url()->current() . (count(request()->except(['category','page'])) ? '?' . http_build_query(request()->except(['category','page'])) : '')); ?>">
-                                    <i class="bi bi-x-circle me-1"></i>Clear Category
-                                </a>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
                 </div>
-                <?php endif; ?>
-
-                <a href="<?php echo e(url()->current()); ?>" class="btn btn-sm btn-primary py-0 px-2 ms-1" title="Clear all filters">
-                    <i class="bi bi-x-circle me-1"></i>Clear
-                </a>
             </div>
-        </div>
 
-        
-        <div id="bulkToolbar" class="mt-2 d-none">
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-                <span class="text-muted small me-1">
-                    <span id="selectedCount">0</span> selected
-                </span>
+            
+            <div class="card-header d-block pb-2">
+                <?php
+                    $activeStatus  = request('status');
+                    $statusOptions = [
+                        'new'     => 'New',
+                        'sent'    => 'Sent',
+                        'failed'  => 'Failed',
+                        'replied' => 'Replied',
+                    ];
+                ?>
 
-                
-                <form method="POST" action="<?php echo e(route('leads.bulk-status')); ?>" id="bulkStatusForm" class="d-flex gap-1">
-                    <?php echo csrf_field(); ?>
-                    <div id="bulkStatusIds"></div>
-                    <select name="status" class="form-select form-select-sm" style="width:130px">
-                        <option value="new">New</option>
-                        <option value="sent">Sent</option>
-                        <option value="failed">Failed</option>
-                        <option value="replied">Replied</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-tag me-1"></i>Set Status
-                    </button>
-                </form>
-
-                
-                <form method="POST" action="<?php echo e(route('leads.bulk-delete')); ?>" id="bulkDeleteForm">
-                    <?php echo csrf_field(); ?>
-                    <input type="hidden" name="_redirect_back" value="<?php echo e(request()->getQueryString() ? '?'.request()->getQueryString() : ''); ?>">
-                    <div id="bulkDeleteIds"></div>
-                    <button
-                        type="submit" class="btn btn-sm btn-outline-danger"
-                        onclick="return confirm('Delete selected leads? This cannot be undone.')"
-                    >
-                        <i class="bi bi-trash me-1"></i>Delete Selected
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <?php if(!$activeCategory): ?>
-        <div class="card-body text-center py-5 text-muted">
-            <i class="bi bi-tag display-4 d-block mb-3 opacity-50"></i>
-            <p class="mb-1 fw-semibold">Select a category to view leads</p>
-            <p class="small">Use the <strong>Category</strong> filter above to load leads for a specific category.</p>
-        </div>
-    <?php elseif($leads->isEmpty()): ?>
-        <div class="card-body text-center py-5 text-muted">
-            <i class="bi bi-inbox display-4 d-block mb-3"></i>
-            No leads found for <strong><?php echo e($activeCatObj->name ?? ''); ?></strong>.
-        </div>
-    <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-hover mb-0" id="leadsTable">
-                <thead class="table-light">
-                    <tr>
-                        <th scope="col" style="width:40px">
-                            <input type="checkbox" class="form-check-input" id="selectAll" title="Select all">
-                        </th>
-                        <th scope="col" class="sortable" data-col="0">S.No
-                            <i class="bi bi-chevron-expand sort-icon text-muted ms-1"></i>
-                        </th>
-                        <th scope="col" class="sortable" data-col="1">Company
-                            <i class="bi bi-chevron-expand sort-icon text-muted ms-1"></i>
-                        </th>
-                        <th scope="col" class="sortable" data-col="2">Website
-                            <i class="bi bi-chevron-expand sort-icon text-muted ms-1"></i>
-                        </th>
-                        <th scope="col" class="sortable" data-col="3">Email
-                            <i class="bi bi-chevron-expand sort-icon text-muted ms-1"></i>
-                        </th>
-                        <th scope="col" class="sortable" data-col="4">Status
-                            <i class="bi bi-chevron-expand sort-icon text-muted ms-1"></i>
-                        </th>
-                        <th scope="col" class="sortable" data-col="5">Platform
-                            <i class="bi bi-chevron-expand sort-icon text-muted ms-1"></i>
-                        </th>
-                        <th scope="col" class="sortable" data-col="6">Found
-                            <i class="bi bi-chevron-expand sort-icon text-muted ms-1"></i>
-                        </th>
-                        <th scope="col" class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php $__currentLoopData = $leads; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lead): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <tr data-id="<?php echo e($lead->id); ?>"
-                        data-search="<?php echo e(strtolower($lead->company_name . ' ' . $lead->email . ' ' . $lead->website . ' ' . $lead->status)); ?>">
-
-                        
-                        <td>
-                            <input type="checkbox" class="form-check-input row-check" value="<?php echo e($lead->id); ?>">
-                        </td>
-
-                        <td class="text-muted small" data-val="<?php echo e($lead->id); ?>"><?php echo e(($leads->currentPage() - 1) * $leads->perPage() + $loop->iteration); ?></td>
-
-                        <td data-val="<?php echo e(strtolower($lead->company_name)); ?>">
-                            <span class="fw-semibold"><?php echo e($lead->company_name); ?></span>
-                        </td>
-
-                        <td data-val="<?php echo e(parse_url($lead->website, PHP_URL_HOST)); ?>" style="max-width:180px;">
-                            <a href="<?php echo e($lead->website); ?>" target="_blank" rel="noopener" class="text-decoration-none small d-block text-truncate" title="<?php echo e($lead->website); ?>">
-                                <i class="bi bi-box-arrow-up-right me-1"></i>
-                                <?php echo e(parse_url($lead->website, PHP_URL_HOST)); ?>
-
-                            </a>
-                        </td>
-
-                        <td data-val="<?php echo e(strtolower($lead->email ?? '')); ?>">
-                            <?php if($lead->email): ?>
-                                <a href="mailto:<?php echo e($lead->email); ?>" class="text-decoration-none small"><?php echo e($lead->email); ?></a>
-                            <?php else: ?>
-                                <span class="text-muted small fst-italic">Not found</span>
-                            <?php endif; ?>
-                        </td>
-
-                        <td data-val="<?php echo e($lead->status); ?>">
-                            <?php
-                                $badgeClass = match($lead->status) {
-                                    'sent'    => 'badge-sent',
-                                    'failed'  => 'badge-failed',
-                                    'replied' => 'badge-replied',
-                                    default   => 'badge-new',
-                                };
-                            ?>
-                            <span class="badge <?php echo e($badgeClass); ?> text-white"><?php echo e(ucfirst($lead->status)); ?></span>
-                        </td>
-
-                        <td data-val="<?php echo e(strtolower($lead->platform?->name ?? '')); ?>">
-                            <?php
-                                $platformIcons = [
-                                    'google'      => ['icon' => 'bi-google',           'color' => '#4285F4'],
-                                    'linkedin'    => ['icon' => 'bi-linkedin',         'color' => '#0A66C2'],
-                                    'upwork'      => ['icon' => 'bi-briefcase',        'color' => '#6fda44'],
-                                    'freelancing' => ['icon' => 'bi-person-workspace', 'color' => '#f26722'],
-                                    'facebook'    => ['icon' => 'bi-facebook',         'color' => '#1877F2'],
-                                ];
-                                $platformName = $lead->platform?->name ?? '—';
-                                $key = strtolower($platformName);
-                                $p   = $platformIcons[$key] ?? ['icon' => 'bi-globe', 'color' => '#6c757d'];
-                            ?>
-                            <span class="small" style="color:<?php echo e($p['color']); ?>">
-                                <i class="bi <?php echo e($p['icon']); ?> me-1"></i><?php echo e($platformName); ?>
-
-                            </span>
-                        </td>
-
-                        <td data-val="<?php echo e($lead->created_at->timestamp); ?>" class="text-muted small">
-                            <?php echo e($lead->created_at->diffForHumans()); ?>
-
-                        </td>
-
-                        
-                        <td class="text-end">
-                            <div class="dropdown">
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center"
-                                    style="width:32px;height:32px;"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                >
-                                    <i class="bi bi-three-dots-vertical"></i>
-                                </button>
-
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width:180px;">
-
-                                    
-                                    <li>
-                                        <button type="button"
-                                            class="dropdown-item btn-view"
-                                            data-id="<?php echo e($lead->id); ?>">
-                                            <i class="bi bi-eye me-2 text-secondary"></i>View Details
-                                        </button>
-                                    </li>
-
-                                    
-                                    <li>
-                                        <button type="button"
-                                            class="dropdown-item btn-edit"
-                                            data-id="<?php echo e($lead->id); ?>">
-                                            <i class="bi bi-pencil-square me-2 text-warning"></i>Edit
-                                        </button>
-                                    </li>
-
-                                    
-                                    <?php if($lead->status === 'sent'): ?>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <button type="button"
-                                                class="dropdown-item btn-show-email"
-                                                data-id="<?php echo e($lead->id); ?>">
-                                                <i class="bi bi-envelope-open me-2 text-success"></i>Show Email
-                                            </button>
-                                        </li>
-                                    <?php endif; ?>
-
-                                    
-                                    
-                                    <?php if($lead->email && in_array($lead->status, ['new', 'failed'])): ?>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <button type="button"
-                                                class="dropdown-item btn-compose"
-                                                data-id="<?php echo e($lead->id); ?>"
-                                                data-name="<?php echo e(addslashes($lead->company_name)); ?>"
-                                                data-website="<?php echo e($lead->website); ?>"
-                                                data-to="<?php echo e($lead->email); ?>">
-                                                <?php if($lead->status === 'failed'): ?>
-                                                    <i class="bi bi-arrow-repeat me-2 text-danger"></i>Retry Email
-                                                <?php else: ?>
-                                                    <i class="bi bi-send me-2 text-primary"></i>Send Email
-                                                <?php endif; ?>
-                                            </button>
-                                        </li>
-                                    <?php endif; ?>
-
-                                    
-                                    <?php if($lead->email && $lead->status === 'replied'): ?>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <form method="POST"
-                                                action="<?php echo e(route('leads.mark-sent', $lead->id)); ?>"
-                                                onsubmit="return confirm('Mark \'<?php echo e(addslashes($lead->company_name)); ?>\' as Sent?')">
-                                                <?php echo csrf_field(); ?>
-                                                <button type="submit" class="dropdown-item text-success">
-                                                    <i class="bi bi-check2-circle me-2"></i>Mark as Sent
-                                                </button>
-                                            </form>
-                                        </li>
-                                    <?php endif; ?>
-
-                                    
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form method="POST"
-                                            action="<?php echo e(route('leads.destroy', $lead->id)); ?>"
-                                            onsubmit="return confirm('Delete <?php echo e(addslashes($lead->company_name)); ?>?')">
-                                            <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
-                                            <input type="hidden" name="_redirect_back" value="<?php echo e(request()->getQueryString() ? '?'.request()->getQueryString() : ''); ?>">
-                                            <button type="submit" class="dropdown-item text-danger">
-                                                <i class="bi bi-trash me-2"></i>Delete
-                                            </button>
-                                        </form>
-                                    </li>
-
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                </tbody>
-            </table>
-        </div>
-
-        
-        <div class="card-footer bg-white py-2 px-3">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-
-                
-                <div class="d-flex align-items-center gap-3">
+                <div class="row filter-bar align-items-start">
 
                     
-                    <div class="d-flex align-items-center gap-2">
-                        <label class="text-muted small mb-0 text-nowrap">Rows per page:</label>
-                        <select id="perPageSelect" class="form-select form-select-sm" style="width:75px">
-                            <?php $__currentLoopData = [10, 25, 50, 100]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $size): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <option value="<?php echo e($size); ?>" <?php echo e(request('per_page', 25) == $size ? 'selected' : ''); ?>>
-                                    <?php echo e($size); ?>
+                    <div class="col-12 col-md-6 col-xl-3 mb-3">
+                        <label class="form-label" for="tableFilter">Search</label>
+                        <input
+                            type="text" id="tableFilter" class="form-control"
+                            placeholder="Filter by company, email, website, status…" autocomplete="off"
+                        >
+                    </div>
+
+                    
+                    <div class="col-6 col-md-3 col-xl-2 mb-3">
+                        <label class="form-label" for="statusFilter">Status</label>
+                        <select id="statusFilter" class="form-select select2" data-param="status" data-placeholder="All Statuses">
+                            <option value="">All Statuses</option>
+                            <?php $__currentLoopData = $statusOptions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $value => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($value); ?>" <?php echo e($activeStatus === $value ? 'selected' : ''); ?>>
+                                    <?php echo e($label); ?>
 
                                 </option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -437,33 +133,106 @@ unset($__errorArgs, $__bag); ?>
                     </div>
 
                     
-                    <span class="text-muted small">
-                        Showing
-                        <strong><?php echo e($leads->firstItem()); ?></strong> - <strong><?php echo e($leads->lastItem()); ?></strong>
-                        of <strong><?php echo e($leads->total()); ?></strong> results
-                    </span>
+                    <div class="col-6 col-md-3 col-xl-2 mb-3">
+                        <label class="form-label" for="platformFilter">Platform</label>
+                        <select id="platformFilter" class="form-select select2" data-param="platform" data-placeholder="All Platforms">
+                            <option value="">All Platforms</option>
+                            <?php $__currentLoopData = $platforms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $plt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($plt->id); ?>" <?php echo e((int)$activePlatform === $plt->id ? 'selected' : ''); ?>>
+                                    <?php echo e($plt->name); ?>
 
+                                </option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
+                    </div>
+
+                    
+                    <div class="col-6 col-md-6 col-xl-3 mb-3">
+                        <label class="form-label" for="categoryFilter">Category</label>
+                        <select id="categoryFilter" class="form-select select2" data-param="category" data-placeholder="All Categories">
+                            <option value="">All Categories</option>
+                            <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($cat->id); ?>" <?php echo e((int)$activeCategory === $cat->id ? 'selected' : ''); ?>>
+                                    <?php echo e($cat->name); ?>
+
+                                </option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
+                    </div>
+
+                    
+                    <div class="col-6 col-md-6 col-xl-2 mb-3">
+                        
+                        <label class="form-label" aria-hidden="true">&nbsp;</label>
+                        <a href="<?php echo e(route('leads.index')); ?>" class="btn btn-danger light" title="Clear all filters">
+                            <i class="bi bi-x-circle me-1"></i>Clear
+                        </a>
+                    </div>
                 </div>
 
                 
-                <?php if($leads->hasPages()): ?>
-                    <div><?php echo e($leads->appends(request()->query())->links()); ?></div>
-                <?php endif; ?>
+                <div id="bulkToolbar" class="mb-3 d-none">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fs-13 me-1">
+                            <span id="selectedCount">0</span> selected
+                        </span>
 
+                        
+                        <form method="POST" action="<?php echo e(route('leads.bulk-status')); ?>" id="bulkStatusForm" class="d-flex gap-2">
+                            <?php echo csrf_field(); ?>
+                            <div id="bulkStatusIds"></div>
+                            <select name="status" class="form-select form-select-sm" style="width:130px">
+                                <option value="new">New</option>
+                                <option value="sent">Sent</option>
+                                <option value="failed">Failed</option>
+                                <option value="replied">Replied</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary light">
+                                <i class="bi bi-tag me-1"></i>Set Status
+                            </button>
+                        </form>
+
+                        
+                        <form method="POST" action="<?php echo e(route('leads.bulk-delete')); ?>" id="bulkDeleteForm">
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="_redirect_back" value="<?php echo e(request()->getQueryString() ? '?'.request()->getQueryString() : ''); ?>">
+                            <div id="bulkDeleteIds"></div>
+                            <button
+                                type="submit" class="btn btn-sm btn-danger light"
+                                onclick="return confirm('Delete selected leads? This cannot be undone.')"
+                            >
+                                <i class="bi bi-trash me-1"></i>Delete Selected
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
+
+            
+            <div class="leads-region" id="leadsRegion">
+                <div class="leads-loader" id="leadsLoader" hidden>
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading…</span>
+                    </div>
+                    <span class="fs-13">Loading leads…</span>
+                </div>
+
+                <?php echo $__env->make('leads._table', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+            </div>
+
         </div>
-    <?php endif; ?>
+    </div>
 </div>
 
 
 <div class="modal fade" id="composeModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius:12px;overflow:hidden;">
+        <div class="modal-content">
 
             
-            <div class="modal-header text-white py-2 px-3" style="background:#404040;">
-                <span class="fw-semibold small" id="composeModalTitle">New Message</span>
-                <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-primary py-3 px-3">
+                <span class="text-white fw-semibold" id="composeModalTitle">New Message</span>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <form id="composeForm" method="POST" enctype="multipart/form-data">
@@ -471,16 +240,16 @@ unset($__errorArgs, $__bag); ?>
                 <input type="hidden" name="_redirect_back" id="compose_redirect_back">
 
                 
-                <div class="border-bottom px-3 py-2 d-flex align-items-center gap-2" style="background:#f8f9fa;">
-                    <span class="text-muted small text-nowrap" style="width:50px">Template</span>
+                <div class="border-bottom px-3 py-2 d-flex align-items-center gap-2 compose-row">
+                    <span class="fs-13 text-nowrap compose-label">Template</span>
                     <select id="compose_template" class="form-select form-select-sm border-0 bg-transparent shadow-none">
                         <option value="">— Select a template (optional) —</option>
                     </select>
                 </div>
 
                 
-                <div class="border-bottom px-3 py-2 d-flex align-items-center gap-2" style="background:#f8f9fa;">
-                    <span class="text-muted small text-nowrap" style="width:50px">Address</span>
+                <div class="border-bottom px-3 py-2 d-flex align-items-center gap-2 compose-row">
+                    <span class="fs-13 text-nowrap compose-label">Address</span>
                     <select name="address_id" id="compose_address" class="form-select form-select-sm border-0 bg-transparent shadow-none">
                         <option value="">— Select an address (optional) —</option>
                         <?php $__currentLoopData = $addresses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $addr): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -494,7 +263,7 @@ unset($__errorArgs, $__bag); ?>
 
                 
                 <div class="border-bottom px-3 py-2 d-flex align-items-center gap-2">
-                    <span class="text-muted small" style="width:50px">To</span>
+                    <span class="fs-13 compose-label">To</span>
                     <input type="email" name="to_display" id="compose_to"
                         class="form-control form-control-sm border-0 shadow-none bg-transparent fw-semibold"
                         readonly>
@@ -502,7 +271,7 @@ unset($__errorArgs, $__bag); ?>
 
                 
                 <div class="border-bottom px-3 py-2 d-flex align-items-center gap-2">
-                    <span class="text-muted small" style="width:50px">Subject</span>
+                    <span class="fs-13 compose-label">Subject</span>
                     <input type="text" name="subject" id="compose_subject"
                         class="form-control form-control-sm border-0 shadow-none bg-transparent"
                         placeholder="Subject" required>
@@ -522,18 +291,18 @@ unset($__errorArgs, $__bag); ?>
                 <div id="attachmentList" class="px-3 pb-1 d-flex flex-wrap gap-2" style="min-height:0;"></div>
 
                 
-                <div class="px-3 py-2 border-top d-flex align-items-center justify-content-between bg-light">
+                <div class="modal-footer justify-content-between">
                     <div class="d-flex align-items-center gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm px-4">
+                        <button type="submit" class="btn btn-primary px-4">
                             <i class="bi bi-send-fill me-1"></i>Send
                         </button>
                         
-                        <label for="attachmentInput" class="btn btn-sm btn-light border mb-0" title="Attach files" style="cursor:pointer;">
+                        <label for="attachmentInput" class="btn btn-light mb-0" title="Attach files" style="cursor:pointer;">
                             <i class="bi bi-paperclip"></i>
                         </label>
                         <input type="file" id="attachmentInput" name="attachments[]" multiple class="d-none" accept="*/*">
                     </div>
-                    <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none" data-bs-dismiss="modal" id="discardBtn">
+                    <button type="button" class="btn btn-danger light" data-bs-dismiss="modal" id="discardBtn">
                         <i class="bi bi-trash me-1"></i>Discard
                     </button>
                 </div>
@@ -545,13 +314,13 @@ unset($__errorArgs, $__bag); ?>
 
 
 <div class="modal fade" id="showEmailModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header" style="background:#404040;">
-                <h5 class="modal-title text-white fw-semibold small">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white">
                     <i class="bi bi-envelope-open me-2"></i>Sent Email
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0" id="showEmailBody">
                 <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
@@ -562,11 +331,11 @@ unset($__errorArgs, $__bag); ?>
 
 
 <div class="modal fade" id="viewModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-eye me-2"></i>View Lead</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title"><i class="bi bi-eye me-2 text-primary"></i>View Lead</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="viewModalBody">
                 <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
@@ -577,11 +346,11 @@ unset($__errorArgs, $__bag); ?>
 
 
 <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Lead</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title"><i class="bi bi-pencil me-2 text-warning"></i>Edit Lead</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="editForm" method="POST">
@@ -589,7 +358,7 @@ unset($__errorArgs, $__bag); ?>
                     <input type="hidden" name="_redirect_back" id="edit_redirect_back">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Platform</label>
+                            <label class="form-label">Platform</label>
                             <select name="platform_id" id="edit_platform_id" class="form-select">
                                 <option value="">— Select Platform —</option>
                                 <?php $__currentLoopData = $platforms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $plt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -598,7 +367,7 @@ unset($__errorArgs, $__bag); ?>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
+                            <label class="form-label">Status <span class="text-danger">*</span></label>
                             <select name="status" id="edit_status" class="form-select">
                                 <option value="new">New</option>
                                 <option value="sent">Sent</option>
@@ -607,23 +376,23 @@ unset($__errorArgs, $__bag); ?>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Company Name <span class="text-danger">*</span></label>
+                            <label class="form-label">Company Name <span class="text-danger">*</span></label>
                             <input type="text" name="company_name" id="edit_company_name" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Website <span class="text-danger">*</span></label>
+                            <label class="form-label">Website <span class="text-danger">*</span></label>
                             <input type="url" name="website" id="edit_website" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">LinkedIn URL</label>
+                            <label class="form-label">LinkedIn URL</label>
                             <input type="url" name="linkedin" id="edit_linkedin" class="form-control" placeholder="https://linkedin.com/company/...">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Email</label>
+                            <label class="form-label">Email</label>
                             <input type="email" name="email" id="edit_email" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Category</label>
+                            <label class="form-label">Category</label>
                             <select name="category_id" id="edit_category_id" class="form-select">
                                 <option value="">— Select Category —</option>
                                 <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -633,7 +402,7 @@ unset($__errorArgs, $__bag); ?>
                         </div>
                     </div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save Changes</button>
                     </div>
                 </form>
@@ -642,78 +411,20 @@ unset($__errorArgs, $__bag); ?>
     </div>
 </div>
 
-<?php $__env->stopSection(); ?>
-
-<?php $__env->startPush('styles'); ?>
-<style>
-    #leadsTable tbody tr.d-none { display: none !important; }
-
-    /* Placeholder text for contenteditable body */
-    #compose_body:empty:before {
-        content: attr(data-placeholder);
-        color: #aaa;
-        pointer-events: none;
-    }
-
-    /* Sortable column headers */
-    th.sortable {
-        cursor: pointer;
-        user-select: none;
-        white-space: nowrap;
-    }
-    th.sortable:hover { background-color: #e9ecef; }
-
-    th.sortable .sort-icon { font-size: .7rem; vertical-align: middle; }
-    th.sort-asc  .sort-icon::before { content: "\f235"; } /* bi-chevron-up   */
-    th.sort-desc .sort-icon::before { content: "\f229"; } /* bi-chevron-down */
-    th.sort-asc  .sort-icon,
-    th.sort-desc .sort-icon { color: #0d6efd !important; }
-
-    /* ── Gmail-style attachment chips ── */
-    .attach-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #f1f3f4;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        padding: 4px 8px 4px 6px;
-        font-size: .8rem;
-        color: #202124;
-        max-width: 180px;
-        cursor: default;
-    }
-    .attach-chip .attach-icon { font-size: 1rem; flex-shrink: 0; }
-    .attach-chip .attach-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-    .attach-chip .attach-size { color: #5f6368; white-space: nowrap; flex-shrink: 0; }
-    .attach-chip .attach-remove {
-        cursor: pointer;
-        color: #5f6368;
-        font-size: .85rem;
-        flex-shrink: 0;
-        line-height: 1;
-        padding: 0 2px;
-        border-radius: 50%;
-    }
-    .attach-chip .attach-remove:hover { background: #dadce0; color: #202124; }
-    .attach-chip.attach-error { border-color: #dc3545; background: #fff5f5; color: #dc3545; }
-</style>
-<?php $__env->stopPush(); ?>
-
 
 <div class="modal fade" id="addLeadModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add Lead</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2 text-primary"></i>Add Lead</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form method="POST" action="<?php echo e(route('leads.store')); ?>">
                     <?php echo csrf_field(); ?>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Platform</label>
+                            <label class="form-label">Platform</label>
                             <select name="platform_id" class="form-select">
                                 <option value="">— Select Platform —</option>
                                 <?php $__currentLoopData = $platforms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $plt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -725,7 +436,7 @@ unset($__errorArgs, $__bag); ?>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Status</label>
+                            <label class="form-label">Status</label>
                             <select name="status" class="form-select">
                                 <option value="new">New</option>
                                 <option value="sent">Sent</option>
@@ -734,23 +445,23 @@ unset($__errorArgs, $__bag); ?>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Company Name <span class="text-danger">*</span></label>
+                            <label class="form-label">Company Name <span class="text-danger">*</span></label>
                             <input type="text" name="company_name" class="form-control" placeholder="e.g. Acme Ltd" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Website <span class="text-danger">*</span></label>
+                            <label class="form-label">Website <span class="text-danger">*</span></label>
                             <input type="url" name="website" class="form-control" placeholder="https://example.com" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">LinkedIn URL</label>
+                            <label class="form-label">LinkedIn URL</label>
                             <input type="url" name="linkedin" class="form-control" placeholder="https://linkedin.com/company/...">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Email</label>
+                            <label class="form-label">Email</label>
                             <input type="email" name="email" class="form-control" placeholder="contact@example.com">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Category</label>
+                            <label class="form-label">Category</label>
                             <select name="category_id" class="form-select">
                                 <option value="">— Select Category —</option>
                                 <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -760,7 +471,7 @@ unset($__errorArgs, $__bag); ?>
                         </div>
                     </div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Lead</button>
                     </div>
                 </form>
@@ -769,20 +480,141 @@ unset($__errorArgs, $__bag); ?>
     </div>
 </div>
 
+<?php $__env->stopSection(); ?>
+
 <?php $__env->startPush('scripts'); ?>
 <script>
-// ── Per-page selector ─────────────────────────────────────────
-const perPageEl = document.getElementById('perPageSelect');
-if (perPageEl) {
-    perPageEl.addEventListener('change', function () {
-        const url = new URL(window.location.href);
-        url.searchParams.set('per_page', this.value);
-        url.searchParams.delete('page'); // reset to page 1
-        window.location.href = url.toString();
-    });
+// ── Route map ─────────────────────────────────────────────────
+// Every URL used below is generated from a *named route*, so paths
+// stay in sync with routes/web.php instead of being hardcoded.
+const leadRoutes = {
+    index:              <?php echo json_encode(route('leads.index'), 15, 512) ?>,
+    apiTemplates:       <?php echo json_encode(route('api.templates'), 15, 512) ?>,
+    show:               <?php echo json_encode(route('leads.show', ['id' => '__ID__']), 512) ?>,
+    edit:               <?php echo json_encode(route('leads.edit', ['id' => '__ID__']), 512) ?>,
+    update:             <?php echo json_encode(route('leads.update', ['id' => '__ID__']), 512) ?>,
+    sendEmail:          <?php echo json_encode(route('leads.send-email', ['id' => '__ID__']), 512) ?>,
+    sentEmail:          <?php echo json_encode(route('leads.sent-email', ['id' => '__ID__']), 512) ?>,
+    scrapeContact:      <?php echo json_encode(route('leads.scrape-contact', ['id' => '__ID__']), 512) ?>,
+    attachmentDownload: <?php echo json_encode(route('leads.attachment.download'), 15, 512) ?>,
+};
+
+function leadRoute(template, id) {
+    return template.replace('__ID__', encodeURIComponent(id));
 }
 
+// ── AJAX table loading ────────────────────────────────────────
+// Every filter, per-page change and pagination click swaps #leadsContent
+// instead of reloading the page. The server returns just leads/_table.blade.php
+// for XHR requests, and the address bar is kept in sync via pushState so the
+// current filters stay bookmarkable and the back button works.
+const leadsWrap = () => document.getElementById('leadsContent');
+
+let leadsRequest = null; // in-flight request, so a fast second change wins
+
+function setLeadsLoading(on) {
+    const region = document.getElementById('leadsRegion');
+    const loader = document.getElementById('leadsLoader');
+
+    if (region) region.classList.toggle('is-loading', on);
+    if (loader) loader.hidden = ! on;
+}
+
+function loadLeads(url, { push = true, quiet = false } = {}) {
+    if (leadsRequest) leadsRequest.abort();
+
+    const controller = new AbortController();
+    leadsRequest = controller;
+    // Background polling refreshes silently - no spinner flashing every few seconds.
+    if (! quiet) setLeadsLoading(true);
+
+    fetch(url, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        signal: controller.signal,
+    })
+        .then(r => {
+            if (! r.ok) throw new Error('Server error: ' + r.status);
+            return r.text();
+        })
+        .then(html => {
+            const wrap = leadsWrap();
+            if (! wrap) return;
+
+            wrap.outerHTML = html;
+
+            if (push) window.history.pushState({ leadsUrl: url }, '', url);
+
+            // Header count badge lives outside the swapped region.
+            const badge = document.getElementById('leadsCount');
+            const fresh = leadsWrap();
+            if (badge && fresh) badge.textContent = fresh.dataset.total || '0';
+
+            resetBulkSelection();
+        })
+        .catch(err => {
+            // An aborted request was superseded - leave the loader up for the new one.
+            if (err.name === 'AbortError') return;
+            alert('Could not load leads. Please try again.');
+        })
+        .finally(() => {
+            if (leadsRequest === controller) {
+                leadsRequest = null;
+                setLeadsLoading(false);
+            }
+        });
+}
+
+// Back / forward buttons replay the same AJAX load.
+window.addEventListener('popstate', function () {
+    loadLeads(window.location.href, { push: false });
+});
+
+<?php if(session('search_queued')): ?>
+// A Find Leads search was just queued. Poll quietly so the rows the worker
+// creates show up on their own; stop as soon as the total grows, or give up
+// after POLL_MAX tries so this never runs forever.
+(function () {
+    const POLL_EVERY = 3000;
+    const POLL_MAX   = 12;
+
+    const startTotal = parseInt(leadsWrap()?.dataset.total || '0', 10);
+    let   attempts   = 0;
+
+    const timer = setInterval(function () {
+        attempts++;
+
+        loadLeads(window.location.href, { push: false, quiet: true });
+
+        const now = parseInt(leadsWrap()?.dataset.total || '0', 10);
+        if (now > startTotal || attempts >= POLL_MAX) {
+            clearInterval(timer);
+        }
+    }, POLL_EVERY);
+}());
+<?php endif; ?>
+
+// Pagination links (inside the swapped region) load over AJAX.
+document.addEventListener('click', function (e) {
+    const link = e.target.closest('#leadsContent .pagination a.page-link');
+    if (! link || ! link.href) return;
+
+    e.preventDefault();
+    loadLeads(link.href);
+});
+
+// ── Per-page selector ─────────────────────────────────────────
+document.addEventListener('change', function (e) {
+    if (e.target.id !== 'perPageSelect') return;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', e.target.value);
+    url.searchParams.delete('page'); // reset to page 1
+    loadLeads(url.toString());
+});
+
 // ── Column sorting ───────────────────────────────────────────
+// Client-side sort of the rows currently on screen. Delegated, so it keeps
+// working after the table is swapped in over AJAX.
 (function () {
     // col index mapping: th data-col maps to the Nth <td> in each row
     // checkbox col is index 0 (skip), then id=0, company=1 … found=5
@@ -791,52 +623,96 @@ if (perPageEl) {
     let sortCol = null;
     let sortDir = 'asc';
 
-    document.querySelectorAll('th.sortable').forEach(function (th) {
-        th.addEventListener('click', function () {
-            const col = parseInt(this.dataset.col);
+    document.addEventListener('click', function (e) {
+        const th = e.target.closest('#leadsTable th.sortable');
+        if (! th) return;
 
-            if (sortCol === col) {
-                sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortCol = col;
-                sortDir = 'asc';
+        const col = parseInt(th.dataset.col);
+
+        if (sortCol === col) {
+            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortCol = col;
+            sortDir = 'asc';
+        }
+
+        // Update header icons
+        document.querySelectorAll('#leadsTable th.sortable').forEach(function (h) {
+            h.classList.remove('sort-asc', 'sort-desc');
+            h.querySelector('.sort-icon').className = 'bi bi-chevron-expand sort-icon text-muted ms-1';
+        });
+        th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+
+        // Sort rows
+        const tbody = document.querySelector('#leadsTable tbody');
+        const rows  = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort(function (a, b) {
+            const tdA = a.querySelectorAll('td')[col + CELL_OFFSET];
+            const tdB = b.querySelectorAll('td')[col + CELL_OFFSET];
+
+            const valA = (tdA ? (tdA.dataset.val || tdA.innerText) : '').trim().toLowerCase();
+            const valB = (tdB ? (tdB.dataset.val || tdB.innerText) : '').trim().toLowerCase();
+
+            // Numeric sort for id and timestamp columns (col 0 and col 5)
+            if (col === 0 || col === 5) {
+                return sortDir === 'asc'
+                    ? parseFloat(valA) - parseFloat(valB)
+                    : parseFloat(valB) - parseFloat(valA);
             }
 
-            // Update header icons
-            document.querySelectorAll('th.sortable').forEach(function (h) {
-                h.classList.remove('sort-asc', 'sort-desc');
-                h.querySelector('.sort-icon').className = 'bi bi-chevron-expand sort-icon text-muted ms-1';
-            });
-            this.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
-
-            // Sort rows
-            const tbody = document.querySelector('#leadsTable tbody');
-            const rows  = Array.from(tbody.querySelectorAll('tr'));
-
-            rows.sort(function (a, b) {
-                const tdA = a.querySelectorAll('td')[col + CELL_OFFSET];
-                const tdB = b.querySelectorAll('td')[col + CELL_OFFSET];
-
-                const valA = (tdA ? (tdA.dataset.val || tdA.innerText) : '').trim().toLowerCase();
-                const valB = (tdB ? (tdB.dataset.val || tdB.innerText) : '').trim().toLowerCase();
-
-                // Numeric sort for id and timestamp columns (col 0 and col 5)
-                if (col === 0 || col === 5) {
-                    return sortDir === 'asc'
-                        ? parseFloat(valA) - parseFloat(valB)
-                        : parseFloat(valB) - parseFloat(valA);
-                }
-
-                // String sort for everything else
-                return sortDir === 'asc'
-                    ? valA.localeCompare(valB)
-                    : valB.localeCompare(valA);
-            });
-
-            rows.forEach(function (row) { tbody.appendChild(row); });
+            // String sort for everything else
+            return sortDir === 'asc'
+                ? valA.localeCompare(valB)
+                : valB.localeCompare(valA);
         });
+
+        rows.forEach(function (row) { tbody.appendChild(row); });
     });
 }());
+
+// ── Select2 + dropdown filters ────────────────────────────────
+// Each .select2 filter carries data-param naming the query string key it drives.
+// Changing one loads the matching page of leads over AJAX (page reset to 1).
+jQuery(function ($) {
+    const $filters = $('#statusFilter, #platformFilter, #categoryFilter');
+
+    // Order matters. Select2 fires a `change` on init while it applies the
+    // placeholder; binding first would let that init event clear the filter the
+    // page was just loaded with. So: initialise first, then bind. The try/catch
+    // keeps the binding happening even if Select2 itself fails to load.
+    try {
+        $filters.each(function () {
+            $(this).select2({
+                width: '100%',
+                minimumResultsForSearch: 5,
+                placeholder: $(this).data('placeholder'),
+                allowClear: false,
+            });
+        });
+    } catch (err) {
+        console.warn('Select2 unavailable - falling back to native selects.', err);
+    }
+
+    $filters.on('select2:select change', function (e) {
+        const select = this;
+        const key    = select.dataset.param;
+        // select2:select carries the chosen item and is authoritative even if the
+        // underlying <select> has not been written yet.
+        const value  = (e && e.params && e.params.data ? e.params.data.id : select.value) || '';
+
+        const url = new URL(window.location.href);
+
+        if (value) {
+            url.searchParams.set(key, value);
+        } else {
+            url.searchParams.delete(key);
+        }
+        url.searchParams.delete('page'); // reset to page 1
+
+        loadLeads(url.toString());
+    });
+});
 
 // ── Spinner on search submit ──────────────────────────────────
 document.getElementById('searchForm').addEventListener('submit', function (e) {
@@ -855,22 +731,33 @@ document.getElementById('searchForm').addEventListener('submit', function (e) {
 
 // ── Live table filter (keyup) ─────────────────────────────────
 document.getElementById('tableFilter').addEventListener('keyup', function () {
-    const term = this.value.toLowerCase().trim();
+    applyLiveFilter(this.value);
+});
+
+function applyLiveFilter(value) {
+    const term = (value || '').toLowerCase().trim();
     document.querySelectorAll('#leadsTable tbody tr').forEach(function (row) {
         const haystack = row.getAttribute('data-search') || '';
         row.classList.toggle('d-none', term !== '' && !haystack.includes(term));
     });
+}
+
+// ── Select all / row checkboxes ───────────────────────────────
+document.addEventListener('change', function (e) {
+    if (e.target.id === 'selectAll') {
+        document.querySelectorAll('.row-check').forEach(cb => cb.checked = e.target.checked);
+        updateBulkToolbar();
+    } else if (e.target.classList.contains('row-check')) {
+        updateBulkToolbar();
+    }
 });
 
-// ── Select all checkbox ───────────────────────────────────────
-document.getElementById('selectAll').addEventListener('change', function () {
-    document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+function resetBulkSelection() {
+    // A freshly swapped table has no rows selected; re-apply the live filter
+    // so a typed search term still narrows the new page.
     updateBulkToolbar();
-});
-
-document.querySelectorAll('.row-check').forEach(cb => {
-    cb.addEventListener('change', updateBulkToolbar);
-});
+    applyLiveFilter(document.getElementById('tableFilter').value);
+}
 
 function updateBulkToolbar() {
     const checked = [...document.querySelectorAll('.row-check:checked')];
@@ -894,14 +781,15 @@ function updateBulkToolbar() {
         });
     } else {
         toolbar.classList.add('d-none');
-        document.getElementById('selectAll').checked = false;
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) selectAll.checked = false;
     }
 }
 
 // ── Load templates into compose dropdown ──────────────────────
 let cachedTemplates = [];
 
-fetch('/api/templates', { headers: { 'Accept': 'application/json' } })
+fetch(leadRoutes.apiTemplates, { headers: { 'Accept': 'application/json' } })
     .then(r => r.json())
     .then(function (templates) {
         cachedTemplates = templates;
@@ -947,7 +835,7 @@ document.getElementById('compose_template').addEventListener('change', function 
 
 // Scrape website in background and silently update client name + any open template body
 function scrapeContactInBackground(leadId, fallbackName) {
-    fetch('/leads/' + leadId + '/scrape-contact', { headers: { 'Accept': 'application/json' } })
+    fetch(leadRoute(leadRoutes.scrapeContact, leadId), { headers: { 'Accept': 'application/json' } })
         .then(r => r.json())
         .then(function (data) {
             if (! data.client_name) return;
@@ -967,12 +855,14 @@ function scrapeContactInBackground(leadId, fallbackName) {
 }
 
 // ── Compose Modal (Gmail-style) ───────────────────────────────
-document.querySelectorAll('.btn-compose').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        const id      = this.dataset.id;
-        const to      = this.dataset.to;
-        const name    = this.dataset.name;
-        const website = this.dataset.website || '';
+// Delegated: row buttons are replaced whenever the table reloads over AJAX.
+document.addEventListener('click', function (event) {
+    const btn = event.target.closest('.btn-compose');
+    if (btn) {
+        const id      = btn.dataset.id;
+        const to      = btn.dataset.to;
+        const name    = btn.dataset.name;
+        const website = btn.dataset.website || '';
 
         currentLeadId      = id;
         currentClientName  = name;
@@ -984,7 +874,7 @@ document.querySelectorAll('.btn-compose').forEach(function (btn) {
         document.getElementById('compose_body').innerHTML        = '';
         document.getElementById('compose_body_hidden').value     = '';
         document.getElementById('compose_template').value        = '';
-        document.getElementById('composeForm').action            = '/send-email/' + id;
+        document.getElementById('composeForm').action            = leadRoute(leadRoutes.sendEmail, id);
         document.getElementById('compose_redirect_back').value   = window.location.search;
 
         // Scrape website in background to get real company name
@@ -998,19 +888,20 @@ document.querySelectorAll('.btn-compose').forEach(function (btn) {
             document.getElementById('compose_subject').focus();
             this.removeEventListener('shown.bs.modal', handler);
         });
-    });
+    }
 });
 
 // ── Show Sent Email Modal ─────────────────────────────────────
-document.querySelectorAll('.btn-show-email').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        const id    = this.dataset.id;
+document.addEventListener('click', function (event) {
+    const btn = event.target.closest('.btn-show-email');
+    if (btn) {
+        const id    = btn.dataset.id;
         const modal = new bootstrap.Modal(document.getElementById('showEmailModal'));
         document.getElementById('showEmailBody').innerHTML =
             '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
         modal.show();
 
-        fetch('/leads/' + id + '/sent-email', { headers: { 'Accept': 'application/json' } })
+        fetch(leadRoute(leadRoutes.sentEmail, id), { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
             .then(function (data) {
                 const email = data.email;
@@ -1025,7 +916,7 @@ document.querySelectorAll('.btn-show-email').forEach(function (btn) {
 
                 if (!email) {
                     document.getElementById('showEmailBody').innerHTML =
-                        '<div class="text-center text-muted py-5"><i class="bi bi-inbox display-5 d-block mb-3"></i>No sent email found.</div>';
+                        '<div class="empty-state"><i class="bi bi-inbox empty-state-icon"></i>No sent email found.</div>';
                     return;
                 }
 
@@ -1048,110 +939,119 @@ document.querySelectorAll('.btn-show-email').forEach(function (btn) {
                     attachments.forEach(function (att) {
                         const ext      = att.name.split('.').pop().toLowerCase();
                         const color    = FILE_ICONS[ext] || '#5f6368';
-                        const dlUrl    = '/leads/attachment/download?path=' + encodeURIComponent(att.path) + '&name=' + encodeURIComponent(att.name);
+                        const dlUrl    = leadRoutes.attachmentDownload
+                            + '?path=' + encodeURIComponent(att.path)
+                            + '&name=' + encodeURIComponent(att.name);
                         attachHtml += `
                             <a href="${dlUrl}" download="${att.name}" class="attach-chip text-decoration-none"
                                title="Download ${att.name}" style="cursor:pointer;">
                                 <i class="bi bi-file-earmark-fill attach-icon" style="color:${color}"></i>
                                 <span class="attach-name">${att.name}</span>
                                 <span class="attach-size">${fmtSize(att.size)}</span>
-                                <i class="bi bi-download ms-1 text-muted" style="font-size:.7rem;"></i>
+                                <i class="bi bi-download ms-1" style="font-size:.7rem;"></i>
                             </a>`;
                     });
                     attachHtml += '</div>';
                 }
 
                 document.getElementById('showEmailBody').innerHTML = `
-                    <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center bg-light">
-                        <span class="text-muted small" style="width:55px">To</span>
-                        <span class="fw-semibold small">${lead.email}</span>
+                    <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center compose-row">
+                        <span class="fs-13 compose-label">To</span>
+                        <span class="fw-semibold">${lead.email}</span>
                     </div>
                     <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center">
-                        <span class="text-muted small" style="width:55px">Subject</span>
+                        <span class="fs-13 compose-label">Subject</span>
                         <span class="fw-semibold">${email.subject}</span>
                     </div>
                     <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center">
-                        <span class="text-muted small" style="width:55px">Sent</span>
-                        <span class="small text-muted">${new Date(email.sent_at).toLocaleString()}</span>
+                        <span class="fs-13 compose-label">Sent</span>
+                        <span class="fs-13">${new Date(email.sent_at).toLocaleString()}</span>
                     </div>
                     <div class="px-3 py-3" style="min-height:120px;white-space:pre-wrap;font-size:.92rem;line-height:1.7;">${email.body}</div>
-                    ${attachments.length > 0 ? '<div class="border-top px-3 pt-2 pb-1 text-muted small"><i class="bi bi-paperclip me-1"></i>' + attachments.length + ' attachment' + (attachments.length > 1 ? 's' : '') + '</div>' + attachHtml : ''}
+                    ${attachments.length > 0 ? '<div class="border-top px-3 pt-2 pb-1 fs-13"><i class="bi bi-paperclip me-1"></i>' + attachments.length + ' attachment' + (attachments.length > 1 ? 's' : '') + '</div>' + attachHtml : ''}
                 `;
             });
-    });
+    }
 });
 
 // ── View Modal ────────────────────────────────────────────────
-document.querySelectorAll('.btn-view').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        const id    = this.dataset.id;
+document.addEventListener('click', function (event) {
+    const btn = event.target.closest('.btn-view');
+    if (btn) {
+        const id    = btn.dataset.id;
         const modal = new bootstrap.Modal(document.getElementById('viewModal'));
         document.getElementById('viewModalBody').innerHTML =
             '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
         modal.show();
 
-        fetch('/leads/' + id, { headers: { 'Accept': 'application/json' } })
+        fetch(leadRoute(leadRoutes.show, id), { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
             .then(function (lead) {
-                const statusColors = { new: 'secondary', sent: 'primary', failed: 'danger', replied: 'success' };
-                const color        = statusColors[lead.status] || 'secondary';
+                const statusBadges = {
+                    new:     'badge-secondary',
+                    sent:    'badge-primary',
+                    failed:  'badge-danger',
+                    replied: 'badge-success',
+                };
+                const badgeClass   = statusBadges[lead.status] || 'badge-secondary';
                 const platformName = lead.platform  ? lead.platform.name  : '—';
                 const categoryName = lead.category  ? lead.category.name  : '—';
                 document.getElementById('viewModalBody').innerHTML = `
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <p class="text-muted small mb-1">Platform</p>
-                            <p class="fw-semibold">${platformName}</p>
+                            <p class="fs-13 mb-1">Platform</p>
+                            <h6 class="mb-0">${platformName}</h6>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-muted small mb-1">Status</p>
-                            <span class="badge bg-${color} text-white">${lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</span>
+                            <p class="fs-13 mb-1">Status</p>
+                            <span class="badge ${badgeClass} light">${lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</span>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-muted small mb-1">Company Name</p>
-                            <p class="fw-semibold">${lead.company_name}</p>
+                            <p class="fs-13 mb-1">Company Name</p>
+                            <h6 class="mb-0">${lead.company_name}</h6>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-muted small mb-1">Website</p>
-                            <a href="${lead.website}" target="_blank" class="text-decoration-none">
+                            <p class="fs-13 mb-1">Website</p>
+                            <a href="${lead.website}" target="_blank" rel="noopener" class="text-primary">
                                 <i class="bi bi-box-arrow-up-right me-1"></i>${lead.website}
                             </a>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-muted small mb-1">LinkedIn</p>
+                            <p class="fs-13 mb-1">LinkedIn</p>
                             ${lead.linkedin
-                                ? `<a href="${lead.linkedin}" target="_blank" class="text-decoration-none">${lead.linkedin}</a>`
-                                : '<span class="text-muted fst-italic">—</span>'}
+                                ? `<a href="${lead.linkedin}" target="_blank" rel="noopener" class="text-primary">${lead.linkedin}</a>`
+                                : '<span class="fst-italic">—</span>'}
                         </div>
                         <div class="col-md-6">
-                            <p class="text-muted small mb-1">Email</p>
+                            <p class="fs-13 mb-1">Email</p>
                             ${lead.email
-                                ? `<a href="mailto:${lead.email}" class="text-decoration-none">${lead.email}</a>`
-                                : '<span class="text-muted fst-italic">Not found</span>'}
+                                ? `<a href="mailto:${lead.email}" class="text-primary">${lead.email}</a>`
+                                : '<span class="fst-italic">Not found</span>'}
                         </div>
                         <div class="col-md-6">
-                            <p class="text-muted small mb-1">Category</p>
-                            <p class="fw-semibold">${categoryName}</p>
+                            <p class="fs-13 mb-1">Category</p>
+                            <h6 class="mb-0">${categoryName}</h6>
                         </div>
                         <div class="col-md-6">
-                            <p class="text-muted small mb-1">Created</p>
-                            <p>${new Date(lead.created_at).toLocaleString()}</p>
+                            <p class="fs-13 mb-1">Created</p>
+                            <span>${new Date(lead.created_at).toLocaleString()}</span>
                         </div>
                     </div>`;
             });
-    });
+    }
 });
 
 // ── Edit Modal ────────────────────────────────────────────────
-document.querySelectorAll('.btn-edit').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        const id    = this.dataset.id;
+document.addEventListener('click', function (event) {
+    const btn = event.target.closest('.btn-edit');
+    if (btn) {
+        const id    = btn.dataset.id;
         const modal = new bootstrap.Modal(document.getElementById('editModal'));
 
-        fetch('/leads/' + id + '/edit', { headers: { 'Accept': 'application/json' } })
+        fetch(leadRoute(leadRoutes.edit, id), { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
             .then(function (lead) {
-                document.getElementById('editForm').action = '/leads/' + lead.id;
+                document.getElementById('editForm').action = leadRoute(leadRoutes.update, lead.id);
                 document.getElementById('edit_company_name').value  = lead.company_name || '';
                 document.getElementById('edit_website').value       = lead.website      || '';
                 document.getElementById('edit_email').value         = lead.email        || '';
@@ -1162,7 +1062,7 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
                 document.getElementById('edit_redirect_back').value = window.location.search;
                 modal.show();
             });
-    });
+    }
 });
 
 // ── Gmail-style Attachment Upload ─────────────────────────────
@@ -1218,7 +1118,7 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
                 <i class="bi ${ic.icon} attach-icon" style="color:${ic.color}"></i>
                 <span class="attach-name">${att.name}</span>
                 <span class="attach-size">${formatSize(att.size)}</span>
-                <span class="badge bg-secondary ms-1" style="font-size:.6rem;">tpl</span>
+                <span class="badge badge-secondary light badge-xs ms-1">tpl</span>
                 <span class="attach-remove" data-tpl-idx="${idx}" title="Remove">&#x2715;</span>
             `;
             list.appendChild(chip);
@@ -1326,7 +1226,7 @@ document.querySelectorAll('.btn-edit').forEach(function (btn) {
         })
         .then(function (res) {
             if (res.ok || res.redirected) {
-                window.location.href = res.redirected ? res.url : '/';
+                window.location.href = res.redirected ? res.url : leadRoutes.index;
             } else {
                 throw new Error('Server error: ' + res.status);
             }

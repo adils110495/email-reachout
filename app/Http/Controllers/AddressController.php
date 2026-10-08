@@ -2,17 +2,64 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\RedirectsBack;
 use App\Models\Address;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AddressController extends Controller
 {
-    public function index(): View
+    use ExportsCsv;
+    use RedirectsBack;
+
+    public function index(Request $request): View
     {
-        $addresses = Address::latest()->get();
-        return view('addresses.index', compact('addresses'));
+        $statusOptions = [
+            'active'   => 'Active',
+            'inactive' => 'Inactive',
+        ];
+
+        $query = Address::latest();
+
+        // Status is a URL-driven filter, same as the Leads page.
+        if ($request->filled('status') && array_key_exists($request->status, $statusOptions)) {
+            $query->where('status', $request->status);
+        }
+
+        $addresses    = $query->get();
+        $activeStatus = $request->input('status');
+
+        $data = compact('addresses', 'activeStatus', 'statusOptions');
+
+        // A filter change fetches just the table partial so the page swaps it
+        // in without a full reload.
+        if ($request->ajax()) {
+            return view('addresses._table', $data);
+        }
+
+        return view('addresses.index', $data);
+    }
+
+    public function export(): StreamedResponse
+    {
+        return $this->streamCsv(
+            'addresses',
+            ['ID', 'Address', 'Email', 'Phone', 'Alternate Phone', 'Website', 'Status', 'Created At'],
+            Address::latest()->get(),
+            fn (Address $address) => [
+                $address->id,
+                $address->address,
+                $address->email,
+                $address->phone,
+                $address->alternate_phone,
+                $address->website,
+                $address->status,
+                $address->created_at->toDateTimeString(),
+            ],
+        );
     }
 
     public function store(Request $request): RedirectResponse
@@ -28,7 +75,7 @@ class AddressController extends Controller
 
         Address::create($request->only('address', 'email', 'phone', 'alternate_phone', 'website', 'status'));
 
-        return redirect()->route('addresses.index')->with('success', 'Address added successfully.');
+        return redirect()->route('addresses.index', $this->redirectQuery($request))->with('success', 'Address added successfully.');
     }
 
     public function update(Request $request, int $id): RedirectResponse
@@ -44,13 +91,13 @@ class AddressController extends Controller
 
         Address::findOrFail($id)->update($request->only('address', 'email', 'phone', 'alternate_phone', 'website', 'status'));
 
-        return redirect()->route('addresses.index')->with('success', 'Address updated successfully.');
+        return redirect()->route('addresses.index', $this->redirectQuery($request))->with('success', 'Address updated successfully.');
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function destroy(Request $request, int $id): RedirectResponse
     {
         Address::findOrFail($id)->delete();
 
-        return redirect()->route('addresses.index')->with('success', 'Address deleted.');
+        return redirect()->route('addresses.index', $this->redirectQuery($request))->with('success', 'Address deleted.');
     }
 }

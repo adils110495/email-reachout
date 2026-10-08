@@ -1,6 +1,6 @@
 <div class="row g-3">
     <div class="col-md-6">
-        <label class="form-label fw-semibold">Template Name <span class="text-danger">*</span></label>
+        <label class="form-label">Template Name <span class="text-danger">*</span></label>
         <input type="text" name="name" class="form-control <?php $__errorArgs = ['name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -21,7 +21,7 @@ unset($__errorArgs, $__bag); ?>
     </div>
 
     <div class="col-md-6">
-        <label class="form-label fw-semibold">Subject <span class="text-danger">*</span></label>
+        <label class="form-label">Subject <span class="text-danger">*</span></label>
         <input type="text" name="subject" class="form-control <?php $__errorArgs = ['subject'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -42,10 +42,10 @@ unset($__errorArgs, $__bag); ?>
     </div>
 
     <div class="col-12">
-        <label class="form-label fw-semibold">Body <span class="text-danger">*</span></label>
+        <label class="form-label">Body <span class="text-danger">*</span></label>
 
         
-        <div id="quill-wrapper" style="border:1px solid #dee2e6;border-radius:.375rem;background:#fff;overflow:hidden;height:280px;">
+        <div id="quill-wrapper">
             <div id="quill-editor" style="height:100%;"></div>
         </div>
 
@@ -62,7 +62,7 @@ unset($__errorArgs, $__bag); ?>"><?php echo e(old('body', $template->body ?? '')
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><div class="text-danger small mt-1"><?php echo e($message); ?></div><?php unset($message);
+$message = $__bag->first($__errorArgs[0]); ?><div class="text-danger fs-13 mt-1"><?php echo e($message); ?></div><?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
@@ -70,18 +70,18 @@ unset($__errorArgs, $__bag); ?>
 
     
     <div class="col-12">
-        <label class="form-label fw-semibold">Attachments <span class="text-muted fw-normal small">(optional, max 10 MB each)</span></label>
+        <label class="form-label">Attachments <span class="text-muted fw-normal fs-13">(optional, max 10 MB each)</span></label>
 
         
         <?php if(!empty($template->attachments)): ?>
             <div class="d-flex flex-wrap gap-2 mb-2" id="existingAttachments">
                 <?php $__currentLoopData = $template->attachments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $att): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <div class="d-flex align-items-center gap-1 px-2 py-1 rounded border bg-white small" id="att-chip-<?php echo e($loop->index); ?>">
-                        <i class="bi bi-paperclip text-muted"></i>
-                        <span><?php echo e($att['name']); ?></span>
-                        <span class="text-muted">(<?php echo e(number_format($att['size'] / 1024, 1)); ?> KB)</span>
-                        <button type="button" class="btn-close btn-close-sm ms-1" style="font-size:.6rem;"
-                            onclick="removeExistingAttachment('<?php echo e($att['path']); ?>', 'att-chip-<?php echo e($loop->index); ?>')"></button>
+                    <div class="attach-chip" id="att-chip-<?php echo e($loop->index); ?>" title="<?php echo e($att['name']); ?>">
+                        <i class="bi bi-paperclip attach-icon"></i>
+                        <span class="attach-name"><?php echo e($att['name']); ?></span>
+                        <span class="attach-size"><?php echo e(number_format($att['size'] / 1024, 1)); ?> KB</span>
+                        <span class="attach-remove" role="button" title="Remove"
+                            onclick="removeExistingAttachment('<?php echo e($att['path']); ?>', 'att-chip-<?php echo e($loop->index); ?>')">&#x2715;</span>
                         <input type="hidden" name="keep_attachments[]" value="<?php echo e($att['path']); ?>" id="keep-<?php echo e($loop->index); ?>">
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -90,7 +90,7 @@ unset($__errorArgs, $__bag); ?>
 
         
         <div class="d-flex align-items-center gap-2">
-            <label for="tplAttachInput" class="btn btn-sm btn-outline-secondary mb-0" style="cursor:pointer;">
+            <label for="tplAttachInput" class="btn btn-light btn-sm mb-0" style="cursor:pointer;">
                 <i class="bi bi-paperclip me-1"></i>Add Files
             </label>
             <input type="file" id="tplAttachInput" name="attachments[]" multiple class="d-none" accept="*/*">
@@ -117,11 +117,12 @@ unset($__errorArgs, $__bag); ?>
         list.innerHTML = '';
         files.forEach(function (f, i) {
             const chip = document.createElement('div');
-            chip.className = 'd-flex align-items-center gap-1 px-2 py-1 rounded border bg-white small';
-            chip.innerHTML = `<i class="bi bi-paperclip text-muted"></i>
-                <span>${f.name}</span>
-                <span class="text-muted">(${formatSize(f.size)})</span>
-                <button type="button" class="btn-close btn-close-sm ms-1" style="font-size:.6rem;" data-idx="${i}"></button>`;
+            chip.className = 'attach-chip';
+            chip.title     = f.name;
+            chip.innerHTML = `<i class="bi bi-paperclip attach-icon"></i>
+                <span class="attach-name">${f.name}</span>
+                <span class="attach-size">${formatSize(f.size)}</span>
+                <span class="attach-remove" role="button" data-idx="${i}" title="Remove">&#x2715;</span>`;
             chip.querySelector('[data-idx]').addEventListener('click', function () {
                 files.splice(parseInt(this.dataset.idx), 1);
                 render();

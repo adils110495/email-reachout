@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ScrapeLeadEmailJob;
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Jobs\FindLeadsJob;
 use App\Mail\OutreachMail;
 use App\Models\Address;
 use App\Models\Category;
@@ -13,7 +14,6 @@ use App\Services\AIService;
 use App\Services\EmailExtractorService;
 use App\Services\EmailSenderService;
 use App\Services\ImapService;
-use App\Services\LeadFinderService;
 use App\Services\ScraperService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,8 +24,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LeadController extends Controller
 {
+    use ExportsCsv;
+
     public function __construct(
-        private readonly LeadFinderService $leadFinder,
         private readonly ScraperService $scraper,
         private readonly EmailExtractorService $emailExtractor,
         private readonly AIService $aiService,
@@ -52,6 +53,10 @@ class LeadController extends Controller
             $query->where('category_id', (int) $request->category);
         }
 
+        if ($request->filled('platform') && is_numeric($request->platform)) {
+            $query->where('platform_id', (int) $request->platform);
+        }
+
         $leads      = $query->paginate($perPage)->withQueryString();
         $platforms  = Platform::active()->orderBy('name')->get();
         $categories = Category::active()->orderBy('name')->get();
@@ -62,10 +67,20 @@ class LeadController extends Controller
             ? $categories->firstWhere('id', (int) $activeCategory)
             : null;
 
+        $activePlatform = $request->input('platform');
+
         $senderName    = env('SENDER_NAME', 'Sales Team');
         $senderCompany = env('SENDER_COMPANY', 'Our Company');
 
-        return view('leads.index', compact('leads', 'platforms', 'categories', 'addresses', 'activeCategory', 'activeCatObj', 'senderName', 'senderCompany'));
+        $data = compact('leads', 'platforms', 'categories', 'addresses', 'activeCategory', 'activeCatObj', 'activePlatform', 'senderName', 'senderCompany');
+
+        // Filter / paginate / per-page changes fetch just the table partial so
+        // the page swaps it in without a full reload.
+        if ($request->ajax()) {
+            return view('leads._table', $data);
+        }
+
+        return view('leads.index', $data);
     }
 
     public function store(Request $request): RedirectResponse
@@ -108,40 +123,19 @@ class LeadController extends Controller
         $keyword    = $request->input('keyword');
         $categoryId = (int) $request->input('search_category');
 
-        // 1. Fetch results from SerpAPI — pass env-configured country/language/limit
-        $results = $this->leadFinder->find(
-            keyword:  $keyword,
-            country:  env('LEAD_COUNTRY',  null) ?: null,
-            language: env('LEAD_LANGUAGE', null) ?: null,
-        );
-
-        $newLeadsCount = 0;
-        $googlePlatform = Platform::where('name', 'Google')->first();
-
-        foreach ($results as $result) {
-            // Skip duplicates
-            if (Lead::where('website', $result['url'])->exists()) {
-                continue;
-            }
-
-            // 2. Save lead immediately (no scraping yet)
-            $lead = Lead::create([
-                'company_name' => $result['title'],
-                'website'      => $result['url'],
-                'email'        => null,
-                'status'       => Lead::STATUS_NEW,
-                'platform_id'  => $googlePlatform?->id,
-                'category_id'  => $categoryId,
-            ]);
-
-            // 3. Dispatch background job to scrape email (non-blocking)
-            ScrapeLeadEmailJob::dispatch($lead)->onQueue('default');
-
-            $newLeadsCount++;
-        }
+        // The SerpAPI call and the lead inserts run on the queue so the request
+        // returns straight away. env() is read here, not in the job, because it is
+        // unreliable in a worker once config is cached.
+        FindLeadsJob::dispatch(
+            keyword:    $keyword,
+            categoryId: $categoryId,
+            country:    env('LEAD_COUNTRY',  null) ?: null,
+            language:   env('LEAD_LANGUAGE', null) ?: null,
+        )->onQueue('default');
 
         return redirect()->route('leads.index', ['category' => $categoryId])
-            ->with('success', "Found {$newLeadsCount} new leads for \"{$keyword}\". Emails are being extracted in the background.");
+            ->with('success', "Searching for \"{$keyword}\" in the background. New leads will appear here as they are found.")
+            ->with('search_queued', true);
     }
 
     /**
@@ -288,7 +282,10 @@ class LeadController extends Controller
         }
 
         try {
-            $html = $this->scraper->fetch($lead->website);
+            // Homepage only: everything read below (og:site_name, <title>) lives
+            // there, so contact/about/careers pages would be requests thrown away.
+            // Budgeted because this runs inside a web request.
+            $html = $this->scraper->fetch($lead->website, budgetSeconds: 12.0, maxExtraPages: 0);
 
             // Try og:site_name first (most reliable)
             if (preg_match('/<meta[^>]+property=["\']og:site_name["\'][^>]+content=["\'](.*?)["\']/i', $html, $m)) {
@@ -465,34 +462,19 @@ class LeadController extends Controller
      */
     public function export(): StreamedResponse
     {
-        $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="leads_' . now()->format('Y-m-d') . '.csv"',
-        ];
-
-        $leads = Lead::orderBy('created_at', 'desc')->get();
-
-        $callback = function () use ($leads) {
-            $handle = fopen('php://output', 'w');
-
-            // CSV header row
-            fputcsv($handle, ['ID', 'Company Name', 'Website', 'Email', 'LinkedIn', 'Status', 'Created At']);
-
-            foreach ($leads as $lead) {
-                fputcsv($handle, [
-                    $lead->id,
-                    $lead->company_name,
-                    $lead->website,
-                    $lead->email,
-                    $lead->linkedin,
-                    $lead->status,
-                    $lead->created_at->toDateTimeString(),
-                ]);
-            }
-
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return $this->streamCsv(
+            'leads',
+            ['ID', 'Company Name', 'Website', 'Email', 'LinkedIn', 'Status', 'Created At'],
+            Lead::orderBy('created_at', 'desc')->get(),
+            fn (Lead $lead) => [
+                $lead->id,
+                $lead->company_name,
+                $lead->website,
+                $lead->email,
+                $lead->linkedin,
+                $lead->status,
+                $lead->created_at->toDateTimeString(),
+            ],
+        );
     }
 }

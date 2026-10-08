@@ -1,10 +1,14 @@
 <?php
 
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\BulkController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailTemplateController;
+use App\Http\Controllers\FinderController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PlatformController;
+use App\Http\Controllers\VerifierController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,8 +17,37 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Dashboard
-Route::get('/', [LeadController::class, 'index'])->name('leads.index');
+// Dashboard — the landing page
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+Route::get('/dashboard/stats', [DashboardController::class, 'stats'])->name('dashboard.stats');
+
+// Finder — search the lead database and discover new addresses
+Route::get('/finder',         [FinderController::class, 'index'])->name('finder.index');
+Route::get('/finder/export',  [FinderController::class, 'export'])->name('finder.export');
+Route::post('/finder/search', [FinderController::class, 'search'])->name('finder.search');
+Route::post('/finder/save',   [FinderController::class, 'store'])->name('finder.store');
+
+// Verifier — check deliverability
+Route::get('/verifier',              [VerifierController::class, 'index'])->name('verifier.index');
+Route::get('/verifier/export',       [VerifierController::class, 'export'])->name('verifier.export');
+Route::post('/verifier/verify',      [VerifierController::class, 'verify'])->name('verifier.verify');
+Route::post('/verifier/verify-many', [VerifierController::class, 'verifyMany'])->name('verifier.verify-many');
+Route::post('/verifier/clear',       [VerifierController::class, 'clear'])->name('verifier.clear');
+Route::delete('/verifier/{id}',      [VerifierController::class, 'destroy'])->name('verifier.destroy')->whereNumber('id');
+
+// Bulks — CSV-driven verification / discovery
+Route::get('/bulks',                  [BulkController::class, 'index'])->name('bulks.index');
+Route::post('/bulks',                 [BulkController::class, 'store'])->name('bulks.store');
+Route::get('/bulks/{id}',             [BulkController::class, 'show'])->name('bulks.show')->whereNumber('id');
+Route::get('/bulks/{id}/status',      [BulkController::class, 'status'])->name('bulks.status')->whereNumber('id');
+Route::get('/bulks/{id}/export',      [BulkController::class, 'export'])->name('bulks.export')->whereNumber('id');
+Route::post('/bulks/{id}/cancel',     [BulkController::class, 'cancel'])->name('bulks.cancel')->whereNumber('id');
+Route::post('/bulks/{id}/retry',      [BulkController::class, 'retry'])->name('bulks.retry')->whereNumber('id');
+Route::delete('/bulks/{id}',          [BulkController::class, 'destroy'])->name('bulks.destroy')->whereNumber('id');
+
+// Leads
+Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
 
 // Search / find leads
 Route::post('/search', [LeadController::class, 'search'])->name('leads.search');
@@ -58,6 +91,7 @@ Route::post('/leads/bulk-status', [LeadController::class, 'bulkStatus'])->name('
 Route::get('/export', [LeadController::class, 'export'])->name('leads.export');
 
 // Settings — Email Templates CRUD
+Route::get('/settings/templates/export',    [EmailTemplateController::class, 'export'])->name('templates.export');
 Route::get('/settings/templates',           [EmailTemplateController::class, 'index'])->name('templates.index');
 Route::get('/settings/templates/create',    [EmailTemplateController::class, 'create'])->name('templates.create');
 Route::post('/settings/templates',          [EmailTemplateController::class, 'store'])->name('templates.store');
@@ -67,18 +101,21 @@ Route::delete('/settings/templates/{id}',   [EmailTemplateController::class, 'de
 Route::post('/settings/templates/{id}/toggle', [EmailTemplateController::class, 'toggleStatus'])->name('templates.toggle');
 
 // Platforms CRUD
+Route::get('/settings/platforms/export',   [PlatformController::class, 'export'])->name('platforms.export');
 Route::get('/settings/platforms',          [PlatformController::class, 'index'])->name('platforms.index');
 Route::post('/settings/platforms',         [PlatformController::class, 'store'])->name('platforms.store');
 Route::put('/settings/platforms/{id}',     [PlatformController::class, 'update'])->name('platforms.update');
 Route::delete('/settings/platforms/{id}',  [PlatformController::class, 'destroy'])->name('platforms.destroy');
 
 // Categories CRUD
+Route::get('/settings/categories/export',  [CategoryController::class, 'export'])->name('categories.export');
 Route::get('/settings/categories',         [CategoryController::class, 'index'])->name('categories.index');
 Route::post('/settings/categories',        [CategoryController::class, 'store'])->name('categories.store');
 Route::put('/settings/categories/{id}',    [CategoryController::class, 'update'])->name('categories.update');
 Route::delete('/settings/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
 // Addresses CRUD
+Route::get('/settings/addresses/export',   [AddressController::class, 'export'])->name('addresses.export');
 Route::get('/settings/addresses',          [AddressController::class, 'index'])->name('addresses.index');
 Route::post('/settings/addresses',         [AddressController::class, 'store'])->name('addresses.store');
 Route::put('/settings/addresses/{id}',     [AddressController::class, 'update'])->name('addresses.update');

@@ -19,6 +19,12 @@ class ScrapeLeadEmailJob implements ShouldQueue
     public int $tries   = 2;
     public int $timeout = 60;
 
+    /**
+     * Wall-clock budget for the scrape, kept clear of $timeout so the job can
+     * still record its result if every page it tries times out.
+     */
+    private const SCRAPE_BUDGET = 45.0;
+
     public function __construct(public readonly Lead $lead) {}
 
     public function handle(ScraperService $scraper, EmailExtractorService $extractor): void
@@ -28,7 +34,7 @@ class ScrapeLeadEmailJob implements ShouldQueue
             return;
         }
 
-        $html   = $scraper->fetch($this->lead->website);
+        $html   = $scraper->fetch($this->lead->website, self::SCRAPE_BUDGET);
         $emails = $extractor->extract($html);
 
         if (! empty($emails)) {

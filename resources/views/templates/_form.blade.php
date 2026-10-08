@@ -1,45 +1,45 @@
 <div class="row g-3">
     <div class="col-md-6">
-        <label class="form-label fw-semibold">Template Name <span class="text-danger">*</span></label>
+        <label class="form-label">Template Name <span class="text-danger">*</span></label>
         <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
             value="{{ old('name', $template->name ?? '') }}" placeholder="e.g. Cold Outreach v1" required>
         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 
     <div class="col-md-6">
-        <label class="form-label fw-semibold">Subject <span class="text-danger">*</span></label>
+        <label class="form-label">Subject <span class="text-danger">*</span></label>
         <input type="text" name="subject" class="form-control @error('subject') is-invalid @enderror"
             value="{{ old('subject', $template->subject ?? '') }}" placeholder="Email subject line" required>
         @error('subject')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 
     <div class="col-12">
-        <label class="form-label fw-semibold">Body <span class="text-danger">*</span></label>
+        <label class="form-label">Body <span class="text-danger">*</span></label>
 
         {{-- Quill rich text editor --}}
-        <div id="quill-wrapper" style="border:1px solid #dee2e6;border-radius:.375rem;background:#fff;overflow:hidden;height:280px;">
+        <div id="quill-wrapper">
             <div id="quill-editor" style="height:100%;"></div>
         </div>
 
         {{-- Hidden textarea that holds the HTML for form submission --}}
         <textarea name="body" id="body-input" class="d-none @error('body') is-invalid @enderror">{{ old('body', $template->body ?? '') }}</textarea>
-        @error('body')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+        @error('body')<div class="text-danger fs-13 mt-1">{{ $message }}</div>@enderror
     </div>
 
     {{-- Attachments --}}
     <div class="col-12">
-        <label class="form-label fw-semibold">Attachments <span class="text-muted fw-normal small">(optional, max 10 MB each)</span></label>
+        <label class="form-label">Attachments <span class="text-muted fw-normal fs-13">(optional, max 10 MB each)</span></label>
 
         {{-- Existing attachments (edit mode) --}}
         @if (!empty($template->attachments))
             <div class="d-flex flex-wrap gap-2 mb-2" id="existingAttachments">
                 @foreach ($template->attachments as $att)
-                    <div class="d-flex align-items-center gap-1 px-2 py-1 rounded border bg-white small" id="att-chip-{{ $loop->index }}">
-                        <i class="bi bi-paperclip text-muted"></i>
-                        <span>{{ $att['name'] }}</span>
-                        <span class="text-muted">({{ number_format($att['size'] / 1024, 1) }} KB)</span>
-                        <button type="button" class="btn-close btn-close-sm ms-1" style="font-size:.6rem;"
-                            onclick="removeExistingAttachment('{{ $att['path'] }}', 'att-chip-{{ $loop->index }}')"></button>
+                    <div class="attach-chip" id="att-chip-{{ $loop->index }}" title="{{ $att['name'] }}">
+                        <i class="bi bi-paperclip attach-icon"></i>
+                        <span class="attach-name">{{ $att['name'] }}</span>
+                        <span class="attach-size">{{ number_format($att['size'] / 1024, 1) }} KB</span>
+                        <span class="attach-remove" role="button" title="Remove"
+                            onclick="removeExistingAttachment('{{ $att['path'] }}', 'att-chip-{{ $loop->index }}')">&#x2715;</span>
                         <input type="hidden" name="keep_attachments[]" value="{{ $att['path'] }}" id="keep-{{ $loop->index }}">
                     </div>
                 @endforeach
@@ -48,7 +48,7 @@
 
         {{-- New file picker --}}
         <div class="d-flex align-items-center gap-2">
-            <label for="tplAttachInput" class="btn btn-sm btn-outline-secondary mb-0" style="cursor:pointer;">
+            <label for="tplAttachInput" class="btn btn-light btn-sm mb-0" style="cursor:pointer;">
                 <i class="bi bi-paperclip me-1"></i>Add Files
             </label>
             <input type="file" id="tplAttachInput" name="attachments[]" multiple class="d-none" accept="*/*">
@@ -75,11 +75,12 @@
         list.innerHTML = '';
         files.forEach(function (f, i) {
             const chip = document.createElement('div');
-            chip.className = 'd-flex align-items-center gap-1 px-2 py-1 rounded border bg-white small';
-            chip.innerHTML = `<i class="bi bi-paperclip text-muted"></i>
-                <span>${f.name}</span>
-                <span class="text-muted">(${formatSize(f.size)})</span>
-                <button type="button" class="btn-close btn-close-sm ms-1" style="font-size:.6rem;" data-idx="${i}"></button>`;
+            chip.className = 'attach-chip';
+            chip.title     = f.name;
+            chip.innerHTML = `<i class="bi bi-paperclip attach-icon"></i>
+                <span class="attach-name">${f.name}</span>
+                <span class="attach-size">${formatSize(f.size)}</span>
+                <span class="attach-remove" role="button" data-idx="${i}" title="Remove">&#x2715;</span>`;
             chip.querySelector('[data-idx]').addEventListener('click', function () {
                 files.splice(parseInt(this.dataset.idx), 1);
                 render();

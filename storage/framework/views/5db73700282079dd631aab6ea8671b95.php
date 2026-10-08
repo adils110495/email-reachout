@@ -1,6 +1,7 @@
 <?php if($paginator->hasPages()): ?>
 <nav aria-label="Pagination">
-    <ul class="pagination pagination-sm mb-0">
+    
+    <ul class="pagination pagination-sm pagination-gutter pagination-primary no-bg mb-0">
 
         
         <?php if($paginator->onFirstPage()): ?>

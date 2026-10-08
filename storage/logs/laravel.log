@@ -1,627 +1,325 @@
-[2026-05-16 12:47:24] local.INFO: LeadFinderService: searching {"keyword":"Web Design","limit":25,"country":"global","language":"any"} 
-[2026-05-16 12:47:32] local.INFO: LeadFinderService: done {"found":25} 
-[2026-05-16 12:47:55] local.INFO: LeadFinderService: searching {"keyword":"Software Development","limit":25,"country":"global","language":"any"} 
-[2026-05-16 12:48:06] local.INFO: LeadFinderService: done {"found":25} 
-[2026-05-16 12:48:18] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":125,"email":"sales@bizinforusa.com"} 
-[2026-05-16 12:48:22] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":126,"email":"aparna.epiceasyeats@wearelit.co"} 
-[2026-05-16 12:48:25] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":127,"email":"info@usdsoftware.com"} 
-[2026-05-16 12:48:27] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":128,"email":"team@sdi.la"} 
-[2026-05-16 12:48:28] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212` resulted in a `403 Forbidden` response:
-<!DOCTYPE html><html lang=\"en-US\"><head><title>Just a moment...</title><meta http-equiv=\"Content-Type\" content=\"text/htm (truncated...)
+[2026-08-26 12:28:13] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://posticy.com/contact-us","error":"Client error: `GET https://posticy.com/contact-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-GB\">
+<head>
+
+<script type=\"application/ld+json\">
+{
+  \"@context\": \"https://schema.org/\",
+  (truncated...)
 "} 
-[2026-05-16 12:48:29] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/contact","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/contact` resulted in a `404 Not Found` response:
+[2026-08-26 12:28:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://posticy.com/about-us","error":"Client error: `GET https://posticy.com/about-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-GB\">
+<head>
+
+<script type=\"application/ld+json\">
+{
+  \"@context\": \"https://schema.org/\",
+  (truncated...)
+"} 
+[2026-08-26 12:28:18] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://posticy.com/team","error":"Client error: `GET https://posticy.com/team` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-GB\">
+<head>
+
+<script type=\"application/ld+json\">
+{
+  \"@context\": \"https://schema.org/\",
+  (truncated...)
+"} 
+[2026-08-26 12:28:20] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://posticy.com/careers","error":"Client error: `GET https://posticy.com/careers` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-GB\">
+<head>
+
+<script type=\"application/ld+json\">
+{
+  \"@context\": \"https://schema.org/\",
+  (truncated...)
+"} 
+[2026-08-26 12:28:21] local.INFO: EmailFinderService: first pass {"domain":"posticy.com","entry":"https://posticy.com","html_bytes":1893246,"all_emails":0,"on_domain":0} 
+[2026-08-26 12:28:26] local.INFO: EmailFinderService: followed links {"domain":"posticy.com","round":1,"links":["https://posticy.com/imprint","https://posticy.com/career/publisher-outreach-and-verification-manager","https://posticy.com/career/client-growth-manager"],"html_bytes":3265159,"all_emails":1,"found":1} 
+[2026-08-26 12:29:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://enginorix.com/contact","error":"Client error: `GET https://enginorix.com/contact` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-us\"
+    prefix=\"content: http://purl.org/rss/1.0/modules/content/ dc: http://purl.org/dc/ (truncated...)
+"} 
+[2026-08-26 12:29:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://enginorix.com/contact-us","error":"Client error: `GET https://enginorix.com/contact-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-us\"
+    prefix=\"content: http://purl.org/rss/1.0/modules/content/ dc: http://purl.org/dc/ (truncated...)
+"} 
+[2026-08-26 12:29:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://enginorix.com/about","error":"Client error: `GET https://enginorix.com/about` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-us\"
+    prefix=\"content: http://purl.org/rss/1.0/modules/content/ dc: http://purl.org/dc/ (truncated...)
+"} 
+[2026-08-26 12:29:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://enginorix.com/about-us","error":"Client error: `GET https://enginorix.com/about-us` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-us\"
+    prefix=\"content: http://purl.org/rss/1.0/modules/content/ dc: http://purl.org/dc/ (truncated...)
+"} 
+[2026-08-26 12:29:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://enginorix.com/team","error":"Client error: `GET https://enginorix.com/team` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-us\"
+    prefix=\"content: http://purl.org/rss/1.0/modules/content/ dc: http://purl.org/dc/ (truncated...)
+"} 
+[2026-08-26 12:29:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://enginorix.com/careers","error":"Client error: `GET https://enginorix.com/careers` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-us\"
+    prefix=\"content: http://purl.org/rss/1.0/modules/content/ dc: http://purl.org/dc/ (truncated...)
+"} 
+[2026-08-26 12:29:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://enginorix.com/career","error":"Client error: `GET https://enginorix.com/career` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-us\"
+    prefix=\"content: http://purl.org/rss/1.0/modules/content/ dc: http://purl.org/dc/ (truncated...)
+"} 
+[2026-08-26 12:29:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://enginorix.com/jobs","error":"Client error: `GET https://enginorix.com/jobs` resulted in a `404 Not Found` response:
+<!DOCTYPE html>
+<html lang=\"en-us\"
+    prefix=\"content: http://purl.org/rss/1.0/modules/content/ dc: http://purl.org/dc/ (truncated...)
+"} 
+[2026-08-26 12:29:50] local.INFO: EmailFinderService: first pass {"domain":"enginorix.com","entry":"https://enginorix.com","html_bytes":26059,"all_emails":1,"on_domain":1} 
+[2026-08-26 12:32:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://dka.pw/contact","error":"Client error: `GET https://dka.pw/contact` resulted in a `404 Not Found` response:
+<html>
+<head>
+    <style>
+        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 5 (truncated...)
+"} 
+[2026-08-26 12:32:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://dka.pw/contact-us","error":"Client error: `GET https://dka.pw/contact-us` resulted in a `404 Not Found` response:
+<html>
+<head>
+    <style>
+        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 5 (truncated...)
+"} 
+[2026-08-26 12:32:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://dka.pw/about","error":"Client error: `GET https://dka.pw/about` resulted in a `404 Not Found` response:
+<html>
+<head>
+    <style>
+        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 5 (truncated...)
+"} 
+[2026-08-26 12:32:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://dka.pw/about-us","error":"Client error: `GET https://dka.pw/about-us` resulted in a `404 Not Found` response:
+<html>
+<head>
+    <style>
+        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 5 (truncated...)
+"} 
+[2026-08-26 12:32:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://dka.pw/team","error":"Client error: `GET https://dka.pw/team` resulted in a `404 Not Found` response:
+<html>
+<head>
+    <style>
+        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 5 (truncated...)
+"} 
+[2026-08-26 12:32:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://dka.pw/careers","error":"Client error: `GET https://dka.pw/careers` resulted in a `404 Not Found` response:
+<html>
+<head>
+    <style>
+        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 5 (truncated...)
+"} 
+[2026-08-26 12:32:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://dka.pw/career","error":"Client error: `GET https://dka.pw/career` resulted in a `404 Not Found` response:
+<html>
+<head>
+    <style>
+        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 5 (truncated...)
+"} 
+[2026-08-26 12:32:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://dka.pw/jobs","error":"Client error: `GET https://dka.pw/jobs` resulted in a `404 Not Found` response:
+<html>
+<head>
+    <style>
+        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #3498db; border-radius: 5 (truncated...)
+"} 
+[2026-08-26 12:32:23] local.INFO: EmailFinderService: first pass {"domain":"dka.pw","entry":"https://dka.pw","html_bytes":53265,"all_emails":0,"on_domain":0} 
+[2026-08-26 12:34:35] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://umzugsfirma-junker-berlin.de/contact","error":"Client error: `GET https://umzugsfirma-junker-berlin.de/contact` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\">
-    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
-"} 
-[2026-05-16 12:48:30] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/contact-us","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/contact-us` resulted in a `404 Not Found` response:
-<!doctype html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\">
-    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
-"} 
-[2026-05-16 12:48:31] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/about","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/about` resulted in a `404 Not Found` response:
-<!doctype html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\">
-    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
-"} 
-[2026-05-16 12:48:32] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/about-us","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/about-us` resulted in a `404 Not Found` response:
-<!doctype html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\">
-    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
-"} 
-[2026-05-16 12:48:33] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://contactout.com/company/Software-Developer-8212/team","error":"Client error: `GET https://contactout.com/company/Software-Developer-8212/team` resulted in a `404 Not Found` response:
-<!doctype html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\">
-    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=ed (truncated...)
-"} 
-[2026-05-16 12:48:33] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":129,"website":"https://contactout.com/company/Software-Developer-8212"} 
-[2026-05-16 12:48:42] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":130,"email":"contact@salezshark.com"} 
-[2026-05-16 12:48:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\" />
-    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
-"} 
-[2026-05-16 12:48:46] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/contact","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/contact` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\" />
-    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
-"} 
-[2026-05-16 12:48:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/contact-us","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/contact-us` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\" />
-    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
-"} 
-[2026-05-16 12:48:49] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/about","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/about` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\" />
-    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
-"} 
-[2026-05-16 12:48:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/about-us","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/about-us` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\" />
-    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
-"} 
-[2026-05-16 12:48:51] local.DEBUG: ScraperService: Failed to fetch page {"url":"http://www.aventionmedia.com/role-base/software-engineers-email-list/team","error":"Client error: `GET http://www.aventionmedia.com/role-base/software-engineers-email-list/team` resulted in a `403 Forbidden` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"utf-8\" />
-    <meta name=\"viewport\" content=\"width=device-wid (truncated...)
-"} 
-[2026-05-16 12:48:51] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":131,"website":"http://www.aventionmedia.com/role-base/software-engineers-email-list"} 
-[2026-05-16 12:48:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/contact","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/contact` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
-"} 
-[2026-05-16 12:48:56] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/contact-us","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/contact-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
-"} 
-[2026-05-16 12:48:57] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/about","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/about` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
-"} 
-[2026-05-16 12:48:58] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/about-us","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/about-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
-"} 
-[2026-05-16 12:48:59] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.contact-software.com/en/about-us/contact-locations/team","error":"Client error: `GET https://www.contact-software.com/en/about-us/contact-locations/team` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-<script src=\"https://cloud.ccm19.de/app.js?apiKey=64e3f15def5f32788e804362b1b0fa (truncated...)
-"} 
-[2026-05-16 12:48:59] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":132,"website":"https://www.contact-software.com/en/about-us/contact-locations"} 
-[2026-05-16 12:49:03] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/contact","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/contact` resulted in a `404 Not Found` response:
-
-<!DOCTYPE html>
-<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
-  <head>
-    <meta charset=\"utf-8\" />
-<link  (truncated...)
-"} 
-[2026-05-16 12:49:04] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/contact-us","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/contact-us` resulted in a `404 Not Found` response:
-
-<!DOCTYPE html>
-<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
-  <head>
-    <meta charset=\"utf-8\" />
-<link  (truncated...)
-"} 
-[2026-05-16 12:49:06] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/about","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/about` resulted in a `404 Not Found` response:
-
-<!DOCTYPE html>
-<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
-  <head>
-    <meta charset=\"utf-8\" />
-<link  (truncated...)
-"} 
-[2026-05-16 12:49:07] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/about-us","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/about-us` resulted in a `404 Not Found` response:
-
-<!DOCTYPE html>
-<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
-  <head>
-    <meta charset=\"utf-8\" />
-<link  (truncated...)
-"} 
-[2026-05-16 12:49:10] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.rocketsoftware.com/en-us/contact/team","error":"Client error: `GET https://www.rocketsoftware.com/en-us/contact/team` resulted in a `404 Not Found` response:
-
-<!DOCTYPE html>
-<html lang=\"en\" dir=\"ltr\" prefix=\"og: https://ogp.me/ns#\">
-  <head>
-    <meta charset=\"utf-8\" />
-<link  (truncated...)
-"} 
-[2026-05-16 12:49:10] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":133,"website":"https://www.rocketsoftware.com/en-us/contact"} 
-[2026-05-16 12:49:15] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":134,"email":"sales@thomsondata.com"} 
-[2026-05-16 12:49:16] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/contact","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/contact` resulted in a `404 Not Found` response:
-<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
-"} 
-[2026-05-16 12:49:17] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/contact-us","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/contact-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
-"} 
-[2026-05-16 12:49:18] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/about","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/about` resulted in a `404 Not Found` response:
-<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
-"} 
-[2026-05-16 12:49:19] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/about-us","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/about-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
-"} 
-[2026-05-16 12:49:20] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/team","error":"Client error: `GET https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach/team` resulted in a `404 Not Found` response:
-<!DOCTYPE html><html lang=\"en\"><head><meta charSet=\"utf-8\" data-next-head=\"\"/><meta name=\"viewport\" content=\"width=devic (truncated...)
-"} 
-[2026-05-16 12:49:20] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":135,"website":"https://www.lemlist.com/blog/sell-software-development-services-with-cold-outreach"} 
-[2026-05-16 12:49:22] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/contact","error":"Client error: `GET https://www.jetbrains.com/company/contacts/contact` resulted in a `404 Not Found` response:
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-        <!-- Optimizely -->
-<script type=\"text/javascript\">
-    window.o (truncated...)
-"} 
-[2026-05-16 12:49:22] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/contact-us","error":"Client error: `GET https://www.jetbrains.com/company/contacts/contact-us` resulted in a `404 Not Found` response:
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-        <!-- Optimizely -->
-<script type=\"text/javascript\">
-    window.o (truncated...)
-"} 
-[2026-05-16 12:49:22] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/about","error":"Client error: `GET https://www.jetbrains.com/company/contacts/about` resulted in a `404 Not Found` response:
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-        <!-- Optimizely -->
-<script type=\"text/javascript\">
-    window.o (truncated...)
-"} 
-[2026-05-16 12:49:22] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/about-us","error":"Client error: `GET https://www.jetbrains.com/company/contacts/about-us` resulted in a `404 Not Found` response:
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-        <!-- Optimizely -->
-<script type=\"text/javascript\">
-    window.o (truncated...)
-"} 
-[2026-05-16 12:49:23] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.jetbrains.com/company/contacts/team","error":"Client error: `GET https://www.jetbrains.com/company/contacts/team` resulted in a `404 Not Found` response:
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-        <!-- Optimizely -->
-<script type=\"text/javascript\">
-    window.o (truncated...)
-"} 
-[2026-05-16 12:49:23] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":136,"website":"https://www.jetbrains.com/company/contacts"} 
-[2026-05-16 12:49:28] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/contact","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/contact` resulted in a `404 Not Found` response:
-<!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:29] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/contact-us","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/contact-us` resulted in a `404 Not Found` response:
+[2026-08-26 12:34:39] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://umzugsfirma-junker-berlin.de/contact-us","error":"Client error: `GET https://umzugsfirma-junker-berlin.de/contact-us` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:30] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/about","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/about` resulted in a `404 Not Found` response:
+[2026-08-26 12:34:42] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://umzugsfirma-junker-berlin.de/about","error":"Client error: `GET https://umzugsfirma-junker-berlin.de/about` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:31] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/about-us","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/about-us` resulted in a `404 Not Found` response:
+[2026-08-26 12:34:44] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://umzugsfirma-junker-berlin.de/about-us","error":"Client error: `GET https://umzugsfirma-junker-berlin.de/about-us` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:32] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.campaignlake.com/professionals-email-list/software-engineers/team","error":"Client error: `GET https://www.campaignlake.com/professionals-email-list/software-engineers/team` resulted in a `404 Not Found` response:
+[2026-08-26 12:34:46] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://umzugsfirma-junker-berlin.de/team","error":"Client error: `GET https://umzugsfirma-junker-berlin.de/team` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:32] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":137,"email":"reach@campaignlake.com"} 
-[2026-05-16 12:49:38] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact` resulted in a `404 Not Found` response:
+[2026-08-26 12:34:51] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://umzugsfirma-junker-berlin.de/careers","error":"Client error: `GET https://umzugsfirma-junker-berlin.de/careers` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:39] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact-us","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact-us` resulted in a `404 Not Found` response:
+[2026-08-26 12:34:54] local.WARNING: EmailFinderService: scrape failed {"domain":"umzugsfirma-junker-berlin.de","error":"cURL error 28: Operation timed out after 2742 milliseconds with 81143 bytes received (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://junker-umzug.de/career"} 
+[2026-08-26 12:34:54] local.INFO: EmailFinderService: first pass {"domain":"umzugsfirma-junker-berlin.de","entry":"https://umzugsfirma-junker-berlin.de","html_bytes":0,"all_emails":0,"on_domain":0} 
+[2026-08-26 12:36:01] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/contact","error":"Client error: `GET https://junker-umzug.de/contact` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:40] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about` resulted in a `404 Not Found` response:
+[2026-08-26 12:36:05] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/contact-us","error":"Client error: `GET https://junker-umzug.de/contact-us` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:41] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about-us","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about-us` resulted in a `404 Not Found` response:
+[2026-08-26 12:36:14] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/about","error":"Client error: `GET https://junker-umzug.de/about` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:43] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/team","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/team` resulted in a `404 Not Found` response:
+[2026-08-26 12:36:16] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/about-us","error":"Client error: `GET https://junker-umzug.de/about-us` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:49:43] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":138,"email":"reach@esalesclub.com"} 
-[2026-05-16 12:52:32] local.INFO: LeadFinderService: searching {"keyword":"Software Development","limit":25,"country":"global","language":"any"} 
-[2026-05-16 12:52:38] local.INFO: LeadFinderService: done {"found":25} 
-[2026-05-16 12:52:44] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact` resulted in a `404 Not Found` response:
+[2026-08-26 12:36:18] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/team","error":"Client error: `GET https://junker-umzug.de/team` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:52:44] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact-us","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/contact-us` resulted in a `404 Not Found` response:
+[2026-08-26 12:36:19] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/careers","error":"Client error: `GET https://junker-umzug.de/careers` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:52:44] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about` resulted in a `404 Not Found` response:
+[2026-08-26 12:36:21] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/career","error":"Client error: `GET https://junker-umzug.de/career` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:52:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about-us","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/about-us` resulted in a `404 Not Found` response:
+[2026-08-26 12:36:21] local.INFO: EmailFinderService: first pass {"domain":"junker-umzug.de","entry":"https://junker-umzug.de","html_bytes":467136,"all_emails":3,"on_domain":1} 
+[2026-08-26 13:09:42] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/contact","error":"Client error: `GET https://junker-umzug.de/contact` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:52:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/team","error":"Client error: `GET https://www.esalesclub.com/professionals-mailing-list/software-engineers-email-list/team` resulted in a `404 Not Found` response:
+[2026-08-26 13:09:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/contact-us","error":"Client error: `GET https://junker-umzug.de/contact-us` resulted in a `404 Not Found` response:
 <!doctype html>
-<html lang=\"en-US\" prefix=\"og: https://ogp.me/ns#\">
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
 \t<meta charset=\"UTF-8\">
-\t<meta name=\"viewport (truncated...)
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:52:45] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":140,"email":"reach@esalesclub.com"} 
-[2026-05-16 12:53:56] local.INFO: LeadFinderService: searching {"keyword":"Web Development","limit":25,"country":"global","language":"any"} 
-[2026-05-16 12:54:10] local.INFO: LeadFinderService: done {"found":25} 
-[2026-05-16 12:54:17] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":141,"website":"https://builder.aws.com/content/31c6EGIZUe9a5eLwMKBv2TuDn2l/contact-form-making-your-website-interactive"} 
-[2026-05-16 12:54:28] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://gawebdev.com/get-in-touch/contact","error":"Client error: `GET https://gawebdev.com/get-in-touch/contact` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en-US\" class=\"html_stretched responsive av-preloader-disabled  html_header_top html_logo_cen (truncated...)
-"} 
-[2026-05-16 12:54:31] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://gawebdev.com/get-in-touch/contact-us","error":"Client error: `GET https://gawebdev.com/get-in-touch/contact-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en-US\" class=\"html_stretched responsive av-preloader-disabled  html_header_top html_logo_cen (truncated...)
-"} 
-[2026-05-16 12:54:35] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":142,"email":"hello@gawebdev.com"} 
-[2026-05-16 12:54:38] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":143,"website":"https://www.crafted.email"} 
-[2026-05-16 12:54:42] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":144,"website":"https://webdevstudios.com/contact"} 
-[2026-05-16 12:54:44] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/contact","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/contact` resulted in a `404 Not Found` response:
-<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
-"} 
-[2026-05-16 12:54:47] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/contact-us","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/contact-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
-"} 
-[2026-05-16 12:54:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/about","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/about` resulted in a `404 Not Found` response:
-<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
-"} 
-[2026-05-16 12:54:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/about-us","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/about-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
-"} 
-[2026-05-16 12:54:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://prospeo.io/c/freelance-web-developer-designer-email-format/team","error":"Client error: `GET https://prospeo.io/c/freelance-web-developer-designer-email-format/team` resulted in a `404 Not Found` response:
-<!DOCTYPE html><!--wI4y4JOgRiHjiGmr6TFTr--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"w (truncated...)
-"} 
-[2026-05-16 12:54:48] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":145,"email":"john.doe@company.com"} 
-[2026-05-16 12:54:52] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/contact","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/contact` resulted in a `404 Not Found` response:
-
-
-
-
-
-\t
-\t\t\t\t\t
-\t<!DOCTYPE html>
-\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
-\t\t<head>
-\t\t\t\t\t\t\t\t\t\t\t\t\t
-<meta charset= (truncated...)
-"} 
-[2026-05-16 12:54:52] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/contact-us","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/contact-us` resulted in a `404 Not Found` response:
-
-
-
-
-
-\t
-\t\t\t\t\t
-\t<!DOCTYPE html>
-\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
-\t\t<head>
-\t\t\t\t\t\t\t\t\t\t\t\t\t
-<meta charset= (truncated...)
-"} 
-[2026-05-16 12:54:53] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/about","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/about` resulted in a `404 Not Found` response:
-
-
-
-
-
-\t
-\t\t\t\t\t
-\t<!DOCTYPE html>
-\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
-\t\t<head>
-\t\t\t\t\t\t\t\t\t\t\t\t\t
-<meta charset= (truncated...)
-"} 
-[2026-05-16 12:54:53] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/about-us","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/about-us` resulted in a `404 Not Found` response:
-
-
-
-
-
-\t
-\t\t\t\t\t
-\t<!DOCTYPE html>
-\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
-\t\t<head>
-\t\t\t\t\t\t\t\t\t\t\t\t\t
-<meta charset= (truncated...)
-"} 
-[2026-05-16 12:54:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/team","error":"Client error: `GET https://toward.studio/latest/how-to-contact-a-design-agency-for-developers/team` resulted in a `404 Not Found` response:
-
-
-
-
-
-\t
-\t\t\t\t\t
-\t<!DOCTYPE html>
-\t<html lang=\"en-GB\" dir=\"ltr\" class=\"no-js preload\">
-\t\t<head>
-\t\t\t\t\t\t\t\t\t\t\t\t\t
-<meta charset= (truncated...)
-"} 
-[2026-05-16 12:54:54] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":146,"email":"projects@toward.studio"} 
-[2026-05-16 12:54:57] local.DEBUG: ScrapeLeadEmailJob: no email found {"lead_id":147,"website":"https://htmlboutique.com/email-development"} 
-[2026-05-16 12:55:01] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":148,"email":"mrn-developer@mrnwebdesigns.com"} 
-[2026-05-16 12:55:02] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/contact","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/contact` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-
-<!-- 
-  © 2026 Wandzilak Web Design Studio
-  wandzilakwebdesign.com | All rights rese (truncated...)
-"} 
-[2026-05-16 12:55:02] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/contact-us","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/contact-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-
-<!-- 
-  © 2026 Wandzilak Web Design Studio
-  wandzilakwebdesign.com | All rights rese (truncated...)
-"} 
-[2026-05-16 12:55:02] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/about","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/about` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-
-<!-- 
-  © 2026 Wandzilak Web Design Studio
-  wandzilakwebdesign.com | All rights rese (truncated...)
-"} 
-[2026-05-16 12:55:02] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/about-us","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/about-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-
-<!-- 
-  © 2026 Wandzilak Web Design Studio
-  wandzilakwebdesign.com | All rights rese (truncated...)
-"} 
-[2026-05-16 12:55:03] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://wandzilakwebdesign.com/contact-professional-web-developer/team","error":"Client error: `GET https://wandzilakwebdesign.com/contact-professional-web-developer/team` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-
-<!-- 
-  © 2026 Wandzilak Web Design Studio
-  wandzilakwebdesign.com | All rights rese (truncated...)
-"} 
-[2026-05-16 12:55:03] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":149,"email":"info@wandzilakwebdesign.com"} 
-[2026-05-16 12:55:06] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
+[2026-08-26 13:09:47] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/about","error":"Client error: `GET https://junker-umzug.de/about` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+\t<meta charset=\"UTF-8\">
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:55:07] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
+[2026-08-26 13:09:48] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/about-us","error":"Client error: `GET https://junker-umzug.de/about-us` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+\t<meta charset=\"UTF-8\">
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:55:07] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
+[2026-08-26 13:09:50] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/team","error":"Client error: `GET https://junker-umzug.de/team` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+\t<meta charset=\"UTF-8\">
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:55:07] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
+[2026-08-26 13:09:52] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/careers","error":"Client error: `GET https://junker-umzug.de/careers` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+\t<meta charset=\"UTF-8\">
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:55:08] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/team","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/team` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
+[2026-08-26 13:09:56] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/career","error":"Client error: `GET https://junker-umzug.de/career` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+\t<meta charset=\"UTF-8\">
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:55:08] local.INFO: ScrapeLeadEmailJob: email found {"lead_id":150,"email":"info@dsngrid.com"} 
-[2026-05-16 12:55:24] local.DEBUG: ImapService: Connecting to mailbox {"mailbox":"{imap.hostinger.com:993/imap/ssl/novalidate-cert}INBOX.Sent","username":"info@heservices.in"} 
-[2026-05-16 12:55:30] local.INFO: ImapService: Email copied to Sent folder {"to":"nazimsaifi0033@gmail.com","subject":"Grow Your Business with Our Marketing Solutions","folder":"INBOX.Sent","attachments":1} 
-[2026-05-16 12:55:30] local.INFO: sendEmail: sent directly {"lead_id":139,"to":"nazimsaifi0033@gmail.com","attachments":1} 
-[2026-05-16 12:55:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
+[2026-08-26 13:09:57] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://junker-umzug.de/jobs","error":"Client error: `GET https://junker-umzug.de/jobs` resulted in a `404 Not Found` response:
+<!doctype html>
+<html lang=\"de-DE\" prefix=\"og: https://ogp.me/ns#\" class=\"no-js\" >
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+\t<meta charset=\"UTF-8\">
+\t<meta (truncated...)
 "} 
-[2026-05-16 12:55:45] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact-us` resulted in a `404 Not Found` response:
+[2026-08-26 13:09:57] local.INFO: EmailFinderService: first pass {"domain":"junker-umzug.de","entry":"https://junker-umzug.de","html_bytes":467136,"all_emails":3,"on_domain":1} 
+[2026-08-26 13:10:28] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://posticy.com/contact-us","error":"Client error: `GET https://posticy.com/contact-us` resulted in a `404 Not Found` response:
 <!DOCTYPE html>
-<html lang=\"en\">
+<html lang=\"en-GB\">
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+
+<script type=\"application/ld+json\">
+{
+  \"@context\": \"https://schema.org/\",
+  (truncated...)
 "} 
-[2026-05-16 12:55:46] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about` resulted in a `404 Not Found` response:
+[2026-08-26 13:10:29] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://posticy.com/about-us","error":"Client error: `GET https://posticy.com/about-us` resulted in a `404 Not Found` response:
 <!DOCTYPE html>
-<html lang=\"en\">
+<html lang=\"en-GB\">
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+
+<script type=\"application/ld+json\">
+{
+  \"@context\": \"https://schema.org/\",
+  (truncated...)
 "} 
-[2026-05-16 12:55:46] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about-us` resulted in a `404 Not Found` response:
+[2026-08-26 13:10:30] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://posticy.com/team","error":"Client error: `GET https://posticy.com/team` resulted in a `404 Not Found` response:
 <!DOCTYPE html>
-<html lang=\"en\">
+<html lang=\"en-GB\">
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+
+<script type=\"application/ld+json\">
+{
+  \"@context\": \"https://schema.org/\",
+  (truncated...)
 "} 
-[2026-05-16 12:55:46] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/team","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/team` resulted in a `404 Not Found` response:
+[2026-08-26 13:10:32] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://posticy.com/careers","error":"Client error: `GET https://posticy.com/careers` resulted in a `404 Not Found` response:
 <!DOCTYPE html>
-<html lang=\"en\">
+<html lang=\"en-GB\">
 <head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
+
+<script type=\"application/ld+json\">
+{
+  \"@context\": \"https://schema.org/\",
+  (truncated...)
 "} 
-[2026-05-16 12:57:53] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
-"} 
-[2026-05-16 12:57:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/contact-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/contact-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
-"} 
-[2026-05-16 12:57:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
-"} 
-[2026-05-16 12:57:54] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/about-us","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/about-us` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
-"} 
-[2026-05-16 12:57:55] local.DEBUG: ScraperService: Failed to fetch page {"url":"https://thecodeandclicks.com/chicago-web-design-company/team","error":"Client error: `GET https://thecodeandclicks.com/chicago-web-design-company/team` resulted in a `404 Not Found` response:
-<!DOCTYPE html>
-<html lang=\"en\">
-<head>
-    <meta charset=\"UTF-8\" />
-    <meta name=\"robots\" content=\"noindex,nofollow,n (truncated...)
-"} 
-[2026-05-16 12:58:17] local.DEBUG: ImapService: Connecting to mailbox {"mailbox":"{imap.hostinger.com:993/imap/ssl/novalidate-cert}INBOX.Sent","username":"info@heservices.in"} 
-[2026-05-16 12:58:23] local.INFO: ImapService: Email copied to Sent folder {"to":"nazimsaifi0033@gmail.com","subject":"Grow Your Business with Our Marketing Solutions","folder":"INBOX.Sent","attachments":1} 
-[2026-05-16 12:58:23] local.INFO: sendEmail: sent directly {"lead_id":139,"to":"nazimsaifi0033@gmail.com","attachments":1} 
+[2026-08-26 13:10:37] local.INFO: EmailFinderService: first pass {"domain":"posticy.com","entry":"https://posticy.com","html_bytes":1893246,"all_emails":0,"on_domain":0} 
+[2026-08-26 13:10:44] local.INFO: EmailFinderService: followed links {"domain":"posticy.com","round":1,"links":["https://posticy.com/imprint","https://posticy.com/career/publisher-outreach-and-verification-manager","https://posticy.com/career/client-growth-manager"],"html_bytes":3265159,"all_emails":1,"found":1} 

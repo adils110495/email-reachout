@@ -64,8 +64,9 @@ class FindLeadsCommand extends Command
                 continue;
             }
 
-            // 2. Scrape website
-            $html = $this->scraper->fetch($result['url']);
+            // 2. Scrape website. Budgeted per lead so one unresponsive site
+            //    cannot stall a run of 25 behind it.
+            $html = $this->scraper->fetch($result['url'], budgetSeconds: 45.0);
 
             // 3. Extract emails
             $emails = $this->emailExtractor->extract($html);

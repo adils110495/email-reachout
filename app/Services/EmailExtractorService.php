@@ -2,8 +2,19 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
+
 class EmailExtractorService
 {
+    /**
+     * Bytes of HTML scanned per pass. Well under any PCRE limit, and small
+     * enough that strip_tags() never works on a multi-megabyte string.
+     */
+    private const SLICE_BYTES = 262144; // 256 KB
+
+    /** Overlap between slices - far longer than the longest legal address. */
+    private const OVERLAP_BYTES = 1024;
+
     /**
      * Domains that are almost never real contact emails —
      * skip these to avoid harvesting generic/example addresses.
@@ -27,39 +38,34 @@ class EmailExtractorService
      */
     public function extract(string $html): array
     {
-        if (empty($html)) {
+        if ($html === '') {
             return [];
         }
 
-        $emails = [];
+        $emails   = [];
+        $allFound = [];
 
-        // 1. Extract from mailto: links (highest quality)
-        preg_match_all(
-            '/href=["\']mailto:([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})["\']/',
-            $html,
-            $mailtoMatches
-        );
+        // Scanned in slices rather than in one go. A domain search concatenates
+        // every page it fetched, which on a content-heavy site is several
+        // megabytes - and PCRE stops matching on a subject that large, returning
+        // false and (before this) silently yielding no addresses at all. Slices
+        // keep every subject small enough for the engine to finish.
+        foreach ($this->slices($html) as $slice) {
+            // 1. mailto: links (highest quality)
+            $allFound = array_merge($allFound, $this->matchAll(
+                '/href=["\']mailto:([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})["\']/',
+                $slice,
+                1,
+            ));
 
-        // 2. Extract from obfuscated mailto patterns (e.g. data-email attributes)
-        preg_match_all(
-            '/data-(?:email|mail|cfemail)=["\']([^"\']+)["\']/',
-            $html,
-            $dataMatches
-        );
-
-        // 3. General regex scan of all text (catches plain-text emails in HTML)
-        // Strip HTML tags first to avoid false positives from markup
-        $plainText = strip_tags($html);
-        preg_match_all(
-            '/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/',
-            $plainText,
-            $textMatches
-        );
-
-        $allFound = array_merge(
-            $mailtoMatches[1] ?? [],
-            $textMatches[0] ?? [],
-        );
+            // 2. Plain text scan. Tags are stripped first so markup cannot
+            //    produce false positives.
+            $allFound = array_merge($allFound, $this->matchAll(
+                '/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/',
+                strip_tags($slice),
+                0,
+            ));
+        }
 
         foreach ($allFound as $email) {
             $email = strtolower(trim($email));
@@ -71,6 +77,64 @@ class EmailExtractorService
 
         // Return unique emails, prioritising those from mailto: links
         return array_values(array_unique($emails));
+    }
+
+    /**
+     * Split HTML into slices small enough for PCRE to scan reliably.
+     *
+     * Slices overlap by OVERLAP_BYTES so an address straddling a boundary is
+     * still matched whole in one of them; duplicates are collapsed later.
+     *
+     * @return iterable<string>
+     */
+    private function slices(string $html): iterable
+    {
+        $length = strlen($html);
+
+        if ($length <= self::SLICE_BYTES) {
+            yield $html;
+
+            return;
+        }
+
+        for ($offset = 0; $offset < $length; $offset += self::SLICE_BYTES) {
+            // Reach back over the boundary, except at the very start.
+            $start = $offset === 0 ? 0 : $offset - self::OVERLAP_BYTES;
+
+            yield substr($html, $start, self::SLICE_BYTES + self::OVERLAP_BYTES);
+        }
+    }
+
+    /**
+     * preg_match_all that reports failure instead of hiding it.
+     *
+     * preg_match_all() returns false on an engine error (backtrack limit, JIT
+     * stack limit, a subject it will not scan) and leaves the matches array
+     * empty - which reads exactly like "this page has no addresses". That is
+     * how a page with a perfectly visible address came back empty. Now the
+     * failure is logged and the caller keeps whatever the other patterns found.
+     *
+     * @return string[]
+     */
+    private function matchAll(string $pattern, string $subject, int $group): array
+    {
+        if ($subject === '') {
+            return [];
+        }
+
+        $matches = [];
+        $result  = @preg_match_all($pattern, $subject, $matches);
+
+        if ($result === false) {
+            Log::warning('EmailExtractorService: pattern failed', [
+                'error'          => preg_last_error_msg(),
+                'subject_length' => strlen($subject),
+            ]);
+
+            return [];
+        }
+
+        return $matches[$group] ?? [];
     }
 
     /**

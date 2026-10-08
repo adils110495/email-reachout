@@ -2,18 +2,66 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\RedirectsBack;
 use App\Models\EmailTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmailTemplateController extends Controller
 {
-    public function index(): View
+    use ExportsCsv;
+    use RedirectsBack;
+
+    public function export(): StreamedResponse
     {
-        $templates = EmailTemplate::latest()->get();
-        return view('templates.index', compact('templates'));
+        return $this->streamCsv(
+            'email_templates',
+            ['ID', 'Name', 'Subject', 'Body', 'Attachments', 'Status', 'Created At'],
+            EmailTemplate::latest()->get(),
+            fn (EmailTemplate $template) => [
+                $template->id,
+                $template->name,
+                $template->subject,
+                // Body is stored as HTML; flatten it so the CSV stays readable.
+                trim(html_entity_decode(strip_tags($template->body))),
+                collect($template->attachments ?? [])->pluck('name')->implode(', '),
+                $template->status,
+                $template->created_at->toDateTimeString(),
+            ],
+        );
+    }
+
+    public function index(Request $request): View
+    {
+        $statusOptions = [
+            'active'   => 'Active',
+            'inactive' => 'Inactive',
+            'deleted'  => 'Deleted',
+        ];
+
+        $query = EmailTemplate::latest();
+
+        // Status is a URL-driven filter, same as the Leads page.
+        if ($request->filled('status') && array_key_exists($request->status, $statusOptions)) {
+            $query->where('status', $request->status);
+        }
+
+        $templates    = $query->get();
+        $activeStatus = $request->input('status');
+
+        $data = compact('templates', 'activeStatus', 'statusOptions');
+
+        // A filter change fetches just the table partial so the page swaps it
+        // in without a full reload.
+        if ($request->ajax()) {
+            return view('templates._table', $data);
+        }
+
+        return view('templates.index', $data);
     }
 
     public function create(): View
@@ -91,11 +139,11 @@ class EmailTemplateController extends Controller
         $request->validate(['status' => ['required', 'in:active,inactive,deleted']]);
         EmailTemplate::findOrFail($id)->update(['status' => $request->status]);
 
-        return redirect()->route('templates.index')
+        return redirect()->route('templates.index', $this->redirectQuery($request))
             ->with('success', 'Template status updated.');
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function destroy(Request $request, int $id): RedirectResponse
     {
         $template = EmailTemplate::findOrFail($id);
 
@@ -105,7 +153,7 @@ class EmailTemplateController extends Controller
 
         $template->update(['status' => 'deleted']);
 
-        return redirect()->route('templates.index')
+        return redirect()->route('templates.index', $this->redirectQuery($request))
             ->with('success', 'Template deleted.');
     }
 

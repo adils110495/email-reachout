@@ -1,0 +1,968 @@
+/*
+ * App-specific overrides layered on top of the W3CRM theme.
+ * Keep this file for project styling only - never edit style.css / plugins.css.
+ */
+
+/* ── Brand ───────────────────────────────────────────────── */
+/* Nav header runs black. sabright-logo.png is transparent artwork whose "SA"
+   and tagline are white, so it is built for exactly this background - keep
+   them in sync if either is ever swapped. */
+.nav-header {
+    background-color: #000;
+}
+@media only screen and (max-width: 47.9375rem) {
+    /* style.css:14295 makes it transparent on small screens; keep it black. */
+    .nav-header {
+        background-color: #000;
+    }
+}
+
+/* The theme expects two separate assets here (a compact mark + a wordmark).
+   We have one wide lockup that already contains the mark, so show only the
+   lockup, and swap to the cropped "B" mark when the sidebar is collapsed. */
+.nav-header .brand-logo .brand-title {
+    height: auto;
+    max-width: 13rem;
+    margin-top: 0;
+    margin-left: 0;
+    object-fit: contain;
+}
+.nav-header .brand-logo .logo-abbr {
+    display: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    min-width: 2.25rem;
+    object-fit: cover;
+    object-position: left center;
+}
+/* Collapsed / mini sidebar: the theme hides .brand-title, so show the mark. */
+[data-sidebar-style=full][data-layout=vertical] .menu-toggle .nav-header .brand-logo .logo-abbr,
+[data-sidebar-style=mini] .nav-header .brand-logo .logo-abbr {
+    display: block;
+}
+
+/* ── Hamburger ───────────────────────────────────────────── */
+/* With headerbg=color_1 the theme paints .nav-control with --bs-light
+   (style.css:4326), which reads as a grey box on the light header. Let the
+   header background show through instead. */
+body[data-headerbg=color_1] .nav-control {
+    background-color: transparent;
+}
+
+/* ── Breadcrumb ──────────────────────────────────────────── */
+/* style.css:4846 ships a broken divider - the mirror that produced the theme
+   rewrote the "/" in the content string into an absolute theme URL. */
+.breadcrumb {
+    --bs-breadcrumb-divider: "/";
+}
+
+/* ── Sidebar icons ───────────────────────────────────────── */
+/* The theme ships inline SVGs here; we use Bootstrap Icons glyphs, so mirror
+   the SVG sizing/spacing rules (style.css: .deznav .metismenu > li > a svg). */
+.deznav .metismenu > li > a .menu-icon i {
+    font-size: 1.375rem;
+    line-height: 1;
+    margin-right: 0.4125rem;
+    vertical-align: middle;
+}
+
+/* ── Tables ──────────────────────────────────────────────── */
+.table > :not(caption) > * > * {
+    vertical-align: middle;
+}
+
+/* Sortable column headers */
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+th.sortable:hover {
+    background-color: var(--bs-primary-bg-subtle);
+}
+th.sortable .sort-icon {
+    font-size: 0.7rem;
+    vertical-align: middle;
+}
+th.sort-asc  .sort-icon::before { content: "\f235"; } /* bi-chevron-up   */
+th.sort-desc .sort-icon::before { content: "\f229"; } /* bi-chevron-down */
+th.sort-asc  .sort-icon,
+th.sort-desc .sort-icon { color: var(--bs-primary) !important; }
+
+#leadsTable tbody tr.d-none { display: none !important; }
+
+/* ── Rows-per-page select ────────────────────────────────── */
+/* style.css reserves padding-right: 3.375rem on .form-select for the caret and
+   .form-select-sm does not shrink it, so a narrow fixed width left almost no
+   room for the digits. Tighten the caret gutter and size to content instead. */
+.per-page-select {
+    width: auto;
+    min-width: 4.75rem;
+    padding-right: 2rem;
+    background-position: right 0.625rem center;
+}
+
+/* ── AJAX table region ───────────────────────────────────── */
+/* .ajax-region is the persistent anchor for the loader; .ajax-content inside
+   it is the node swapped on every filter / page change. */
+.leads-region,
+.ajax-region {
+    position: relative;
+    min-height: 8rem;
+}
+#leadsContent,
+.ajax-content {
+    transition: opacity .15s ease-in-out;
+}
+.leads-region.is-loading #leadsContent,
+.ajax-region.is-loading .ajax-content {
+    opacity: .25;
+    pointer-events: none;
+}
+
+/* Spinner sits over the table only, so the filters above stay usable. */
+.leads-loader,
+.ajax-loader {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    color: var(--bs-secondary-color);
+}
+.leads-loader[hidden],
+.ajax-loader[hidden] {
+    display: none;
+}
+
+/* ── Select2 ─────────────────────────────────────────────── */
+/* NOTE: do NOT set an explicit height on .select2-selection here. plugins.css
+   already gives Select2 the exact .form-control box (padding .563rem 1.125rem,
+   font-size .9375rem, line-height 1.572, height:auto), so a hardcoded height
+   only breaks that match and mispositions the arrow. */
+.is-invalid + .select2-container--default .select2-selection--single {
+    border-color: var(--bs-danger);
+}
+
+/* ── Filter bar ──────────────────────────────────────────── */
+/*
+ * Every label and every control in the bar sits on one line, at one height, in
+ * every state (normal / hover / focus / open / selected) and at every text
+ * length. Three different control types are involved:
+ *
+ *   .form-control       style.css:2239   padding .563/1.125  fs .9375  lh 1.572
+ *   Select2 selection   plugins.css:9    same box, but the container it lives in
+ *                                        is display:inline-block, so a baseline
+ *                                        descender gap made it sit lower and
+ *                                        read as taller than the input.
+ *   .btn                style.css        same padding/lh, but fs .875 -> ~1.5px short.
+ *
+ * Fixes below: one shared height token (derived from the theme's own numbers,
+ * not a magic value), the Select2 container promoted to a block, and the button
+ * tokens realigned. Rows are top-aligned so labels line up even if a control
+ * ever changes, and every column carries a label row (the Clear column uses a
+ * blank one) so nothing can drift vertically.
+ */
+.filter-bar {
+    /* = .form-control height: padding-y * 2 + (font-size * line-height) + borders */
+    --filter-control-h: calc((0.563rem * 2) + (0.9375rem * 1.572) + (var(--bs-border-width) * 2));
+}
+
+.filter-bar .form-label {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.filter-bar .form-control,
+.filter-bar .btn,
+.filter-bar .select2-container--default .select2-selection--single {
+    height: var(--filter-control-h);
+    min-height: var(--filter-control-h);
+    box-sizing: border-box;
+    border-radius: var(--bs-border-radius);
+}
+
+/* Button: match the inputs' type metrics, and never let text length alter the box. */
+.filter-bar .btn {
+    --bs-btn-font-size: 0.9375rem;
+    --bs-btn-padding-y: 0;
+    --bs-btn-padding-x: 1.125rem;
+    --bs-btn-line-height: 1.572;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Select2: block-level container (kills the inline-block baseline gap) and
+   vertically centred text now that the box has a fixed height. */
+.filter-bar .select2-container {
+    display: block;
+    width: 100% !important;
+}
+.filter-bar .select2-container--default .select2-selection--single {
+    display: flex;
+    align-items: center;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+.filter-bar .select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding-left: 0;
+    padding-right: 1.25rem; /* clear of the arrow */
+    line-height: 1.572;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1 1 auto;
+}
+/* plugins.css puts the arrow at top:50%; with a flex box, span the full height
+   instead so its triangle stays centred. */
+.filter-bar .select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 0;
+    height: 100%;
+}
+
+/* ── Compose modal (Gmail-style) ─────────────────────────── */
+#compose_body:empty:before {
+    content: attr(data-placeholder);
+    color: var(--bs-body-color);
+    opacity: .55;
+    pointer-events: none;
+}
+.compose-row {
+    background: var(--bs-body-bg);
+}
+.compose-label {
+    width: 60px;
+    flex-shrink: 0;
+}
+
+/* ── Attachment chips ────────────────────────────────────── */
+.attach-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bs-secondary-bg-subtle);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    padding: 4px 8px 4px 6px;
+    font-size: .8rem;
+    color: var(--bs-body-color);
+    max-width: 200px;
+    cursor: default;
+}
+.attach-chip .attach-icon  { font-size: 1rem; flex-shrink: 0; }
+.attach-chip .attach-name  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.attach-chip .attach-size  { color: var(--bs-secondary-color); white-space: nowrap; flex-shrink: 0; }
+.attach-chip .attach-remove {
+    cursor: pointer;
+    color: var(--bs-secondary-color);
+    font-size: .85rem;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0 2px;
+    border-radius: 50%;
+}
+.attach-chip .attach-remove:hover {
+    background: var(--bs-border-color);
+    color: var(--bs-heading-color);
+}
+.attach-chip.attach-error {
+    border-color: var(--bs-danger);
+    background: var(--bs-danger-bg-subtle);
+    color: var(--bs-danger);
+}
+
+/* ── Quill editor ────────────────────────────────────────── */
+#quill-wrapper {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.625rem;
+    background: var(--bs-card-bg, #fff);
+    overflow: hidden;
+    height: 280px;
+}
+#quill-wrapper .ql-toolbar {
+    border: none;
+    border-bottom: 1px solid var(--bs-border-color);
+    border-radius: 0;
+}
+#quill-wrapper .ql-container {
+    border: none;
+    font-size: .92rem;
+    height: calc(100% - 42px);
+    font-family: inherit;
+}
+#quill-wrapper .ql-editor {
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* ── Misc ────────────────────────────────────────────────── */
+.empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--bs-secondary-color);
+}
+.empty-state .empty-state-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: .75rem;
+    opacity: .35;
+}
+.table-card-body .table > thead > tr > th {
+    white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dashboard / Finder / Verifier / Bulks
+   Components shared by the four modules so they read as one application.
+   Everything is built from theme tokens (--bs-*) - no fixed colours - so a
+   switcher change carries through here too.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Stat cards ──────────────────────────────────────────── */
+.stat-card {
+    height: 100%;
+}
+.stat-card .card-body {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.stat-icon {
+    flex: 0 0 auto;
+    width: 3.25rem;
+    height: 3.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+.stat-body { min-width: 0; }
+.stat-value {
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--bs-heading-color);
+}
+.stat-label {
+    font-size: 0.8125rem;
+    color: var(--bs-secondary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.stat-meta {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+}
+/* Tinted icon tiles. .light variants of the theme's contextual colours. */
+.stat-icon.tint-primary { background: var(--bs-primary-bg-subtle);   color: var(--bs-primary); }
+.stat-icon.tint-success { background: var(--bs-success-bg-subtle);   color: var(--bs-success); }
+.stat-icon.tint-warning { background: var(--bs-warning-bg-subtle);   color: var(--bs-warning); }
+.stat-icon.tint-danger  { background: var(--bs-danger-bg-subtle);    color: var(--bs-danger);  }
+.stat-icon.tint-info    { background: var(--bs-info-bg-subtle);      color: var(--bs-info);    }
+.stat-icon.tint-dark    { background: var(--bs-secondary-bg-subtle); color: var(--bs-body-color); }
+
+/* ── Activity chart ──────────────────────────────────────── */
+/* A plain CSS column chart. The app ships no charting library and the theme's
+   is not bundled, so this keeps the dashboard dependency-free and offline. */
+.activity-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    height: 11rem;
+    padding-top: 0.5rem;
+    overflow-x: auto;
+}
+.activity-day {
+    flex: 1 1 0;
+    min-width: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    height: 100%;
+}
+.activity-bars {
+    flex: 1 1 auto;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+}
+.activity-bar {
+    width: 45%;
+    max-width: 0.75rem;
+    min-height: 2px;
+    border-radius: 0.25rem 0.25rem 0 0;
+    transition: opacity .15s ease-in-out;
+}
+.activity-bar:hover { opacity: .75; }
+.activity-bar.bar-leads  { background: var(--bs-primary); }
+.activity-bar.bar-emails { background: var(--bs-success); }
+.activity-label {
+    font-size: 0.6875rem;
+    color: var(--bs-secondary-color);
+    white-space: nowrap;
+}
+.chart-legend {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8125rem;
+    color: var(--bs-secondary-color);
+}
+.chart-legend .swatch {
+    display: inline-block;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 0.1875rem;
+    margin-right: 0.375rem;
+    vertical-align: middle;
+}
+
+/* ── Score meter ─────────────────────────────────────────── */
+.score-meter {
+    height: 0.375rem;
+    border-radius: 1rem;
+    background: var(--bs-secondary-bg-subtle);
+    overflow: hidden;
+    min-width: 3.5rem;
+}
+.score-meter > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+}
+
+/* ── Verification check list ─────────────────────────────── */
+.check-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.check-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+.check-list li:last-child { border-bottom: 0; }
+.check-list .check-mark { font-size: 1rem; line-height: 1.4; flex-shrink: 0; }
+.check-list .check-name { font-weight: 500; color: var(--bs-heading-color); }
+.check-list .check-detail {
+    font-size: 0.8125rem;
+    color: var(--bs-secondary-color);
+    word-break: break-word;
+}
+
+/* ── Result panel (Finder / Verifier) ────────────────────── */
+.result-panel {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    background: var(--bs-body-bg);
+}
+.result-email {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--bs-heading-color);
+    word-break: break-all;
+}
+.result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: var(--bs-body-bg);
+}
+.result-row:last-child { margin-bottom: 0; }
+.result-row .result-main { min-width: 0; }
+.result-row .result-addr {
+    font-weight: 500;
+    color: var(--bs-heading-color);
+    word-break: break-all;
+}
+
+/* ── Bulk progress ───────────────────────────────────────── */
+.bulk-progress {
+    height: 0.625rem;
+    border-radius: 1rem;
+    background: var(--bs-secondary-bg-subtle);
+}
+.bulk-progress .progress-bar { border-radius: 1rem; }
+
+/* Small stat chips used under a run's progress bar. */
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.stat-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 1rem;
+    font-size: 0.8125rem;
+    background: var(--bs-secondary-bg-subtle);
+    color: var(--bs-body-color);
+}
+.stat-chip strong { color: var(--bs-heading-color); }
+
+/* ── Misc ────────────────────────────────────────────────── */
+/* Long URLs and addresses must wrap rather than widen the table. */
+.cell-wrap { word-break: break-word; }
+.mw-220 { max-width: 220px; }
+
+/* Inline spinner shown while a lookup is in flight. */
+.inline-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    padding: 2.5rem 1rem;
+    color: var(--bs-secondary-color);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ───────────────────────────────────────────────────────────────────────────
+   Desktop layout deliberately untouched. Everything below is either a media
+   query, or a non-visual guard (min-width:0 / overflow-wrap) that changes
+   nothing at desktop width but stops content pushing the page sideways.
+
+   Breakpoints (matching Bootstrap 5's own, so utility classes stay in step):
+     1200px  xl   small laptop
+      992px  lg   tablet landscape
+      768px  md   tablet portrait   <- theme switches the sidebar to overlay here
+      576px  sm   mobile
+      480px       small mobile
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 0. Overflow guards — apply at every width ───────────────────────────── */
+/*
+ * A flex/grid child defaults to min-width:auto, which means it refuses to
+ * shrink below its content. One long URL or a wide table inside a flex column
+ * is then enough to push the whole page sideways. Setting min-width:0 on the
+ * containers that actually wrap variable-width content lets them shrink and
+ * hand the overflow to the inner scroller instead. Purely structural - nothing
+ * moves at desktop width.
+ */
+.content-body,
+.container-fluid,
+.card,
+.card-body,
+.card-header,
+.ajax-region,
+.ajax-content,
+.table-responsive,
+.result-panel,
+.stat-body,
+.result-main {
+    min-width: 0;
+}
+
+/* Never let the page itself scroll sideways - the table scrolls instead. */
+.content-body,
+.container-fluid {
+    max-width: 100%;
+}
+
+/* Long unbroken strings (URLs, emails, domains) wrap instead of widening. */
+.cell-wrap,
+.result-addr,
+.result-email,
+.check-detail,
+.stat-label,
+.breadcrumb li {
+    overflow-wrap: anywhere;
+}
+
+/* Media scales down with its box. */
+img,
+video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Momentum scrolling for the horizontal scrollers on iOS. */
+.table-responsive,
+.activity-chart {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Many pages of pagination must wrap, never overflow the card footer. */
+.pagination {
+    flex-wrap: wrap;
+}
+
+/* A dropdown opened near the right edge must not widen the viewport. */
+.dropdown-menu {
+    max-width: calc(100vw - 1.5rem);
+}
+
+/* ── 1. 1200px and below — small laptop ──────────────────────────────────── */
+@media (max-width: 1199.98px) {
+    /* The theme's page padding is generous for a 1440px canvas; reclaim some. */
+    .content-body .container-fluid {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+}
+
+/* ── 2. 992px and below — tablet landscape ───────────────────────────────── */
+@media (max-width: 991.98px) {
+    /* Card header = title block + action buttons. Let the actions drop onto
+       their own line rather than squeezing the title. */
+    .card-header.d-sm-flex {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .activity-chart {
+        gap: 0.375rem;
+    }
+}
+
+/* ── 3. 768px and below — tablet portrait / large mobile ─────────────────── */
+/* The theme flips the sidebar to overlay below 768px (deznav-init.js), so from
+   here down the content owns the full width. */
+@media (max-width: 767.98px) {
+    .content-body .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .filter-bar > [class*="col-"] {
+        margin-bottom: 0.75rem;
+    }
+
+    /* Card header actions align left once they have wrapped - right-aligned
+       buttons read as detached from the title they belong to. */
+    .card-header.d-sm-flex > .clearfix:last-child {
+        width: 100%;
+    }
+
+    .card-header .btn {
+        margin-left: 0 !important;
+    }
+
+    /* Modals: reclaim the desktop gutter, and keep a tall body scrollable
+       inside the dialog rather than pushing the footer off-screen. */
+    .modal-dialog {
+        margin: 0.75rem;
+    }
+
+    .modal-body {
+        max-height: calc(100vh - 12rem);
+        overflow-y: auto;
+    }
+
+    .stat-icon {
+        width: 2.75rem;
+        height: 2.75rem;
+        font-size: 1.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.35rem;
+    }
+}
+
+/* ── 4. 576px and below — mobile ─────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+    .content-body .container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    /* Every filter control full width - a half-width Select2 at 360px shows
+       about four characters, which is not a usable filter. */
+    .filter-bar > [class*="col-"] {
+        width: 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* The blank spacer label above the Clear button wastes a whole row here. */
+    .filter-bar .form-label[aria-hidden="true"] {
+        display: none;
+    }
+
+    /* Card header: title, then full-width actions underneath. */
+    .card-header.d-sm-flex {
+        display: block !important;
+    }
+
+    .card-header .btn,
+    .card-header form.d-inline {
+        width: 100%;
+        margin: 0.25rem 0 !important;
+    }
+
+    .card-header form.d-inline .btn {
+        margin: 0 !important;
+    }
+
+    /* Mode switch pills (Finder domain/person, Verifier single/many). */
+    .nav-pills {
+        flex-wrap: wrap;
+        gap: 0.375rem;
+    }
+
+    .nav-pills .nav-item {
+        flex: 1 1 auto;
+    }
+
+    .nav-pills .nav-link {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Result rows: score + action stack under the address instead of fighting
+       it for width. */
+    .result-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .result-row > div:last-child {
+        justify-content: space-between;
+    }
+
+    .result-row .btn {
+        flex: 1 1 auto;
+    }
+
+    /* Table footer: rows-per-page block and pagination on separate lines. */
+    .card-footer .d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0.75rem;
+    }
+
+    .card-footer .pagination {
+        justify-content: center;
+        margin-bottom: 0;
+    }
+
+    /* Chart: narrower columns so more days fit before it needs scrolling, and
+       the date labels turn vertical so they stop colliding. */
+    .activity-chart {
+        height: 9rem;
+        gap: 0.25rem;
+    }
+
+    .activity-day {
+        min-width: 1.375rem;
+    }
+
+    .activity-label {
+        font-size: 0.625rem;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+    }
+
+    .chart-legend {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    /* Compose modal (Leads): the fixed 60px label column costs too much here. */
+    .compose-label {
+        width: auto;
+        min-width: 3.25rem;
+    }
+
+    /* Quill editor: fixed 280px leaves no room once the toolbar wraps. */
+    #quill-wrapper {
+        height: 20rem;
+    }
+
+    .stat-chip {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* ── 5. 480px and below — small mobile ───────────────────────────────────── */
+@media (max-width: 480px) {
+    .content-body .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-header {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .stat-card .card-body {
+        gap: 0.75rem;
+    }
+
+    .stat-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.125rem;
+        border-radius: 0.625rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    .stat-meta {
+        font-size: 0.6875rem;
+    }
+
+    .card-title {
+        font-size: 0.9375rem;
+    }
+
+    .activity-chart {
+        height: 8rem;
+    }
+
+    .activity-day {
+        min-width: 1.25rem;
+    }
+
+    .check-list li {
+        padding: 0.4375rem 0;
+        gap: 0.5rem;
+    }
+
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+}
+
+/* ── 6. Touch targets ────────────────────────────────────────────────────── */
+/*
+ * Keyed to pointer:coarse rather than a width breakpoint: a touchscreen laptop
+ * needs these too, and a narrow desktop window does not. 2.75rem (44px) is the
+ * smallest target a finger hits reliably.
+ */
+@media (pointer: coarse) {
+    .btn,
+    .form-control,
+    .form-select {
+        min-height: 2.75rem;
+    }
+
+    .btn-sm,
+    .form-control-sm,
+    .form-select-sm {
+        min-height: 2.25rem;
+    }
+
+    .dropdown-item {
+        padding-top: 0.625rem;
+        padding-bottom: 0.625rem;
+    }
+
+    /* The row-action button is the smallest tap target in every table. */
+    .table .btn-square {
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+    }
+
+    /* The filter bar pins its controls to one shared height; honour the touch
+       minimum instead when that is larger. */
+    .filter-bar .form-control,
+    .filter-bar .btn,
+    .filter-bar .select2-container--default .select2-selection--single {
+        min-height: 2.75rem;
+    }
+}
+
+/* ── 7. Mobile sidebar drawer ────────────────────────────────────────────── */
+/*
+ * Below 768px deznav-init.js switches the sidebar to data-sidebar-style="overlay",
+ * where the theme slides .deznav in from left:-100% to left:0 and leaves
+ * .content-body at margin-left:0. That part already works and is untouched.
+ *
+ * What the theme does not ship is a backdrop. The panel opens over the content
+ * at z-index 3 with nothing behind it, so there is no visual separation and
+ * nothing to tap to dismiss. The rules below add one, and assets/js/mobile-nav.js
+ * handles the dismissals.
+ *
+ * Scoped to the overlay breakpoint on purpose: above it .menu-toggle means
+ * "collapse the sidebar to icons", which must keep working exactly as before.
+ */
+@media (max-width: 767.98px) {
+    [data-sidebar-style="overlay"] #main-wrapper.menu-toggle::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        /* Under .deznav (z-index 3), over everything else. */
+        z-index: 2;
+        opacity: 1;
+        animation: mobile-nav-fade 0.3s ease-out;
+    }
+
+    /* The drawer is 18rem wide in the theme; never let it exceed the screen. */
+    [data-sidebar-style="overlay"] .deznav {
+        max-width: 85vw;
+    }
+
+    /* The panel scrolls internally rather than growing the page. */
+    [data-sidebar-style="overlay"] .deznav .deznav-scroll {
+        max-height: 100vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@keyframes mobile-nav-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Body scroll lock while the drawer is open, so a swipe moves the menu and not
+   the page behind it. position:fixed would jump the scroll position back to the
+   top on close, so overflow:hidden is used instead. */
+body.mobile-nav-open {
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-sidebar-style="overlay"] #main-wrapper.menu-toggle::before {
+        animation: none;
+    }
+
+    [data-sidebar-style="overlay"] .deznav {
+        transition: none !important;
+    }
+}

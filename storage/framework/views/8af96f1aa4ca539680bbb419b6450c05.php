@@ -1,116 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
-    <title><?php echo $__env->yieldContent('title', 'AI Client Finder'); ?></title>
-    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('hes-favicon.png?v=4')); ?>">
-    <link rel="shortcut icon" type="image/png" href="<?php echo e(asset('hes-favicon.png?v=4')); ?>">
+    <meta name="robots" content="noindex, nofollow">
 
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
+    <title><?php echo $__env->yieldContent('title', 'AI Client Finder'); ?></title>
+
+    
+    <?php $favicon = asset('images/sabright-logo.png').'?v='.filemtime(public_path('images/sabright-logo.png')); ?>
+    <link rel="icon" type="image/png" href="<?php echo e($favicon); ?>">
+    <link rel="shortcut icon" type="image/png" href="<?php echo e($favicon); ?>">
+    <link rel="apple-touch-icon" href="<?php echo e($favicon); ?>">
+
+    
+    <link href="<?php echo e(asset('assets/vendor/metismenu/dist/metisMenu.min.css')); ?>" rel="stylesheet">
+    <link href="<?php echo e(asset('assets/vendor/bootstrap-select/dist/css/bootstrap-select.min.css')); ?>" rel="stylesheet">
+    <link class="main-switcher" href="<?php echo e(asset('assets/css/switcher.css')); ?>" rel="stylesheet">
+
+    
+    <link class="main-plugins" href="<?php echo e(asset('assets/css/plugins.css')); ?>" rel="stylesheet">
+    <link class="main-css" href="<?php echo e(asset('assets/css/style.css')); ?>" rel="stylesheet">
+
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.4rem;
-        }
-        .badge-new      { background-color: #6c757d; }
-        .badge-sent     { background-color: #0d6efd; }
-        .badge-failed   { background-color: #dc3545; }
-        .badge-replied  { background-color: #198754; }
-        .table > :not(caption) > * > * {
-            vertical-align: middle;
-        }
-        .search-card {
-            border: none;
-            box-shadow: 0 2px 12px rgba(0,0,0,.08);
-            border-radius: 12px;
-        }
-        .btn-find {
-            min-width: 140px;
-        }
-    </style>
+    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+
+    
+    <link href="<?php echo e(asset('assets/css/app-custom.css')); ?>?v=<?php echo e(filemtime(public_path('assets/css/app-custom.css'))); ?>" rel="stylesheet">
 
     <?php echo $__env->yieldPushContent('styles'); ?>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="<?php echo e(route('leads.index')); ?>">
-            <i class="bi bi-robot me-2"></i>AI Client Finder
-        </a>
-        <div class="ms-auto d-flex align-items-center gap-2">
-            <a href="<?php echo e(route('leads.export')); ?>" class="btn btn-sm btn-outline-light">
-                <i class="bi bi-download me-1"></i>Export CSV
-            </a>
 
-            
-            <div class="dropdown">
-                <button class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-gear me-1"></i>Settings
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                    <li>
-                        <a class="dropdown-item" href="<?php echo e(route('templates.index')); ?>">
-                            <i class="bi bi-envelope-paper me-2 text-primary"></i>Email Templates
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="<?php echo e(route('platforms.index')); ?>">
-                            <i class="bi bi-grid me-2 text-success"></i>Platforms
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="<?php echo e(route('categories.index')); ?>">
-                            <i class="bi bi-tag me-2 text-warning"></i>Categories
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="<?php echo e(route('addresses.index')); ?>">
-                            <i class="bi bi-geo-alt me-2 text-danger"></i>Addresses
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+<div id="preloader">
+    <div class="lds-ripple">
+        <div></div>
+        <div></div>
     </div>
-</nav>
-
-<div class="container pb-5">
-
-    
-    <?php if(session('success')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i><?php echo e(session('success')); ?>
-
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if(session('error')): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i><?php echo e(session('error')); ?>
-
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php echo $__env->yieldContent('content'); ?>
 </div>
 
-<!-- Bootstrap 5 JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<div id="main-wrapper">
+
+    <?php echo $__env->make('layouts.partials.nav-header', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+    <?php echo $__env->make('layouts.partials.header', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+    <?php echo $__env->make('layouts.partials.sidebar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+    
+    <main class="content-body">
+
+        <?php echo $__env->make('layouts.partials.page-title', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+        <div class="container-fluid">
+
+            
+            <?php if(session('success')): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i><?php echo e(session('success')); ?>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
+            <?php if(session('error')): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i><?php echo e(session('error')); ?>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
+            <?php echo $__env->yieldContent('content'); ?>
+        </div>
+    </main>
+    
+
+    <?php echo $__env->make('layouts.partials.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+</div>
+
+
+
+<script>
+    // Consumed by deznav-init.js so theme stylesheets resolve from any URL depth.
+    window.THEME_ASSET_BASE = "<?php echo e(asset('assets')); ?>/";
+</script>
+<script src="<?php echo e(asset('assets/vendor/jquery/dist/jquery.min.js')); ?>"></script>
+<script src="<?php echo e(asset('assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js')); ?>"></script>
+<script src="<?php echo e(asset('assets/vendor/bootstrap-select/dist/js/bootstrap-select.min.js')); ?>"></script>
+<script src="<?php echo e(asset('assets/vendor/metismenu/dist/metisMenu.min.js')); ?>"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="<?php echo e(asset('assets/vendor/i18n/i18n.js')); ?>"></script>
+<script src="<?php echo e(asset('assets/js/translator.js')); ?>"></script>
+<script src="<?php echo e(asset('assets/js/deznav-init.js')); ?>"></script>
+<script>
+    // deznav-init.js defaults the header bar to color_12 (#2c2c2c); run it light
+    // so the hamburger lines render dark. The nav header's black is owned by
+    // app-custom.css (.nav-header), since no theme token is true black.
+    // Mutating the shared options object keeps this applied on the theme's resize re-init.
+    Object.assign(dzSettingsOptions, { headerBg: 'color_1' });
+    new dzSettings(dzSettingsOptions);
+</script>
+<script src="<?php echo e(asset('assets/js/custom.js')); ?>"></script>
+
+<script src="<?php echo e(asset('assets/js/mobile-nav.js')); ?>?v=<?php echo e(filemtime(public_path('assets/js/mobile-nav.js'))); ?>"></script>
+<script src="<?php echo e(asset('assets/js/ajax-filters.js')); ?>"></script>
 
 <?php echo $__env->yieldPushContent('scripts'); ?>
+
 </body>
 </html>
 <?php /**PATH /var/www/html/resources/views/layouts/app.blade.php ENDPATH**/ ?>
