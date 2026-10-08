@@ -58,21 +58,21 @@ class CashLeadController extends Controller
     {
         CashLead::create($this->validated($request) + ['source' => CashLead::SOURCE_MANUAL]);
 
-        return redirect()->route('cash-leads.index', $this->redirectQuery($request))->with('success', 'Cash lead added.');
+        return redirect()->route('cash-leads.index', $this->redirectQuery($request))->with('success', 'Deal added.');
     }
 
     public function update(Request $request, int $id): RedirectResponse
     {
         CashLead::findOrFail($id)->update($this->validated($request));
 
-        return redirect()->route('cash-leads.index', $this->redirectQuery($request))->with('success', 'Cash lead updated.');
+        return redirect()->route('cash-leads.index', $this->redirectQuery($request))->with('success', 'Deal updated.');
     }
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
         CashLead::findOrFail($id)->delete();
 
-        return redirect()->route('cash-leads.index', $this->redirectQuery($request))->with('success', 'Cash lead removed.');
+        return redirect()->route('cash-leads.index', $this->redirectQuery($request))->with('success', 'Deal removed.');
     }
 
     /**
@@ -83,7 +83,7 @@ class CashLeadController extends Controller
         $lead = Lead::findOrFail($id);
 
         if (CashLead::where('lead_id', $lead->id)->exists()) {
-            return back()->with('error', "\"{$lead->company_name}\" is already a cash lead.");
+            return back()->with('error', "\"{$lead->company_name}\" is already a deal.");
         }
 
         CashLead::create([
@@ -95,7 +95,7 @@ class CashLeadController extends Controller
             'website'      => $lead->website,
         ]);
 
-        return back()->with('success', "\"{$lead->company_name}\" added to Cash Leads.");
+        return back()->with('success', "\"{$lead->company_name}\" added to Deals.");
     }
 
     /**
@@ -106,7 +106,7 @@ class CashLeadController extends Controller
         $gmb = GmbLead::findOrFail($id);
 
         if (CashLead::where('gmb_lead_id', $gmb->id)->exists()) {
-            return back()->with('error', "\"{$gmb->name}\" is already a cash lead.");
+            return back()->with('error', "\"{$gmb->name}\" is already a deal.");
         }
 
         CashLead::create([
@@ -118,7 +118,7 @@ class CashLeadController extends Controller
             'address'      => $gmb->address,
         ]);
 
-        return back()->with('success', "\"{$gmb->name}\" added to Cash Leads.");
+        return back()->with('success', "\"{$gmb->name}\" added to Deals.");
     }
 
     public function export(): StreamedResponse

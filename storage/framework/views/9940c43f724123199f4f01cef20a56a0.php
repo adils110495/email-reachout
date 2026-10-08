@@ -70,7 +70,7 @@
                                             <form method="POST" action="<?php echo e(route('cash-leads.from-gmb', $lead->id)); ?>">
                                                 <?php echo csrf_field(); ?>
                                                 <button type="submit" class="dropdown-item">
-                                                    <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Cash Lead
+                                                    <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Deal
                                                 </button>
                                             </form>
                                         </li>

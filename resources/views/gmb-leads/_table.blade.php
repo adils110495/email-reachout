@@ -73,7 +73,7 @@
                                             <form method="POST" action="{{ route('cash-leads.from-gmb', $lead->id) }}">
                                                 @csrf
                                                 <button type="submit" class="dropdown-item">
-                                                    <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Cash Lead
+                                                    <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Deal
                                                 </button>
                                             </form>
                                         </li>

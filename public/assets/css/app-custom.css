@@ -1011,9 +1011,18 @@ body.mobile-nav-open {
         padding-right: 0.625rem;
     }
 
-    /* Notification dropdown: never wider than the screen. */
-    #notifDropdown .dropdown-menu {
-        width: calc(100vw - 1.5rem) !important;
+    /* Notification dropdown: the bell sits left of the account button, so an
+       end-aligned menu runs off the left edge. Pin it to the screen instead,
+       under the header, with an even gutter on both sides. */
+    #notifDropdown .dropdown-menu.show {
+        position: fixed !important;
+        top: 3.5rem !important;
+        right: 0.75rem !important;
+        bottom: auto !important;
+        left: 0.75rem !important;
+        width: auto !important;
+        max-width: none;
+        transform: none !important;
     }
 
     /* Toasts span the screen instead of a fixed 350px box that overflows. */
@@ -1046,4 +1055,15 @@ body.mobile-nav-open {
     .test-result {
         flex-basis: 100%;
     }
+}
+
+/* Header bell and account buttons: no background or border, just the icon/label. */
+.header .navbar-collapse .btn-light,
+.header .navbar-collapse .btn-light:hover,
+.header .navbar-collapse .btn-light:focus,
+.header .navbar-collapse .btn-light:active,
+.header .navbar-collapse .btn-light.show {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
 }

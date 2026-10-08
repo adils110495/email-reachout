@@ -5,9 +5,9 @@
         <div class="empty-state">
             <i class="bi bi-cash-coin empty-state-icon"></i>
             <?php if($activeCategory || $activeSource || $search): ?>
-                No cash leads match. <a href="<?php echo e(route('cash-leads.index')); ?>">Clear the filters</a>.
+                No deals match. <a href="<?php echo e(route('cash-leads.index')); ?>">Clear the filters</a>.
             <?php else: ?>
-                No cash leads yet. Mark a lead as a Cash Lead, or add one with the button above.
+                No deals yet. Mark a lead as a Deal, or add one with the button above.
             <?php endif; ?>
         </div>
     </div>
@@ -68,7 +68,7 @@
                                         </li>
                                         <li>
                                             <form method="POST" action="<?php echo e(route('cash-leads.destroy', $cash->id)); ?>"
-                                                  onsubmit="return confirm('Remove \'<?php echo e(addslashes($cash->company_name)); ?>\' from Cash Leads?')">
+                                                  onsubmit="return confirm('Remove \'<?php echo e(addslashes($cash->company_name)); ?>\' from Deals?')">
                                                 <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                                 <input type="hidden" name="_redirect_back" value="<?php echo e(request()->getQueryString() ? '?'.request()->getQueryString() : ''); ?>">
                                                 <button type="submit" class="dropdown-item text-danger">

@@ -9,9 +9,9 @@
         <div class="empty-state">
             <i class="bi bi-cash-coin empty-state-icon"></i>
             @if($activeCategory || $activeSource || $search)
-                No cash leads match. <a href="{{ route('cash-leads.index') }}">Clear the filters</a>.
+                No deals match. <a href="{{ route('cash-leads.index') }}">Clear the filters</a>.
             @else
-                No cash leads yet. Mark a lead as a Cash Lead, or add one with the button above.
+                No deals yet. Mark a lead as a Deal, or add one with the button above.
             @endif
         </div>
     </div>
@@ -72,7 +72,7 @@
                                         </li>
                                         <li>
                                             <form method="POST" action="{{ route('cash-leads.destroy', $cash->id) }}"
-                                                  onsubmit="return confirm('Remove \'{{ addslashes($cash->company_name) }}\' from Cash Leads?')">
+                                                  onsubmit="return confirm('Remove \'{{ addslashes($cash->company_name) }}\' from Deals?')">
                                                 @csrf @method('DELETE')
                                                 <input type="hidden" name="_redirect_back" value="{{ request()->getQueryString() ? '?'.request()->getQueryString() : '' }}">
                                                 <button type="submit" class="dropdown-item text-danger">

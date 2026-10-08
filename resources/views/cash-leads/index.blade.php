@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Cash Leads')
-@section('page-title', 'Cash Leads')
+@section('title', 'Deals')
+@section('page-title', 'Deals')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item active" aria-current="page">Cash Leads</li>
+    <li class="breadcrumb-item active" aria-current="page">Deals</li>
 @endsection
 
 @section('content')
@@ -23,7 +23,7 @@
             <div class="card-header py-3 d-sm-flex d-block align-items-center justify-content-between">
                 <div class="clearfix">
                     <h4 class="card-title">
-                        <i class="bi bi-cash-coin me-2 text-primary"></i>Cash Leads
+                        <i class="bi bi-cash-coin me-2 text-primary"></i>Deals
                         <span class="badge badge-primary light ms-1" data-ajax-total>{{ $cashLeads->total() }}</span>
                     </h4>
                     <p class="mb-0 fs-13">Leads you have talked to and expect to turn into paying customers.</p>
@@ -33,7 +33,7 @@
                         <i class="bi bi-download me-1"></i>Export CSV
                     </a>
                     <button class="btn btn-primary btn-sm m-1" data-bs-toggle="modal" data-bs-target="#addCashModal">
-                        <i class="bi bi-plus-lg me-1"></i>Add Cash Lead
+                        <i class="bi bi-plus-lg me-1"></i>Add Deal
                     </button>
                 </div>
             </div>
@@ -82,8 +82,8 @@
 </div>
 
 {{-- Add / Edit modals share one field set --}}
-@foreach(['add' => ['Add Cash Lead', 'bi-plus-circle text-primary', route('cash-leads.store'), false],
-          'edit' => ['Edit Cash Lead', 'bi-pencil-square text-warning', '#', true]] as $mode => [$title, $iconClass, $action, $isEdit])
+@foreach(['add' => ['Add Deal', 'bi-plus-circle text-primary', route('cash-leads.store'), false],
+          'edit' => ['Edit Deal', 'bi-pencil-square text-warning', '#', true]] as $mode => [$title, $iconClass, $action, $isEdit])
 <div class="modal fade" id="{{ $mode }}CashModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
