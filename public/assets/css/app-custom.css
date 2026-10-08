@@ -974,3 +974,76 @@ body.mobile-nav-open {
 .nav-tabs .nav-link i {
     display: inline-block;
 }
+
+/* ── 8. Newer modules on tablet / mobile ─────────────────────────────────── */
+/*
+ * Header account controls, notification toasts, tab strips and the Mail
+ * Settings test row. Every rule below sits inside a max-width query, so
+ * screens of 1200px and up (desktop) are not touched.
+ */
+@media (max-width: 991.98px) {
+    /* Title + bell + account stay on one row; the page title gives way first. */
+    .header .navbar-collapse {
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+    }
+
+    .header .header-left {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .header .dashboard_bar {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .header .navbar-collapse > .d-flex {
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 575.98px) {
+    /* Compact bell / account buttons so they do not crowd the title. */
+    .header .navbar-collapse .btn {
+        padding-left: 0.625rem;
+        padding-right: 0.625rem;
+    }
+
+    /* Notification dropdown: never wider than the screen. */
+    #notifDropdown .dropdown-menu {
+        width: calc(100vw - 1.5rem) !important;
+    }
+
+    /* Toasts span the screen instead of a fixed 350px box that overflows. */
+    #notifToasts {
+        left: 0;
+        right: 0;
+        padding: 0.5rem !important;
+    }
+
+    #notifToasts .toast {
+        width: 100%;
+        max-width: none;
+    }
+
+    /* Tab strips (Finder, Verifier, Mail Settings): scroll sideways, never wrap
+       a label onto two lines or push the page wider. */
+    .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-tabs .nav-link {
+        flex-shrink: 0;
+    }
+
+    /* Mail Settings: the connection-test result drops under the buttons. */
+    .test-result {
+        flex-basis: 100%;
+    }
+}

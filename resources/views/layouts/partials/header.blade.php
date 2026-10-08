@@ -9,6 +9,8 @@
                     <div class="dashboard_bar">@yield('page-title', 'Dashboard')</div>
                 </div>
 
+                <div class="d-flex align-items-center gap-2">
+
                 {{-- Notification bell: filled in by layouts/partials/notifications.blade.php --}}
                 <div class="dropdown" id="notifDropdown">
                     <button class="btn btn-light position-relative" type="button" id="notifBell"
@@ -26,6 +28,29 @@
                             <div class="text-center text-muted fs-13 py-4">No notifications yet.</div>
                         </div>
                     </div>
+                </div>
+
+                {{-- Signed-in user + sign out --}}
+                <div class="dropdown">
+                    <button class="btn btn-light d-inline-flex align-items-center gap-2" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account">
+                        <i class="bi bi-person-circle"></i>
+                        <span class="d-none d-md-inline">{{ auth()->user()->name }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li class="px-3 py-2 fs-13 text-muted">Signed in as <strong>{{ auth()->user()->username }}</strong></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sign out
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+
                 </div>
             </div>
         </nav>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BulkController;
 use App\Http\Controllers\CashLeadController;
 use App\Http\Controllers\CategoryController;
@@ -22,6 +23,26 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 */
+
+// ── Public ─────────────────────────────────────────────────────────────────
+
+// Open-tracking pixel. Hit by the recipient's mail client, which has no
+// session - it must stay outside the auth group or opens are never recorded.
+Route::get('/t/o/{token}.gif', [TrackingController::class, 'open'])->name('track.open');
+
+// Sign in / sign up. Guests only; a signed-in user is sent to the dashboard.
+Route::middleware('guest')->group(function () {
+    Route::get('/login',   [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',  [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.attempt');
+    Route::get('/signup',  [AuthController::class, 'showSignup'])->name('signup');
+    Route::post('/signup', [AuthController::class, 'signup'])->middleware('throttle:10,1')->name('signup.attempt');
+});
+
+// ── Signed-in users only: everything below ─────────────────────────────────
+Route::middleware('auth')->group(function () {
+
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
 
 // Dashboard — the landing page
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -119,8 +140,6 @@ Route::get('/export', [LeadController::class, 'export'])->name('leads.export');
 Route::get('/email-activity',                [EmailActivityController::class, 'index'])->name('email-activity.index');
 Route::post('/email-activity/check-replies', [EmailActivityController::class, 'checkReplies'])->name('email-activity.check-replies');
 
-// Open-tracking pixel (hit by the recipient's mail client)
-Route::get('/t/o/{token}.gif', [TrackingController::class, 'open'])->name('track.open');
 
 // Settings — Email Templates CRUD
 Route::get('/settings/templates/export',    [EmailTemplateController::class, 'export'])->name('templates.export');
@@ -163,3 +182,5 @@ Route::post('/settings/mail/test/{type}', [MailSettingController::class, 'test']
 Route::get('/api/templates', fn() => response()->json(
     \App\Models\EmailTemplate::select('id','name','subject','body','attachments')->where('status', 'active')->latest()->get()
 ))->name('api.templates');
+
+}); // end auth group

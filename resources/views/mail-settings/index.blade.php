@@ -92,7 +92,7 @@
                                        {{ old('is_active', $smtp->is_active ?? true) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="smtpActive">Active (use these settings for sending)</label>
                             </div>
-                            <div class="d-flex gap-2 align-items-center">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save SMTP</button>
                                 <button type="button" class="btn btn-light btn-test"><i class="bi bi-plug me-1"></i>Test Connection</button>
                                 <span class="test-result fs-13"></span>
@@ -150,7 +150,7 @@
                                        {{ old('is_active', $imap->is_active ?? true) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="imapActive">Active (copy sent emails to this mailbox)</label>
                             </div>
-                            <div class="d-flex gap-2 align-items-center">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save IMAP</button>
                                 <button type="button" class="btn btn-light btn-test"><i class="bi bi-plug me-1"></i>Test Connection</button>
                                 <span class="test-result fs-13"></span>
