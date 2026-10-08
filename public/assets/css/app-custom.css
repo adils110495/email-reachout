@@ -25,15 +25,16 @@
 .nav-header .brand-logo .brand-title {
     height: auto;
     max-width: 13rem;
+    max-height: 2.5rem; /* the lockup is ~4:1; keep it inside the 50px nav header */
     margin-top: 0;
     margin-left: 0;
     object-fit: contain;
 }
 .nav-header .brand-logo .logo-abbr {
     display: none;
-    width: 2.25rem;
+    width: 2.5rem;
     height: 2.25rem;
-    min-width: 2.25rem;
+    min-width: 2.5rem;
     object-fit: cover;
     object-position: left center;
 }
@@ -1066,4 +1067,18 @@ body.mobile-nav-open {
     background-color: transparent;
     border-color: transparent;
     box-shadow: none;
+}
+
+/* Tablet / mobile: the theme shrinks .nav-header to 5rem and hides the wordmark
+   (style.css: max-width 63.9375rem), and the collapsed-sidebar rule above only
+   shows the "SB" mark in desktop collapse mode - so below 1024px there was no
+   logo at all. Show the mark there. Desktop (1024px and up) is unchanged. */
+@media (max-width: 1023.98px) {
+    .nav-header .brand-logo .brand-title {
+        display: none;
+    }
+
+    .nav-header .brand-logo .logo-abbr {
+        display: block;
+    }
 }
