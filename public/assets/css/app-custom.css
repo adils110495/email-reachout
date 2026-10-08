@@ -4,16 +4,18 @@
  */
 
 /* ── Brand ───────────────────────────────────────────────── */
-/* Nav header runs black. sabright-logo.png is transparent artwork whose "SA"
-   and tagline are white, so it is built for exactly this background - keep
-   them in sync if either is ever swapped. */
+/* Nav header runs white. sabright-logo.png is transparent artwork whose "SA"
+   and tagline are DARK grey (red mark + red "BRIGHT"), so it is built for a
+   light background - on black those parts disappear. Keep them in sync if
+   either is ever swapped. */
 .nav-header {
-    background-color: #000;
+    background-color: #fff;
+    border-bottom: 1px solid var(--bs-border-color, #e9ecef);
 }
 @media only screen and (max-width: 47.9375rem) {
-    /* style.css:14295 makes it transparent on small screens; keep it black. */
+    /* style.css:14295 makes it transparent on small screens; keep it white. */
     .nav-header {
-        background-color: #000;
+        background-color: #fff;
     }
 }
 

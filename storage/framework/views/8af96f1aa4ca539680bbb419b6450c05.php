@@ -104,8 +104,9 @@
 <script src="<?php echo e(asset('assets/js/deznav-init.js')); ?>"></script>
 <script>
     // deznav-init.js defaults the header bar to color_12 (#2c2c2c); run it light
-    // so the hamburger lines render dark. The nav header's black is owned by
-    // app-custom.css (.nav-header), since no theme token is true black.
+    // so the hamburger lines render dark. The nav header's white (the logo's
+    // dark "SA" and tagline need a light background) is owned by
+    // app-custom.css (.nav-header).
     // Mutating the shared options object keeps this applied on the theme's resize re-init.
     Object.assign(dzSettingsOptions, { headerBg: 'color_1' });
     new dzSettings(dzSettingsOptions);
