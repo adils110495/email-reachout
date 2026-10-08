@@ -68,7 +68,7 @@ return [
                     'icon'   => 'bi-geo-alt',
                 ],
                 [
-                    'label'  => 'Cash Leads',
+                    'label'  => 'Deals',
                     'route'  => 'cash-leads.index',
                     'active' => ['cash-leads.*'],
                     'icon'   => 'bi-cash-coin',
