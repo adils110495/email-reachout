@@ -23,14 +23,15 @@
             <table class="table">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:60px">#</th>
+                        
+                        <th style="width:60px" class="d-none d-md-table-cell">#</th>
                         <th class="mw-150">Run</th>
-                        <th style="width:130px">Type</th>
+                        <th style="width:130px" class="d-none d-lg-table-cell">Type</th>
                         <th style="width:120px">Status</th>
                         <th style="width:220px">Progress</th>
-                        <th style="width:110px" class="text-end">Success</th>
-                        <th style="width:110px" class="text-end">Failed</th>
-                        <th style="width:130px">Started</th>
+                        <th style="width:110px" class="text-end d-none d-lg-table-cell">Success</th>
+                        <th style="width:110px" class="text-end d-none d-lg-table-cell">Failed</th>
+                        <th style="width:130px" class="d-none d-xl-table-cell">Started</th>
                         <th style="width:70px" class="text-center">Action</th>
                     </tr>
                 </thead>
@@ -40,7 +41,9 @@
                         <tr data-search="<?php echo e(strtolower($bulk->name.' '.$bulk->original_filename.' '.$bulk->type.' '.$bulk->status)); ?>"
                             <?php if($bulk->isRunning()): ?> data-bulk-running="<?php echo e($bulk->id); ?>" <?php endif; ?>>
 
-                            <td><span><?php echo e(($bulks->currentPage() - 1) * $bulks->perPage() + $loop->iteration); ?></span></td>
+                            <td class="d-none d-md-table-cell">
+                                <span><?php echo e(($bulks->currentPage() - 1) * $bulks->perPage() + $loop->iteration); ?></span>
+                            </td>
 
                             <td>
                                 <h6 class="mb-0 cell-wrap">
@@ -49,9 +52,17 @@
                                 <?php if($bulk->original_filename): ?>
                                     <span class="fs-13 text-muted cell-wrap"><?php echo e($bulk->original_filename); ?></span>
                                 <?php endif; ?>
+
+                                
+                                <div class="d-lg-none fs-13 text-muted">
+                                    <?php echo e($bulk->type === 'find' ? 'Finder' : 'Verify'); ?>
+
+                                    · <span data-cell="successful-sm"><?php echo e(number_format($bulk->successful_records)); ?></span> ok
+                                    · <span data-cell="failed-sm"><?php echo e(number_format($bulk->failed_records)); ?></span> failed
+                                </div>
                             </td>
 
-                            <td>
+                            <td class="d-none d-lg-table-cell">
                                 <?php if($bulk->type === 'find'): ?>
                                     <span class="badge badge-info light"><i class="bi bi-search me-1"></i>Finder</span>
                                 <?php else: ?>
@@ -81,10 +92,10 @@
                                 </span>
                             </td>
 
-                            <td class="text-end text-success fw-medium" data-cell="successful"><?php echo e(number_format($bulk->successful_records)); ?></td>
-                            <td class="text-end text-danger fw-medium" data-cell="failed"><?php echo e(number_format($bulk->failed_records)); ?></td>
+                            <td class="text-end text-success fw-medium d-none d-lg-table-cell" data-cell="successful"><?php echo e(number_format($bulk->successful_records)); ?></td>
+                            <td class="text-end text-danger fw-medium d-none d-lg-table-cell" data-cell="failed"><?php echo e(number_format($bulk->failed_records)); ?></td>
 
-                            <td class="fs-13 text-muted text-nowrap">
+                            <td class="fs-13 text-muted text-nowrap d-none d-xl-table-cell">
                                 <?php echo e(($bulk->started_at ?? $bulk->created_at)?->format('j M Y, H:i') ?? '—'); ?>
 
                             </td>

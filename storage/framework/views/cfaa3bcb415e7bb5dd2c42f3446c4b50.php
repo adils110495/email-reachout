@@ -61,7 +61,7 @@
                     </div>
                 <?php endif; ?>
 
-                <ul class="nav nav-pills mb-3" role="tablist">
+                <ul class="nav nav-tabs mb-4" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" data-verify-mode="single" type="button" role="tab" aria-selected="true">
                             <i class="bi bi-envelope me-1"></i>Single address

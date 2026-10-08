@@ -6,6 +6,7 @@ use App\Mail\OutreachMail;
 use App\Models\Lead;
 use App\Services\AIService;
 use App\Services\ImapService;
+use App\Services\MailConfigService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -43,7 +44,7 @@ class SendEmailJob implements ShouldQueue
      * Execute the queued job.
      * Uses pre-written subject/body when provided; falls back to AI generation.
      */
-    public function handle(AIService $aiService, ImapService $imapService): void
+    public function handle(AIService $aiService, ImapService $imapService, MailConfigService $mailConfig): void
     {
         if ($this->lead->status === Lead::STATUS_SENT) {
             Log::info('SendEmailJob: Skipping — already sent', ['lead_id' => $this->lead->id]);
@@ -54,6 +55,9 @@ class SendEmailJob implements ShouldQueue
         $senderCompany = env('SENDER_COMPANY', 'Our Company');
 
         try {
+            // Use the SMTP saved under Settings > Mail Settings (falls back to .env)
+            $mailConfig->applySmtp();
+
             // Use the compose-modal content if provided, otherwise generate via AI
             $emailBody   = $this->body    ?: $aiService->generateOutreachEmail($this->lead, $senderName, $senderCompany);
             $subjectLine = $this->subject ?: $aiService->generateSubjectLine($this->lead, $senderCompany);
@@ -68,8 +72,8 @@ class SendEmailJob implements ShouldQueue
                 to:        $this->lead->email,
                 subject:   $subjectLine,
                 htmlBody:  $mailable->render(),
-                fromName:  env('MAIL_FROM_NAME', $senderName),
-                fromEmail: env('MAIL_FROM_ADDRESS'),
+                fromName:  $mailConfig->fromName($senderName),
+                fromEmail: (string) $mailConfig->fromAddress(),
             );
 
             // Mark as sent

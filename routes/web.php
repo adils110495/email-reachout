@@ -4,10 +4,13 @@ use App\Http\Controllers\AddressController;
 use App\Http\Controllers\BulkController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailActivityController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FinderController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\MailSettingController;
 use App\Http\Controllers\PlatformController;
+use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\VerifierController;
 use Illuminate\Support\Facades\Route;
 
@@ -90,6 +93,13 @@ Route::post('/leads/bulk-status', [LeadController::class, 'bulkStatus'])->name('
 // Export CSV
 Route::get('/export', [LeadController::class, 'export'])->name('leads.export');
 
+// Email Activity — opened / replied / not opened for every email we sent
+Route::get('/email-activity',                [EmailActivityController::class, 'index'])->name('email-activity.index');
+Route::post('/email-activity/check-replies', [EmailActivityController::class, 'checkReplies'])->name('email-activity.check-replies');
+
+// Open-tracking pixel (hit by the recipient's mail client)
+Route::get('/t/o/{token}.gif', [TrackingController::class, 'open'])->name('track.open');
+
 // Settings — Email Templates CRUD
 Route::get('/settings/templates/export',    [EmailTemplateController::class, 'export'])->name('templates.export');
 Route::get('/settings/templates',           [EmailTemplateController::class, 'index'])->name('templates.index');
@@ -120,6 +130,12 @@ Route::get('/settings/addresses',          [AddressController::class, 'index'])-
 Route::post('/settings/addresses',         [AddressController::class, 'store'])->name('addresses.store');
 Route::put('/settings/addresses/{id}',     [AddressController::class, 'update'])->name('addresses.update');
 Route::delete('/settings/addresses/{id}',  [AddressController::class, 'destroy'])->name('addresses.destroy');
+
+// Mail Settings — SMTP (sending) and IMAP (Sent folder copy)
+Route::get('/settings/mail',             [MailSettingController::class, 'index'])->name('mail-settings.index');
+Route::put('/settings/mail/smtp',        [MailSettingController::class, 'updateSmtp'])->name('mail-settings.smtp');
+Route::put('/settings/mail/imap',        [MailSettingController::class, 'updateImap'])->name('mail-settings.imap');
+Route::post('/settings/mail/test/{type}', [MailSettingController::class, 'test'])->name('mail-settings.test');
 
 // Templates JSON for compose modal dropdown
 Route::get('/api/templates', fn() => response()->json(

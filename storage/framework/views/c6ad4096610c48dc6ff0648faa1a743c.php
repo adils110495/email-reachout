@@ -314,11 +314,14 @@ unset($__errorArgs, $__bag); ?>
             counts.textContent = fmt(data.processed) + ' / ' + fmt(data.total) + ' (' + data.progress + '%)';
         }
 
-        const ok = row.querySelector('[data-cell="successful"]');
-        if (ok) ok.textContent = fmt(data.successful);
+        // Two targets each: the wide column, and the summary line that replaces
+        // it below lg. Only one is visible at a time, but both must stay current
+        // so a resize never reveals a stale number.
+        row.querySelectorAll('[data-cell="successful"], [data-cell="successful-sm"]')
+           .forEach(function (el) { el.textContent = fmt(data.successful); });
 
-        const bad = row.querySelector('[data-cell="failed"]');
-        if (bad) bad.textContent = fmt(data.failed);
+        row.querySelectorAll('[data-cell="failed"], [data-cell="failed-sm"]')
+           .forEach(function (el) { el.textContent = fmt(data.failed); });
     }
 
     function watch(row) {

@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Queue\SerializesModels;
 
 class OutreachMail extends Mailable
@@ -27,7 +28,18 @@ class OutreachMail extends Mailable
         public readonly string   $senderCompany,
         public readonly array    $emailAttachments = [],
         public readonly ?Address $address = null,
+        public readonly ?string  $trackingToken = null,
+        public readonly ?string  $messageId = null,
     ) {}
+
+    /**
+     * A known Message-ID lets replies be matched back to this email
+     * (their In-Reply-To header carries it).
+     */
+    public function headers(): Headers
+    {
+        return new Headers(messageId: $this->messageId);
+    }
 
     public function envelope(): Envelope
     {

@@ -18,19 +18,19 @@
             <table class="table">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:60px">#</th>
+                        <th style="width:60px" class="d-none d-md-table-cell">#</th>
                         <th class="mw-150">Template Name</th>
                         <th class="mw-200">Subject</th>
                         <th style="width:120px">Status</th>
-                        <th class="mw-100">Created</th>
+                        <th class="mw-100 d-none d-lg-table-cell">Created</th>
                         <th style="width:80px" class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php $__currentLoopData = $templates; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $template): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr data-search="<?php echo e(strtolower($template->name . ' ' . $template->subject)); ?>">
-                        <td><span><?php echo e($i + 1); ?></span></td>
-                        <td><h6 class="mb-0"><?php echo e($template->name); ?></h6></td>
+                        <td class="d-none d-md-table-cell"><span><?php echo e($i + 1); ?></span></td>
+                        <td><h6 class="mb-0 cell-wrap"><?php echo e($template->name); ?></h6><div class="d-lg-none fs-13 text-muted"><?php echo e($template->created_at->diffForHumans()); ?></div></td>
                         <td><span><?php echo e(Str::limit($template->subject, 60)); ?></span></td>
                         <td>
                             <?php if($template->status === 'active'): ?>
@@ -41,7 +41,7 @@
                                 <span class="badge badge-danger light">Deleted</span>
                             <?php endif; ?>
                         </td>
-                        <td><span class="text-nowrap"><?php echo e($template->created_at->diffForHumans()); ?></span></td>
+                        <td class="d-none d-lg-table-cell"><span class="text-nowrap"><?php echo e($template->created_at->diffForHumans()); ?></span></td>
                         <td class="text-center">
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-light btn-square"

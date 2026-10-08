@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $subjectLine }}</title>
+    <title><?php echo e($subjectLine); ?></title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -130,54 +130,55 @@
 
 <div class="email-wrapper">
 
-    {{-- ── HEADER ── --}}
+    
     <div class="email-header">
-        <img src="{{ config('app.url') }}/images/hes-email-logo.png" alt="{{ $senderCompany }}">
+        <img src="<?php echo e(config('app.url')); ?>/images/hes-email-logo.png" alt="<?php echo e($senderCompany); ?>">
     </div>
     <div class="header-divider"></div>
 
-    {{-- ── BODY ── --}}
+    
     <div class="email-body">
-        @foreach(explode("\n", $emailBody) as $line)
-            @if(trim($line))
-                <p>{{ $line }}</p>
-            @endif
-        @endforeach
+        <?php $__currentLoopData = explode("\n", $emailBody); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $line): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <?php if(trim($line)): ?>
+                <p><?php echo e($line); ?></p>
+            <?php endif; ?>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </div>
 
-    {{-- ── FOOTER ── --}}
+    
     <div class="email-footer">
 
         <!-- <div class="footer-tagline">
             You have received this email because you expressed interest in engineering services
-            or were identified as a potential partner for {{ $senderCompany }}.
+            or were identified as a potential partner for <?php echo e($senderCompany); ?>.
         </div> -->
 
         
 
         <div class="footer-contact-info">
-            @if($address)
-                <div>{{ $address->address }}</div>
+            <?php if($address): ?>
+                <div><?php echo e($address->address); ?></div>
                 <div>
-                    <a href="mailto:{{ $address->email }}">{{ $address->email }}</a>
+                    <a href="mailto:<?php echo e($address->email); ?>"><?php echo e($address->email); ?></a>
                     &nbsp;|&nbsp;
-                    <a href="tel:{{ $address->phone }}">{{ $address->phone }}</a>
-                    @if($address->alternate_phone)
+                    <a href="tel:<?php echo e($address->phone); ?>"><?php echo e($address->phone); ?></a>
+                    <?php if($address->alternate_phone): ?>
                         &nbsp;|&nbsp;
-                        <a href="tel:{{ $address->alternate_phone }}">{{ $address->alternate_phone }}</a>
-                    @endif
+                        <a href="tel:<?php echo e($address->alternate_phone); ?>"><?php echo e($address->alternate_phone); ?></a>
+                    <?php endif; ?>
                 </div>
-                @if($address->website)
+                <?php if($address->website): ?>
                     <div>
-                        <a href="{{ $address->website }}" style="color:#4361ee; text-decoration:underline;">
-                            {{ parse_url($address->website, PHP_URL_HOST) ?: $address->website }}
+                        <a href="<?php echo e($address->website); ?>" style="color:#4361ee; text-decoration:underline;">
+                            <?php echo e(parse_url($address->website, PHP_URL_HOST) ?: $address->website); ?>
+
                         </a>
                     </div>
-                @endif
-            @else
+                <?php endif; ?>
+            <?php else: ?>
                 <div>Shop No. 25, Modipuram, Meerut, Uttar Pradesh - 250110, India</div>
                 <div>
-                    <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>
+                    <a href="mailto:<?php echo e(config('mail.from.address')); ?>"><?php echo e(config('mail.from.address')); ?></a>
                     &nbsp;|&nbsp;
                     <a href="tel:+918864939301">+91 88649 39301</a>
                     &nbsp;|&nbsp;
@@ -186,7 +187,7 @@
                 <div>
                     <a href="http://heservices.in/" style="color:#4361ee; text-decoration:underline;">heservices.in</a>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
 
         <hr class="footer-divider-line">
@@ -199,17 +200,18 @@
         </div>
 
         <div class="footer-copy">
-            &copy; {{ date('Y') }} {{ $senderCompany }}. All rights reserved.
+            &copy; <?php echo e(date('Y')); ?> <?php echo e($senderCompany); ?>. All rights reserved.
         </div>
 
     </div>
 
 </div>
 
-@if(! empty($trackingToken))
-    {{-- Open tracking pixel --}}
-    <img src="{{ route('track.open', $trackingToken) }}" width="1" height="1" alt="" style="border:0;">
-@endif
+<?php if(! empty($trackingToken)): ?>
+    
+    <img src="<?php echo e(route('track.open', $trackingToken)); ?>" width="1" height="1" alt="" style="border:0;">
+<?php endif; ?>
 
 </body>
 </html>
+<?php /**PATH /var/www/html/resources/views/emails/outreach.blade.php ENDPATH**/ ?>

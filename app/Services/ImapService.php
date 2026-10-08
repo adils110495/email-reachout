@@ -25,14 +25,16 @@ class ImapService
             return;
         }
 
-        $host     = env('IMAP_HOST');
-        $username = env('IMAP_USERNAME');
-        $password = env('IMAP_PASSWORD');
-        $folder   = env('IMAP_FOLDER', 'INBOX.Sent');
-        $port     = (int) env('IMAP_PORT', 993);
-        $protocol = env('IMAP_PROTOCOL', 'ssl');
+        // Saved Mail Settings first, .env as fallback.
+        ['host' => $host, 'port' => $port, 'protocol' => $protocol,
+         'username' => $username, 'password' => $password, 'folder' => $folder] = app(MailConfigService::class)->imap();
 
-        $mailbox = '{' . $host . ':' . $port . '/imap/' . $protocol . '/novalidate-cert}' . $folder;
+        if (! $host) {
+            Log::warning('ImapService: no IMAP host configured, skipping Sent-folder copy.');
+            return;
+        }
+
+        $mailbox = $this->mailboxString($host, $port, $protocol, $folder);
 
         Log::debug('ImapService: Connecting to mailbox', ['mailbox' => $mailbox, 'username' => $username]);
 
@@ -65,6 +67,83 @@ class ImapService
         }
 
         imap_close($mbox);
+    }
+
+    /**
+     * Open and close a connection to verify the credentials.
+     *
+     * @return string|null  null on success, otherwise the error message
+     */
+    public function testConnection(string $host, int $port, string $protocol, string $username, string $password, string $folder): ?string
+    {
+        if (! extension_loaded('imap')) {
+            return 'PHP imap extension is not loaded.';
+        }
+
+        $mbox = @imap_open($this->mailboxString($host, $port, $protocol, $folder), $username, $password, OP_HALFOPEN, 1);
+
+        if (! $mbox) {
+            return imap_last_error() ?: 'Could not connect to the IMAP server.';
+        }
+
+        imap_close($mbox);
+        imap_errors();
+
+        return null;
+    }
+
+    /**
+     * Header summary of INBOX messages received since $since (newest 500 max).
+     *
+     * @return array<int, array{from:string,in_reply_to:string,references:string,date:\Illuminate\Support\Carbon}>
+     * @throws \RuntimeException when the mailbox cannot be reached
+     */
+    public function recentInboxMessages(\DateTimeInterface $since): array
+    {
+        if (! extension_loaded('imap')) {
+            throw new \RuntimeException('PHP imap extension is not loaded.');
+        }
+
+        ['host' => $host, 'port' => $port, 'protocol' => $protocol, 'username' => $username, 'password' => $password] = app(MailConfigService::class)->imap();
+
+        if (! $host) {
+            throw new \RuntimeException('No IMAP settings configured (Settings > Mail Settings).');
+        }
+
+        $mbox = @imap_open($this->mailboxString($host, $port, $protocol, 'INBOX'), (string) $username, (string) $password, OP_READONLY, 1);
+
+        if (! $mbox) {
+            throw new \RuntimeException(imap_last_error() ?: 'Could not connect to the IMAP server.');
+        }
+
+        $messages = [];
+        $numbers  = imap_search($mbox, 'SINCE "' . $since->format('d-M-Y') . '"') ?: [];
+
+        foreach (array_slice($numbers, -500) as $number) {
+            $header = @imap_headerinfo($mbox, $number);
+            if (! $header || empty($header->from[0])) {
+                continue;
+            }
+
+            $messages[] = [
+                'from'        => strtolower($header->from[0]->mailbox . '@' . ($header->from[0]->host ?? '')),
+                'in_reply_to' => (string) ($header->in_reply_to ?? ''),
+                'references'  => (string) ($header->references ?? ''),
+                'date'        => \Illuminate\Support\Carbon::parse($header->date ?? 'now'),
+            ];
+        }
+
+        imap_close($mbox);
+        imap_errors();
+
+        return $messages;
+    }
+
+    private function mailboxString(string $host, int $port, string $protocol, string $folder): string
+    {
+        $flags = $protocol === 'notls' ? '/notls' : '/' . $protocol;
+
+        return '{' . $host . ':' . $port . '/imap' . $flags . '/novalidate-cert}' . $folder;
     }
 
     /**

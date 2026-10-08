@@ -966,3 +966,9 @@ body.mobile-nav-open {
         transition: none !important;
     }
 }
+
+/* Theme sets .nav-pills .nav-link i { display:flex }, which stacks the icon above the label. Keep them inline. */
+.nav-pills .nav-link i,
+.nav-tabs .nav-link i {
+    display: inline-block;
+}

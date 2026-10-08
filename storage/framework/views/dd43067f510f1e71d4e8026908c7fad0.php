@@ -18,12 +18,12 @@
             <table class="table">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:60px">#</th>
+                        <th style="width:60px" class="d-none d-md-table-cell">#</th>
                         <th class="mw-200">Address</th>
                         <th class="mw-150">Email</th>
-                        <th class="mw-120">Phone</th>
-                        <th class="mw-120">Alt. Phone</th>
-                        <th class="mw-150">Website</th>
+                        <th class="mw-120 d-none d-md-table-cell">Phone</th>
+                        <th class="mw-120 d-none d-xl-table-cell">Alt. Phone</th>
+                        <th class="mw-150 d-none d-lg-table-cell">Website</th>
                         <th style="width:120px">Status</th>
                         <th style="width:80px" class="text-center">Action</th>
                     </tr>
@@ -31,14 +31,14 @@
                 <tbody>
                     <?php $__currentLoopData = $addresses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $addr): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr data-search="<?php echo e(strtolower(implode(' ', [$addr->address, $addr->email, $addr->phone, $addr->alternate_phone, $addr->website, $addr->status]))); ?>">
-                        <td><span><?php echo e($i + 1); ?></span></td>
-                        <td><span><?php echo e($addr->address); ?></span></td>
+                        <td class="d-none d-md-table-cell"><span><?php echo e($i + 1); ?></span></td>
+                        <td><span class="cell-wrap"><?php echo e($addr->address); ?></span><div class="d-md-none fs-13 text-muted"><?php echo e($addr->phone); ?></div></td>
                         <td>
                             <a href="mailto:<?php echo e($addr->email); ?>" class="text-primary"><?php echo e($addr->email); ?></a>
                         </td>
-                        <td><span><?php echo e($addr->phone); ?></span></td>
-                        <td><span><?php echo e($addr->alternate_phone ?: '—'); ?></span></td>
-                        <td>
+                        <td class="d-none d-md-table-cell"><span><?php echo e($addr->phone); ?></span></td>
+                        <td class="d-none d-xl-table-cell"><span><?php echo e($addr->alternate_phone ?: '—'); ?></span></td>
+                        <td class="d-none d-lg-table-cell">
                             <?php if($addr->website): ?>
                                 <a href="<?php echo e($addr->website); ?>" target="_blank" rel="noopener"
                                    class="text-primary text-truncate d-inline-block" style="max-width:150px"

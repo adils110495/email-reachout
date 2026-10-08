@@ -26,7 +26,7 @@
             <div class="card-body">
                 {{-- Mode switch: the two searches take different inputs, so the
                      form swaps rather than showing both at once. --}}
-                <ul class="nav nav-pills mb-3" role="tablist">
+                <ul class="nav nav-tabs mb-4" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="modeDomainTab" data-mode="domain" type="button" role="tab"
                                 aria-selected="true" aria-controls="finderForm">

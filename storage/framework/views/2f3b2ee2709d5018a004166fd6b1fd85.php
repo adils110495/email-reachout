@@ -23,7 +23,7 @@
 
             <div class="card-body">
                 
-                <ul class="nav nav-pills mb-3" role="tablist">
+                <ul class="nav nav-tabs mb-4" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="modeDomainTab" data-mode="domain" type="button" role="tab"
                                 aria-selected="true" aria-controls="finderForm">

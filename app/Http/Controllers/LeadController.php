@@ -14,11 +14,13 @@ use App\Services\AIService;
 use App\Services\EmailExtractorService;
 use App\Services\EmailSenderService;
 use App\Services\ImapService;
+use App\Services\MailConfigService;
 use App\Services\ScraperService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -402,18 +404,30 @@ class LeadController extends Controller
         }
 
         try {
-            $mailable = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany, emailAttachments: $attachments, address: $address);
+            // Use the SMTP saved under Settings > Mail Settings (falls back to .env)
+            $mailConfig = app(MailConfigService::class);
+            $mailConfig->applySmtp();
+
+            // Tracking: the token keys the open pixel, the Message-ID lets replies be matched.
+            $trackingToken = Str::random(40);
+            $fromAddress   = (string) $mailConfig->fromAddress();
+            $messageId     = $trackingToken . '@' . (Str::after($fromAddress, '@') ?: 'localhost');
+
+            $mailable = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany, emailAttachments: $attachments, address: $address, trackingToken: $trackingToken, messageId: $messageId);
 
             // Send directly — no queue
             Mail::to($lead->email)->send($mailable);
 
-            // Copy to IMAP Sent folder (with same attachments + original names)
+            // Copy to IMAP Sent folder (with same attachments + original names).
+            // Rendered WITHOUT the pixel, otherwise opening the Sent folder would count as an open.
+            $sentCopy = new OutreachMail($lead, $body, $subject, $senderName, $senderCompany, emailAttachments: $attachments, address: $address);
+
             app(ImapService::class)->copyToSentFolder(
                 to:          $lead->email,
                 subject:     $subject,
-                htmlBody:    $mailable->render(),
-                fromName:    env('MAIL_FROM_NAME', $senderName),
-                fromEmail:   env('MAIL_FROM_ADDRESS'),
+                htmlBody:    $sentCopy->render(),
+                fromName:    $mailConfig->fromName($senderName),
+                fromEmail:   (string) $mailConfig->fromAddress(),
                 attachments: $attachments,
             );
 
@@ -427,6 +441,8 @@ class LeadController extends Controller
                 'attachments' => !empty($attachmentMeta) ? json_encode($attachmentMeta) : null,
                 'status'      => 'sent',
                 'sent_at'     => now(),
+                'tracking_token' => $trackingToken,
+                'message_id'     => $messageId,
             ]);
 
             Log::info('sendEmail: sent directly', [

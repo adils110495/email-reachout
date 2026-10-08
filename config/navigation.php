@@ -61,10 +61,17 @@ return [
                     'icon'   => 'bi-people',
                 ],
 
+                [
+                    'label'  => 'Email Activity',
+                    'route'  => 'email-activity.index',
+                    'active' => ['email-activity.*'],
+                    'icon'   => 'bi-activity',
+                ],
+
                 // Settings module - collapsible, holds every settings page.
                 [
                     'label'    => 'Settings',
-                    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*'],
+                    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*', 'mail-settings.*'],
                     'icon'     => 'bi-gear',
                     'children' => [
                         [
@@ -98,6 +105,11 @@ return [
                             'label'  => 'Addresses',
                             'route'  => 'addresses.index',
                             'active' => ['addresses.*'],
+                        ],
+                        [
+                            'label'  => 'Mail Settings',
+                            'route'  => 'mail-settings.index',
+                            'active' => ['mail-settings.*'],
                         ],
                     ],
                 ],
