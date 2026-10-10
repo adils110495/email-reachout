@@ -120,20 +120,8 @@
 <script src="{{ asset('assets/js/mobile-nav.js') }}?v={{ filemtime(public_path('assets/js/mobile-nav.js')) }}"></script>
 <script src="{{ asset('assets/js/ajax-filters.js') }}"></script>
 
-{{-- Row-action menus live inside .table-responsive, whose overflow clips an
-     absolutely positioned dropdown (worst with one or two rows). Popper's
-     "fixed" strategy lets the menu escape the scroller. Bootstrap ignores a
-     data-bs-strategy attribute, so the instance is created here - in the
-     capture phase, before Bootstrap's own click handler would create it
-     without this option. --}}
-<script>
-    document.addEventListener('click', function (e) {
-        const toggle = e.target.closest('.table-responsive [data-bs-toggle="dropdown"]');
-        if (! toggle || bootstrap.Dropdown.getInstance(toggle)) return;
-
-        bootstrap.Dropdown.getOrCreateInstance(toggle, { popperConfig: { strategy: 'fixed' } });
-    }, true);
-</script>
+{{-- Page dropdowns (table row actions etc.) open above any card/table so they are never clipped --}}
+<script src="{{ asset('assets/js/dropdown-portal.js') }}?v={{ filemtime(public_path('assets/js/dropdown-portal.js')) }}"></script>
 
 @include('layouts.partials.notifications')
 

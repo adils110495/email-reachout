@@ -117,14 +117,7 @@
 <script src="<?php echo e(asset('assets/js/ajax-filters.js')); ?>"></script>
 
 
-<script>
-    document.addEventListener('click', function (e) {
-        const toggle = e.target.closest('.table-responsive [data-bs-toggle="dropdown"]');
-        if (! toggle || bootstrap.Dropdown.getInstance(toggle)) return;
-
-        bootstrap.Dropdown.getOrCreateInstance(toggle, { popperConfig: { strategy: 'fixed' } });
-    }, true);
-</script>
+<script src="<?php echo e(asset('assets/js/dropdown-portal.js')); ?>?v=<?php echo e(filemtime(public_path('assets/js/dropdown-portal.js'))); ?>"></script>
 
 <?php echo $__env->make('layouts.partials.notifications', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 

@@ -131,7 +131,7 @@
                                     type="button"
                                     class="btn btn-sm btn-light btn-square"
                                     data-bs-toggle="dropdown"
-                                    data-bs-strategy="fixed"
+                                   
                                     aria-expanded="false"
                                     aria-label="Actions"
                                 >
@@ -207,7 +207,7 @@
                                         <form method="POST" action="<?php echo e(route('cash-leads.from-lead', $lead->id)); ?>">
                                             <?php echo csrf_field(); ?>
                                             <button type="submit" class="dropdown-item">
-                                                <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Cash Lead
+                                                <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Deal
                                             </button>
                                         </form>
                                     </li>

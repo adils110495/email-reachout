@@ -49,7 +49,7 @@
                         <td class="text-center">
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-light btn-square"
-                                        data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-expanded="false"
+                                        data-bs-toggle="dropdown" aria-expanded="false"
                                         aria-label="Actions" title="Actions">
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>

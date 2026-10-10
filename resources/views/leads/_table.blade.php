@@ -132,7 +132,7 @@
                                     type="button"
                                     class="btn btn-sm btn-light btn-square"
                                     data-bs-toggle="dropdown"
-                                    data-bs-strategy="fixed"
+                                   
                                     aria-expanded="false"
                                     aria-label="Actions"
                                 >
