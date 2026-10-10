@@ -132,8 +132,10 @@
 
     {{-- ── HEADER ── --}}
     <div class="email-header">
-        {{-- Uploaded under Settings > Branding (falls back to the default email logo) --}}
-        <img src="{{ $logoUrl }}" alt="{{ $senderCompany }}">
+        {{-- Logo from Settings > Branding, embedded inline (cid:) so it shows even when APP_URL
+             is not publicly reachable (e.g. localhost). render() - used for the IMAP Sent-folder
+             copy - turns the cid into a data: URI. The URL is only a fallback without $message. --}}
+        <img src="{{ isset($message) ? $message->embed($logoPath) : $logoUrl }}" alt="{{ $senderCompany }}">
     </div>
     <div class="header-divider"></div>
 

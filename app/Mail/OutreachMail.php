@@ -53,6 +53,7 @@ class OutreachMail extends Mailable
         AppSetting::flush();
 
         return new Content(view: 'emails.outreach', with: [
+            'logoPath'      => AppSetting::emailLogoPath(),
             'logoUrl'       => AppSetting::emailLogoUrl(),
             'socialLinks'   => AppSetting::socialLinks(),
             // No address picked in the compose modal (or sent from the queue): use the first active one.

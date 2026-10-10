@@ -101,6 +101,12 @@ class AppSetting extends Model
         return rtrim((string) config('app.url'), '/').'/'.$path.'?v='.filemtime(public_path($path));
     }
 
+    /** Absolute file path of the admin logo, for embedding it inline in emails. */
+    public static function emailLogoPath(): string
+    {
+        return public_path(static::brandingPath(self::ADMIN_LOGO));
+    }
+
     /** Brand name set under Settings > Branding. */
     public static function companyName(): string
     {

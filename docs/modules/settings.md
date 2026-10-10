@@ -139,8 +139,8 @@ Fields: `address`, `email`, `phone`, `alternate_phone`, `website`, `status`
 
 - Brand name sirf yahin se aata hai — `.env` ka `SENDER_COMPANY` ab use nahi hota.
 - Email aur admin panel ka logo **ek hi** hai, isliye logo PNG/JPG/GIF hi ho sakta hai (mail clients WEBP/SVG nahi dikhate).
-- Files `public/uploads/branding/` me save hoti hain (git-ignored) — public URL chahiye
-  taaki recipient ka mail client logo load kar sake. Isliye `APP_URL` sahi public domain hona chahiye.
+- Email me logo **inline (CID) embed** hota hai — `APP_URL` localhost ho tab bhi dikhta hai.
+- Files `public/uploads/branding/` me save hoti hain (git-ignored).
 - Naya upload purani file delete kar deta hai; "Reset" default par wapas le jata hai.
 - Code me use: `AppSetting::companyName()`, `adminLogoUrl()`, `adminIconUrl()`, `emailLogoUrl()`.
 
