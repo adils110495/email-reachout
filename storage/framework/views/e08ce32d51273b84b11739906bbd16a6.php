@@ -1,13 +1,15 @@
 <?php
-    // filemtime busts the browser cache whenever the logo file is replaced.
-    $brandLogo = asset('images/sabright-logo.png').'?v='.filemtime(public_path('images/sabright-logo.png'));
+    // Uploaded under Settings > Branding (falls back to the shipped logo).
+    $brandLogo = \App\Models\AppSetting::adminLogoUrl();
+    $brandIcon = \App\Models\AppSetting::adminIconUrl();
+    $hasIcon   = \App\Models\AppSetting::isCustom(\App\Models\AppSetting::ADMIN_ICON);
 ?>
 
 
 <div class="nav-header">
     <a href="<?php echo e(route('dashboard')); ?>" class="brand-logo" aria-label="SabRight">
         
-        <img class="logo-abbr" src="<?php echo e($brandLogo); ?>" alt="">
+        <img class="logo-abbr <?php echo e($hasIcon ? 'is-icon' : ''); ?>" src="<?php echo e($brandIcon); ?>" alt="">
         <img class="brand-title" src="<?php echo e($brandLogo); ?>" alt="SabRight">
     </a>
     <div class="nav-control">

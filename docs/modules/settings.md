@@ -127,6 +127,33 @@ Fields: `address`, `email`, `phone`, `alternate_phone`, `website`, `status`
 
 ---
 
+## Branding
+
+**URL:** `/settings/branding` — logos upload karne ka page. Table: `app_settings` (key/value).
+
+| Key | Kahan dikhta hai | Default |
+|---|---|---|
+| `admin_logo` | Sidebar header, login/signup page | `images/sabright-logo.png` |
+| `admin_icon` | Collapsed sidebar, mobile header, favicon | admin logo (left side crop) |
+| `email_logo` | Outreach email ka header | `images/hes-email-logo.png` |
+
+- Files `public/uploads/branding/` me save hoti hain (git-ignored) — public URL chahiye
+  taaki recipient ka mail client logo load kar sake. Isliye `APP_URL` sahi public domain hona chahiye.
+- Naya upload purani file delete kar deta hai; "Reset" default par wapas le jata hai.
+- Code me use: `AppSetting::adminLogoUrl()`, `adminIconUrl()`, `emailLogoUrl()`.
+
+**Email Footer** (same page, neeche wala card):
+
+| Key | Kaam |
+|---|---|
+| `company_name` | Copyright line + AI prompts ka sender company. Khaali → `.env` ka `SENDER_COMPANY` |
+| `social_linkedin`, `social_facebook`, `social_x`, `social_instagram`, `social_youtube` | Footer icons — sirf wahi dikhte hain jinka URL bhara ho |
+
+Footer ka address/email/phone/website **Addresses** se aata hai: compose modal me chuna hua
+address, warna pehla active address. Koi active address na ho to wo block hide ho jata hai.
+
+---
+
 ## Sidebar me kahan hai
 
 `config/navigation.php` me Settings ek **collapsible parent** hai:
@@ -134,13 +161,15 @@ Fields: `address`, `email`, `phone`, `alternate_phone`, `website`, `status`
 ```php
 [
     'label'    => 'Settings',
-    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*'],
+    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*', 'mail-settings.*', 'branding.*'],
     'icon'     => 'bi-gear',
     'children' => [
         ['label' => 'Email Templates', 'route' => 'templates.index', ...],
         ['label' => 'Platforms',  'route' => 'platforms.index',  ...],
         ['label' => 'Categories', 'route' => 'categories.index', ...],
         ['label' => 'Addresses',  'route' => 'addresses.index',  ...],
+        ['label' => 'Mail Settings', 'route' => 'mail-settings.index', ...],
+        ['label' => 'Branding',   'route' => 'branding.index',   ...],
     ],
 ],
 ```

@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Address;
+use App\Models\AppSetting;
 use App\Models\Lead;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -48,7 +49,15 @@ class OutreachMail extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.outreach');
+        // Header logo and footer come from Settings > Branding / Addresses.
+        AppSetting::flush();
+
+        return new Content(view: 'emails.outreach', with: [
+            'logoUrl'       => AppSetting::emailLogoUrl(),
+            'socialLinks'   => AppSetting::socialLinks(),
+            // No address picked in the compose modal (or sent from the queue): use the first active one.
+            'footerAddress' => $this->address ?? Address::active()->orderBy('id')->first(),
+        ]);
     }
 
     public function attachments(): array

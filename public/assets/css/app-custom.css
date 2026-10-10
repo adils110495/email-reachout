@@ -38,6 +38,11 @@
     object-fit: cover;
     object-position: left center;
 }
+/* A dedicated square icon uploaded under Settings > Branding: show it whole. */
+.nav-header .brand-logo .logo-abbr.is-icon {
+    object-fit: contain;
+    object-position: center;
+}
 /* Collapsed / mini sidebar: the theme hides .brand-title, so show the mark. */
 [data-sidebar-style=full][data-layout=vertical] .menu-toggle .nav-header .brand-logo .logo-abbr,
 [data-sidebar-style=mini] .nav-header .brand-logo .logo-abbr {

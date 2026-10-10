@@ -9,9 +9,9 @@
 
     <title>@yield('title', 'AI Client Finder')</title>
 
-    {{-- Favicon: same artwork as the sidebar brand logo (layouts/partials/nav-header).
-         filemtime busts the browser's (very sticky) favicon cache on replacement. --}}
-    @php $favicon = asset('images/sabright-logo.png').'?v='.filemtime(public_path('images/sabright-logo.png')); @endphp
+    {{-- Favicon: the admin icon from Settings > Branding (falls back to the logo).
+         The ?v= filemtime busts the browser's (very sticky) favicon cache on replacement. --}}
+    @php $favicon = \App\Models\AppSetting::adminIconUrl(); @endphp
     <link rel="icon" type="image/png" href="{{ $favicon }}">
     <link rel="shortcut icon" type="image/png" href="{{ $favicon }}">
     <link rel="apple-touch-icon" href="{{ $favicon }}">

@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Jobs\FindLeadsJob;
 use App\Mail\OutreachMail;
 use App\Models\Address;
+use App\Models\AppSetting;
 use App\Models\Category;
 use App\Models\Lead;
 use App\Models\LeadEmail;
@@ -72,7 +73,7 @@ class LeadController extends Controller
         $activePlatform = $request->input('platform');
 
         $senderName    = env('SENDER_NAME', 'Sales Team');
-        $senderCompany = env('SENDER_COMPANY', 'Our Company');
+        $senderCompany = AppSetting::companyName();
 
         $data = compact('leads', 'platforms', 'categories', 'addresses', 'activeCategory', 'activeCatObj', 'activePlatform', 'senderName', 'senderCompany');
 
@@ -329,7 +330,7 @@ class LeadController extends Controller
     {
         $lead          = Lead::findOrFail($id);
         $senderName    = env('SENDER_NAME', 'Sales Team');
-        $senderCompany = env('SENDER_COMPANY', 'Our Company');
+        $senderCompany = AppSetting::companyName();
 
         $subject = $this->aiService->generateSubjectLine($lead, $senderCompany);
         $body    = $this->aiService->generateOutreachEmail($lead, $senderName, $senderCompany);
@@ -389,7 +390,7 @@ class LeadController extends Controller
         }
 
         $senderName    = env('SENDER_NAME', 'Sales Team');
-        $senderCompany = env('SENDER_COMPANY', 'Our Company');
+        $senderCompany = AppSetting::companyName();
         $subject       = $request->input('subject');
         $body          = $request->input('body');
         $address       = $request->filled('address_id') ? Address::find((int) $request->input('address_id')) : null;

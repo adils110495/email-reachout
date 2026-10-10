@@ -132,7 +132,8 @@
 
     {{-- ── HEADER ── --}}
     <div class="email-header">
-        <img src="{{ config('app.url') }}/images/hes-email-logo.png" alt="{{ $senderCompany }}">
+        {{-- Uploaded under Settings > Branding (falls back to the default email logo) --}}
+        <img src="{{ $logoUrl }}" alt="{{ $senderCompany }}">
     </div>
     <div class="header-divider"></div>
 
@@ -155,48 +156,43 @@
 
         
 
-        <div class="footer-contact-info">
-            @if($address)
-                <div>{{ $address->address }}</div>
-                <div>
-                    <a href="mailto:{{ $address->email }}">{{ $address->email }}</a>
-                    &nbsp;|&nbsp;
-                    <a href="tel:{{ $address->phone }}">{{ $address->phone }}</a>
-                    @if($address->alternate_phone)
-                        &nbsp;|&nbsp;
-                        <a href="tel:{{ $address->alternate_phone }}">{{ $address->alternate_phone }}</a>
-                    @endif
-                </div>
-                @if($address->website)
+        {{-- Address picked in the compose modal, else the first active one (Settings > Addresses) --}}
+        @if($footerAddress)
+            <div class="footer-contact-info">
+                <div>{{ $footerAddress->address }}</div>
+                @php
+                    $contacts = array_filter([
+                        $footerAddress->email           ? '<a href="mailto:'.e($footerAddress->email).'">'.e($footerAddress->email).'</a>' : null,
+                        $footerAddress->phone           ? '<a href="tel:'.e($footerAddress->phone).'">'.e($footerAddress->phone).'</a>' : null,
+                        $footerAddress->alternate_phone ? '<a href="tel:'.e($footerAddress->alternate_phone).'">'.e($footerAddress->alternate_phone).'</a>' : null,
+                    ]);
+                @endphp
+                @if($contacts)
+                    <div>{!! implode('&nbsp;|&nbsp;', $contacts) !!}</div>
+                @endif
+                @if($footerAddress->website)
                     <div>
-                        <a href="{{ $address->website }}" style="color:#4361ee; text-decoration:underline;">
-                            {{ parse_url($address->website, PHP_URL_HOST) ?: $address->website }}
+                        <a href="{{ $footerAddress->website }}" style="color:#4361ee; text-decoration:underline;">
+                            {{ parse_url($footerAddress->website, PHP_URL_HOST) ?: $footerAddress->website }}
                         </a>
                     </div>
                 @endif
-            @else
-                <div>Shop No. 25, Modipuram, Meerut, Uttar Pradesh - 250110, India</div>
-                <div>
-                    <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>
-                    &nbsp;|&nbsp;
-                    <a href="tel:+918864939301">+91 88649 39301</a>
-                    &nbsp;|&nbsp;
-                    <a href="tel:+918439913891">+91 84399 13891</a>
-                </div>
-                <div>
-                    <a href="http://heservices.in/" style="color:#4361ee; text-decoration:underline;">heservices.in</a>
-                </div>
+            </div>
+        @endif
+
+        {{-- Social links from Settings > Branding; an icon is shown only when its URL is set --}}
+        @if($socialLinks)
+            @if($footerAddress)
+                <hr class="footer-divider-line">
             @endif
-        </div>
 
-        <hr class="footer-divider-line">
-
-        <div class="footer-social">
-            <a href="#" title="LinkedIn">in</a>
-            <a href="#" title="Facebook">f</a>
-            <a href="#" title="X">X</a>
-            <a href="#" title="YouTube" style="font-size:16px;">&#9654;</a>
-        </div>
+            <div class="footer-social">
+                @foreach($socialLinks as $social)
+                    <a href="{{ $social['url'] }}" title="{{ $social['label'] }}"
+                       @if($social['label'] === 'YouTube') style="font-size:16px;" @endif>{!! $social['glyph'] !!}</a>
+                @endforeach
+            </div>
+        @endif
 
         <div class="footer-copy">
             &copy; {{ date('Y') }} {{ $senderCompany }}. All rights reserved.

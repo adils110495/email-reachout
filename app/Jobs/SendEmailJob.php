@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Mail\OutreachMail;
+use App\Models\AppSetting;
 use App\Models\Lead;
 use App\Services\AIService;
 use App\Services\ImapService;
@@ -52,7 +53,8 @@ class SendEmailJob implements ShouldQueue
         }
 
         $senderName    = env('SENDER_NAME', 'Sales Team');
-        $senderCompany = env('SENDER_COMPANY', 'Our Company');
+        AppSetting::flush(); // long-lived worker: pick up changes made under Settings > Branding
+        $senderCompany = AppSetting::companyName();
 
         try {
             // Use the SMTP saved under Settings > Mail Settings (falls back to .env)

@@ -1,13 +1,15 @@
 @php
-    // filemtime busts the browser cache whenever the logo file is replaced.
-    $brandLogo = asset('images/sabright-logo.png').'?v='.filemtime(public_path('images/sabright-logo.png'));
+    // Uploaded under Settings > Branding (falls back to the shipped logo).
+    $brandLogo = \App\Models\AppSetting::adminLogoUrl();
+    $brandIcon = \App\Models\AppSetting::adminIconUrl();
+    $hasIcon   = \App\Models\AppSetting::isCustom(\App\Models\AppSetting::ADMIN_ICON);
 @endphp
 
 {{-- Start - Nav Header --}}
 <div class="nav-header">
     <a href="{{ route('dashboard') }}" class="brand-logo" aria-label="SabRight">
-        {{-- Collapsed sidebar: the same artwork, cropped to the "B" mark (see app-custom.css) --}}
-        <img class="logo-abbr" src="{{ $brandLogo }}" alt="">
+        {{-- Collapsed sidebar: the uploaded icon, or the logo cropped to its mark (see app-custom.css) --}}
+        <img class="logo-abbr {{ $hasIcon ? 'is-icon' : '' }}" src="{{ $brandIcon }}" alt="">
         <img class="brand-title" src="{{ $brandLogo }}" alt="SabRight">
     </a>
     <div class="nav-control">

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BrandingController;
 use App\Http\Controllers\BulkController;
 use App\Http\Controllers\CashLeadController;
 use App\Http\Controllers\CategoryController;
@@ -177,6 +178,12 @@ Route::get('/settings/mail',             [MailSettingController::class, 'index']
 Route::put('/settings/mail/smtp',        [MailSettingController::class, 'updateSmtp'])->name('mail-settings.smtp');
 Route::put('/settings/mail/imap',        [MailSettingController::class, 'updateImap'])->name('mail-settings.imap');
 Route::post('/settings/mail/test/{type}', [MailSettingController::class, 'test'])->name('mail-settings.test');
+
+// Branding — admin panel logo / icon and the logo in outgoing emails
+Route::get('/settings/branding',          [BrandingController::class, 'index'])->name('branding.index');
+Route::put('/settings/branding',          [BrandingController::class, 'update'])->name('branding.update');
+Route::put('/settings/branding/footer',   [BrandingController::class, 'updateFooter'])->name('branding.footer');
+Route::delete('/settings/branding/{key}', [BrandingController::class, 'reset'])->name('branding.reset');
 
 // Templates JSON for compose modal dropdown
 Route::get('/api/templates', fn() => response()->json(

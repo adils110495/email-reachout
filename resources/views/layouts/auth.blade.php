@@ -7,8 +7,11 @@
 
     <title>@yield('title', 'Sign in') — AI Client Finder</title>
 
-    @php $logo = asset('images/sabright-logo.png').'?v='.filemtime(public_path('images/sabright-logo.png')); @endphp
-    <link rel="icon" type="image/png" href="{{ $logo }}">
+    @php
+        $logo = \App\Models\AppSetting::adminLogoUrl();
+        $icon = \App\Models\AppSetting::adminIconUrl();
+    @endphp
+    <link rel="icon" type="image/png" href="{{ $icon }}">
 
     <link class="main-plugins" href="{{ asset('assets/css/plugins.css') }}" rel="stylesheet">
     <link class="main-css" href="{{ asset('assets/css/style.css') }}" rel="stylesheet">

@@ -10,7 +10,7 @@
     <title><?php echo $__env->yieldContent('title', 'AI Client Finder'); ?></title>
 
     
-    <?php $favicon = asset('images/sabright-logo.png').'?v='.filemtime(public_path('images/sabright-logo.png')); ?>
+    <?php $favicon = \App\Models\AppSetting::adminIconUrl(); ?>
     <link rel="icon" type="image/png" href="<?php echo e($favicon); ?>">
     <link rel="shortcut icon" type="image/png" href="<?php echo e($favicon); ?>">
     <link rel="apple-touch-icon" href="<?php echo e($favicon); ?>">

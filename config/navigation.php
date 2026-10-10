@@ -83,7 +83,7 @@ return [
                 // Settings module - collapsible, holds every settings page.
                 [
                     'label'    => 'Settings',
-                    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*', 'mail-settings.*'],
+                    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*', 'mail-settings.*', 'branding.*'],
                     'icon'     => 'bi-gear',
                     'children' => [
                         [
@@ -122,6 +122,11 @@ return [
                             'label'  => 'Mail Settings',
                             'route'  => 'mail-settings.index',
                             'active' => ['mail-settings.*'],
+                        ],
+                        [
+                            'label'  => 'Branding',
+                            'route'  => 'branding.index',
+                            'active' => ['branding.*'],
                         ],
                     ],
                 ],
