@@ -32,7 +32,13 @@ trait ExportsCsv
             fputcsv($handle, $columns);
 
             foreach ($rows as $row) {
-                fputcsv($handle, $mapper($row));
+                // Cells are user/imported data: a leading = + - @ would run as a formula
+                // when the file is opened in a spreadsheet, so those are quoted.
+                fputcsv($handle, array_map(static function ($cell) {
+                    $cell = (string) ($cell ?? '');
+
+                    return $cell !== '' && in_array($cell[0], ['=', '+', '-', '@'], true) ? "'".$cell : $cell;
+                }, $mapper($row)));
             }
 
             fclose($handle);

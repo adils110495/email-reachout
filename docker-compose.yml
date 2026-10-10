@@ -8,7 +8,7 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     container_name: ai_client_finder_app
-    restart: unless-stopped
+    #restart: unless-stopped
     working_dir: /var/www/html
     volumes:
       - .:/var/www/html
@@ -27,7 +27,7 @@ services:
   webserver:
     image: httpd:2.4
     container_name: ai_client_finder_web
-    restart: unless-stopped
+    #restart: unless-stopped
     ports:
       - "${APP_PORT:-8080}:80"
     volumes:
@@ -49,7 +49,7 @@ services:
   mysql:
     image: mysql:8.0
     container_name: ai_client_finder_mysql
-    restart: unless-stopped
+    #restart: unless-stopped
     ports:
       - "${DB_PORT_EXTERNAL:-3306}:3306"
     environment:
@@ -73,7 +73,7 @@ services:
   phpmyadmin:
     image: phpmyadmin:5
     container_name: ai_client_finder_pma
-    restart: unless-stopped
+    #restart: unless-stopped
     ports:
       - "${PMA_PORT:-8081}:80"
     environment:
@@ -90,27 +90,73 @@ services:
       - app_network
 
   # ──────────────────────────────────────────────────────────────
-  # Queue worker (processes the "emails" queue)
+  # Queue worker: "emails" (Leads sends + sequence steps) and "default"
+  # (Finder, Bulks incl. imports/sequence actions, IMAP reply polling).
+  # Scale for throughput: docker compose up -d --scale queue=3 (duplicate sends are impossible).
   # ──────────────────────────────────────────────────────────────
   queue:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
     container_name: ai_client_finder_queue
-    restart: unless-stopped
+    #restart: unless-stopped
     working_dir: /var/www/html
     volumes:
       - .:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
-    command: php artisan queue:work database --queue=emails,default --tries=3 --backoff=30 --sleep=3 --timeout=90
+    # No --max-time / queue:restart here: with `restart` disabled nothing would bring the worker
+    # back, and sequence emails would silently stop. After code or .env changes run:
+    #   docker compose restart queue
+    command: php artisan queue:work redis --queue=emails,default --tries=3 --backoff=30 --sleep=3 --timeout=120
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # ──────────────────────────────────────────────────────────────
+  # Redis: queue, cache, rate limiting, locks
+  # ──────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ai_client_finder_redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  # ──────────────────────────────────────────────────────────────
+  # Scheduler: runs schedule:run every minute (dev; use cron in production)
+  # ──────────────────────────────────────────────────────────────
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    command: php artisan schedule:work
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - app_network
 
 volumes:
   mysql_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:

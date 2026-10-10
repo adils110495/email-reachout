@@ -31,6 +31,13 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // Run the MySQL session in the app timezone. Every date column is a TIMESTAMP, which
+            // MySQL stores as an absolute instant and converts per session - so rows written
+            // under any earlier timezone still read back correctly, and DATE()/NOW() in SQL
+            // agree with PHP. A numeric offset is used because MySQL's named-zone tables are
+            // usually not loaded; it is fixed when config is cached, fine for a zone without
+            // daylight saving such as IST.
+            'timezone' => env('DB_TIMEZONE', (new DateTimeImmutable('now', new DateTimeZone(env('APP_TIMEZONE', 'Asia/Kolkata'))))->format('P')),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

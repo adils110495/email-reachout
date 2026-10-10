@@ -103,6 +103,10 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="description" class="form-control" maxlength="500" value="{{ old('description') }}" placeholder="Optional">
+                    </div>
                     <div class="mb-0">
                         <label class="form-label">Status</label>
                         <select name="status" class="form-select">
@@ -136,6 +140,10 @@
                         <label class="form-label">Name <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="edit_category_name" class="form-control" required>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="description" id="edit_category_description" class="form-control" maxlength="500" placeholder="Optional">
+                    </div>
                     <div class="mb-0">
                         <label class="form-label">Status</label>
                         <select name="status" id="edit_category_status" class="form-select">
@@ -168,6 +176,7 @@
 
         document.getElementById('edit_category_name').value   = btn.dataset.name;
         document.getElementById('edit_category_status').value = btn.dataset.status;
+        document.getElementById('edit_category_description').value = btn.dataset.description || '';
         document.getElementById('editCategoryForm').action    = categoryUpdateUrl.replace('__ID__', btn.dataset.id);
 
         new bootstrap.Modal(document.getElementById('editCategoryModal')).show();

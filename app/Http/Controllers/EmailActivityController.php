@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\LeadEmail;
+use App\Models\Sequence;
 use App\Services\ReplyCheckerService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -22,8 +24,12 @@ class EmailActivityController extends Controller
         $activity = array_key_exists((string) $request->input('activity'), $activityOptions) ? $request->input('activity') : null;
         $search   = trim((string) $request->input('q'));
 
+        // Sequence emails live in the same table; an optional filter narrows to one sequence.
+        $sequenceId = $request->integer('sequence') ?: null;
+
         // Only emails we actually sent.
-        $base = LeadEmail::with('lead')->where('status', 'sent');
+        $base = LeadEmail::with(['lead', 'sequence:id,name', 'step:id,step_number'])->where('status', 'sent')
+            ->when($sequenceId, fn (Builder $q) => $q->where('sequence_id', $sequenceId));
 
         $query = (clone $base)
             ->when($activity, fn (Builder $q) => $this->filterActivity($q, $activity))
@@ -47,6 +53,8 @@ class EmailActivityController extends Controller
             'activity'        => $activity,
             'search'          => $search,
             'counts'          => $counts,
+            'sequences'       => Sequence::orderBy('name')->get(['id', 'name']),
+            'sequenceId'      => $sequenceId,
         ];
 
         // A filter / search / page change fetches just the table partial so the
@@ -60,16 +68,42 @@ class EmailActivityController extends Controller
 
     /**
      * Scan the inbox now instead of waiting for the scheduler.
+     *
+     * The page calls this over AJAX and gets JSON back (message + fresh filter
+     * counts), then reloads just the table; a plain form post still redirects.
      */
-    public function checkReplies(ReplyCheckerService $checker): RedirectResponse
+    public function checkReplies(Request $request, ReplyCheckerService $checker): RedirectResponse|JsonResponse
     {
         try {
             $count = $checker->check();
         } catch (\RuntimeException $e) {
-            return back()->with('error', 'Could not check replies: ' . $e->getMessage());
+            $message = 'Could not check replies: ' . $e->getMessage();
+
+            return $request->expectsJson()
+                ? response()->json(['ok' => false, 'message' => $message], 422)
+                : back()->with('error', $message);
         }
 
-        return back()->with('success', $count > 0 ? "{$count} new repl" . ($count === 1 ? 'y' : 'ies') . ' found.' : 'No new replies.');
+        $message = $count > 0 ? "{$count} new repl" . ($count === 1 ? 'y' : 'ies') . ' found.' : 'No new replies.';
+
+        if ($request->expectsJson()) {
+            $base = LeadEmail::where('status', 'sent')
+                ->when($request->integer('sequence') ?: null, fn (Builder $q, $id) => $q->where('sequence_id', $id));
+
+            return response()->json([
+                'ok'      => true,
+                'replies' => $count,
+                'message' => $message,
+                'counts'  => [
+                    'total'                        => (clone $base)->count(),
+                    LeadEmail::ACTIVITY_NOT_OPENED => $this->filterActivity(clone $base, LeadEmail::ACTIVITY_NOT_OPENED)->count(),
+                    LeadEmail::ACTIVITY_OPENED     => $this->filterActivity(clone $base, LeadEmail::ACTIVITY_OPENED)->count(),
+                    LeadEmail::ACTIVITY_REPLIED    => $this->filterActivity(clone $base, LeadEmail::ACTIVITY_REPLIED)->count(),
+                ],
+            ]);
+        }
+
+        return back()->with('success', $message);
     }
 
     private function filterActivity(Builder $query, string $activity): Builder

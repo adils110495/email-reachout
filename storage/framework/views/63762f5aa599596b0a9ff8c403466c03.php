@@ -55,7 +55,7 @@
 
                                 
                                 <div class="d-lg-none fs-13 text-muted">
-                                    <?php echo e($bulk->type === 'find' ? 'Finder' : 'Verify'); ?>
+                                    <?php echo e(match($bulk->type) { 'find' => 'Finder', 'verify' => 'Verify', default => $bulk->type_label }); ?>
 
                                     · <span data-cell="successful-sm"><?php echo e(number_format($bulk->successful_records)); ?></span> ok
                                     · <span data-cell="failed-sm"><?php echo e(number_format($bulk->failed_records)); ?></span> failed
@@ -65,6 +65,8 @@
                             <td class="d-none d-lg-table-cell">
                                 <?php if($bulk->type === 'find'): ?>
                                     <span class="badge badge-info light"><i class="bi bi-search me-1"></i>Finder</span>
+                                <?php elseif($bulk->type !== 'verify'): ?>
+                                    <span class="badge badge-success light"><i class="bi <?php echo e($bulk->isImport() ? 'bi-person-plus' : 'bi-diagram-3'); ?> me-1"></i><?php echo e($bulk->type_label); ?></span>
                                 <?php else: ?>
                                     <span class="badge badge-primary light"><i class="bi bi-patch-check me-1"></i>Verify</span>
                                 <?php endif; ?>

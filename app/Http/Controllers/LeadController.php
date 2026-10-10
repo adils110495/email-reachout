@@ -9,7 +9,13 @@ use App\Models\Address;
 use App\Models\Category;
 use App\Models\Lead;
 use App\Models\LeadEmail;
+use App\Models\Bulk;
+use App\Models\MailSetting;
 use App\Models\Platform;
+use App\Models\Sequence;
+use App\Sequencer\Enums\ContactStatus;
+use App\Sequencer\Services\EnrollmentService;
+use App\Sequencer\Services\TemplateRendererService;
 use App\Services\AIService;
 use App\Services\EmailExtractorService;
 use App\Services\EmailSenderService;
@@ -27,6 +33,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class LeadController extends Controller
 {
     use ExportsCsv;
+
+    /** Optional contact-person fields, used by sequence variables. */
+    private const CONTACT_RULES = [
+        'first_name' => ['nullable', 'string', 'max:255'],
+        'last_name'  => ['nullable', 'string', 'max:255'],
+        'job_title'  => ['nullable', 'string', 'max:255'],
+        'phone'      => ['nullable', 'string', 'max:64'],
+        'country'    => ['nullable', 'string', 'max:100'],
+    ];
 
     public function __construct(
         private readonly ScraperService $scraper,
@@ -52,7 +67,12 @@ class LeadController extends Controller
         }
 
         if ($request->filled('category') && is_numeric($request->category)) {
-            $query->where('category_id', (int) $request->category);
+            // Primary category or any extra list membership.
+            $query->inCategory((int) $request->category);
+        }
+
+        if ($request->filled('contact_status') && ContactStatus::tryFrom((string) $request->contact_status)) {
+            $query->where('contact_status', $request->contact_status);
         }
 
         if ($request->filled('platform') && is_numeric($request->platform)) {
@@ -74,7 +94,10 @@ class LeadController extends Controller
         $senderName    = env('SENDER_NAME', 'Sales Team');
         $senderCompany = env('SENDER_COMPANY', 'Our Company');
 
-        $data = compact('leads', 'platforms', 'categories', 'addresses', 'activeCategory', 'activeCatObj', 'activePlatform', 'senderName', 'senderCompany');
+        // Sequences the bulk toolbar can enroll the selection in.
+        $sequences = Sequence::where('status', '!=', 'archived')->orderBy('name')->get(['id', 'name']);
+
+        $data = compact('leads', 'platforms', 'categories', 'addresses', 'activeCategory', 'activeCatObj', 'activePlatform', 'senderName', 'senderCompany', 'sequences');
 
         // Filter / paginate / per-page changes fetch just the table partial so
         // the page swaps it in without a full reload.
@@ -95,11 +118,11 @@ class LeadController extends Controller
             'linkedin'     => ['nullable', 'url', 'max:255'],
             'platform_id'  => ['nullable', 'exists:platforms,id'],
             'category_id'  => ['nullable', 'exists:categories,id'],
-        ]);
+        ] + self::CONTACT_RULES);
 
         $raw = $request->input('category_id');
 
-        Lead::create([
+        Lead::create($request->only(array_keys(self::CONTACT_RULES)) + [
             'company_name' => $request->company_name,
             'website'      => $request->website,
             // Lead::saving() derives the primary `email` from the first of these.
@@ -206,12 +229,22 @@ class LeadController extends Controller
             'status'       => ['required', 'in:new,sent,failed,replied'],
             'platform_id'  => ['nullable', 'exists:platforms,id'],
             'category_id'  => ['nullable', 'exists:categories,id'],
-        ]);
+            'contact_status' => ['nullable', 'in:'.implode(',', ContactStatus::values())],
+        ] + self::CONTACT_RULES);
 
         // Always written, even when empty: clearing every chip must clear the lead's emails.
         $data['emails'] = Lead::normalizeEmails($request->input('emails', []));
 
+        // Email status is system-managed: it stops the lead's sequences, and an
+        // unsubscribe can never be reverted.
+        $contactStatus = $data['contact_status'] ?? null;
+        unset($data['contact_status']);
+
         $lead->update($data);
+
+        if ($contactStatus) {
+            app(EnrollmentService::class)->setContactStatus($lead, ContactStatus::from($contactStatus));
+        }
 
         $redirectBack = $request->input('_redirect_back', '');
         $query = [];
@@ -281,6 +314,66 @@ class LeadController extends Controller
         $count = Lead::whereIn('id', $request->ids)->update(['status' => $request->status]);
 
         return redirect()->route('leads.index')->with('success', "{$count} lead(s) updated to \"{$request->status}\".");
+    }
+
+    /**
+     * Enroll the selected leads in a sequence. Queued as a Bulk run so a large
+     * selection never blocks the request; unsubscribed / bounced / already-enrolled
+     * leads are skipped and reported on the Bulk page.
+     */
+    public function bulkEnroll(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids'         => ['required', 'array', 'min:1'],
+            'ids.*'       => ['integer'],
+            'sequence_id' => ['required', 'exists:sequences,id'],
+            'mail_setting_id' => ['nullable', 'exists:mail_settings,id'],
+        ]);
+
+        $sequence = Sequence::findOrFail($data['sequence_id']);
+
+        $bulk = Bulk::queueSequenceAction(
+            Bulk::TYPE_ENROLL,
+            Lead::whereIn('id', $data['ids'])->pluck('id')->all(),
+            'Enroll in '.$sequence->name,
+            ['sequence_id' => $sequence->id, 'mail_setting_id' => $data['mail_setting_id'] ?? null],
+        );
+
+        return redirect()->route('bulks.show', $bulk->id)
+            ->with('success', "Enrolling {$bulk->total_records} lead(s) in \"{$sequence->name}\". Progress updates below.");
+    }
+
+    /** Add the selected leads to a category (list), or take them out of it. */
+    public function bulkCategory(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids'         => ['required', 'array', 'min:1'],
+            'ids.*'       => ['integer'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'mode'        => ['nullable', 'in:add,remove'],
+        ]);
+
+        $category = Category::findOrFail($data['category_id']);
+        $remove   = ($data['mode'] ?? 'add') === 'remove';
+        $count    = $remove ? $category->removeLeads($data['ids']) : $category->addLeads($data['ids']);
+
+        $query = [];
+        if ($redirectBack = $request->input('_redirect_back', '')) {
+            parse_str(ltrim($redirectBack, '?'), $query);
+        }
+
+        return redirect()->route('leads.index', $query)
+            ->with('success', $remove ? "{$count} lead(s) removed from \"{$category->name}\"." : "{$count} lead(s) added to \"{$category->name}\".");
+    }
+
+    /** Unsubscribe the selected leads: every sequence they are in stops, for good. */
+    public function bulkUnsubscribe(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['ids' => ['required', 'array', 'min:1'], 'ids.*' => ['integer']]);
+
+        $bulk = Bulk::queueSequenceAction(Bulk::TYPE_UNSUBSCRIBE, Lead::whereIn('id', $data['ids'])->pluck('id')->all(), 'Unsubscribe leads');
+
+        return redirect()->route('bulks.show', $bulk->id)->with('success', "Unsubscribing {$bulk->total_records} lead(s).");
     }
 
     /**
@@ -377,6 +470,12 @@ class LeadController extends Controller
                 ->with('error', "Email already sent to \"{$lead->company_name}\".");
         }
 
+        // An unsubscribe or a hard bounce applies to every way of emailing the lead.
+        if (! $lead->canReceiveEmail()) {
+            return redirect()->route('leads.index', $redirectQuery)
+                ->with('error', "\"{$lead->displayName()}\" is {$lead->contact_status->value} and cannot be emailed.");
+        }
+
         // The compose dropdown picks which of the lead's addresses to write to.
         // It must be one the lead actually has - never trust the posted value.
         $recipient = strtolower((string) $request->input('to_email', ''));
@@ -390,8 +489,13 @@ class LeadController extends Controller
 
         $senderName    = env('SENDER_NAME', 'Sales Team');
         $senderCompany = env('SENDER_COMPANY', 'Our Company');
-        $subject       = $request->input('subject');
-        $body          = $request->input('body');
+        // {{first_name}}, {{company}}... in a loaded Email Template are filled in here,
+        // through the same renderer the sequences use.
+        $renderer      = app(TemplateRendererService::class);
+        $account       = MailSetting::defaultAccount();
+        $variables     = $renderer->variablesFor($lead, $account);
+        $subject       = $renderer->renderSubject((string) $request->input('subject'), $variables);
+        $body          = $renderer->render((string) $request->input('body'), $variables, escape: true);
         $address       = $request->filled('address_id') ? Address::find((int) $request->input('address_id')) : null;
 
         // Store attachments permanently under lead-attachments/{lead_id}/
@@ -466,6 +570,10 @@ class LeadController extends Controller
                 'sent_at'     => now(),
                 'tracking_token' => $trackingToken,
                 'message_id'     => $messageId,
+                'mail_setting_id' => $account?->id,
+                'from_email'     => $fromAddress,
+                'to_email'       => $recipient,
+                'attempts'       => 1,
             ]);
 
             Log::info('sendEmail: sent directly', [
@@ -487,6 +595,10 @@ class LeadController extends Controller
                 'attachments' => !empty($attachmentMeta) ? json_encode($attachmentMeta) : null,
                 'status'      => 'failed',
                 'sent_at'     => now(),
+                'mail_setting_id' => $account?->id,
+                'to_email'       => $recipient,
+                'attempts'       => 1,
+                'error_message'  => mb_substr($e->getMessage(), 0, 1000),
             ]);
 
             Log::error('sendEmail: failed', ['lead_id' => $lead->id, 'error' => $e->getMessage()]);

@@ -22,7 +22,7 @@ class CategoryController extends Controller
             'inactive' => 'Inactive',
         ];
 
-        $query = Category::latest();
+        $query = Category::withCount('leads')->latest();
 
         // Status is a URL-driven filter, same as the Leads page.
         if ($request->filled('status') && array_key_exists($request->status, $statusOptions)) {
@@ -63,9 +63,10 @@ class CategoryController extends Controller
         $request->validate([
             'name'   => ['required', 'string', 'max:255', 'unique:categories,name'],
             'status' => ['required', 'in:active,inactive'],
+            'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        Category::create($request->only('name', 'status'));
+        Category::create($request->only('name', 'status', 'description'));
 
         return redirect()->route('categories.index', $this->redirectQuery($request))->with('success', 'Category added successfully.');
     }
@@ -75,9 +76,10 @@ class CategoryController extends Controller
         $request->validate([
             'name'   => ['required', 'string', 'max:255', 'unique:categories,name,' . $id],
             'status' => ['required', 'in:active,inactive'],
+            'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        Category::findOrFail($id)->update($request->only('name', 'status'));
+        Category::findOrFail($id)->update($request->only('name', 'status', 'description'));
 
         return redirect()->route('categories.index', $this->redirectQuery($request))->with('success', 'Category updated successfully.');
     }

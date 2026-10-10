@@ -9,6 +9,9 @@ use App\Jobs\ProcessBulkJob;
 use App\Models\Bulk;
 use App\Models\BulkItem;
 use App\Models\Category;
+use App\Models\Lead;
+use App\Models\SequenceEnrollment;
+use App\Services\BulkImportService;
 use App\Services\EmailFinderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -34,9 +37,15 @@ class BulkController extends Controller
     use ExportsCsv, FiltersRequests, RedirectsBack;
 
     /** Every result_status a bulk item can carry, across both run types. */
-    private const RESULT_STATUSES = ['valid', 'risky', 'invalid', 'unknown', 'found', 'not_found'];
+    private const RESULT_STATUSES = ['valid', 'risky', 'invalid', 'unknown', 'found', 'not_found', 'imported', 'updated', 'duplicate', 'done', 'skipped'];
 
-    public function __construct(private readonly EmailFinderService $finder) {}
+    /** Run types a user can start from the upload form (sequence actions are started elsewhere). */
+    private const UPLOAD_TYPES = [Bulk::TYPE_VERIFY, Bulk::TYPE_FIND, Bulk::TYPE_IMPORT];
+
+    public function __construct(
+        private readonly EmailFinderService $finder,
+        private readonly BulkImportService $importer,
+    ) {}
 
     /** Rows read from a CSV before the rest is ignored. */
     private function maxRows(): int
@@ -51,12 +60,12 @@ class BulkController extends Controller
         // per-row subquery would buy nothing.
         $query = Bulk::query()->orderByDesc('id');
 
-        if ($type = $this->enumParam($request, 'type', [Bulk::TYPE_VERIFY, Bulk::TYPE_FIND])) {
+        if ($type = $this->enumParam($request, 'type', [...self::UPLOAD_TYPES, ...Bulk::SEQUENCE_ACTIONS])) {
             $query->where('type', $type);
         }
 
         $status = $this->enumParam($request, 'status', [
-            Bulk::STATUS_PENDING, Bulk::STATUS_PROCESSING,
+            Bulk::STATUS_DRAFT, Bulk::STATUS_PENDING, Bulk::STATUS_PROCESSING,
             Bulk::STATUS_COMPLETED, Bulk::STATUS_FAILED, Bulk::STATUS_CANCELLED,
         ]);
 
@@ -86,6 +95,11 @@ class BulkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Importing leads has its own flow: upload -> preview + column mapping -> confirm.
+        if ($request->input('type') === Bulk::TYPE_IMPORT) {
+            return $this->storeImport($request);
+        }
+
         $validated = $request->validate([
             'name'        => ['nullable', 'string', 'max:120'],
             'type'        => ['required', 'in:verify,find'],
@@ -100,7 +114,7 @@ class BulkController extends Controller
 
         $file      = $request->file('file');
         $column    = ((int) ($validated['column'] ?? 1)) - 1;
-        $extraCol  = $validated['name_column'] ? ((int) $validated['name_column']) - 1 : null;
+        $extraCol  = ! empty($validated['name_column']) ? ((int) $validated['name_column']) - 1 : null;
         $hasHeader = $request->boolean('has_header');
         $isFind    = $validated['type'] === Bulk::TYPE_FIND;
 
@@ -124,7 +138,7 @@ class BulkController extends Controller
         $storedPath = $file->store('bulk-uploads', 'local');
 
         $bulk = Bulk::create([
-            'name'              => $validated['name'] ?: pathinfo((string) $file->getClientOriginalName(), PATHINFO_FILENAME),
+            'name'              => ($validated['name'] ?? null) ?: pathinfo((string) $file->getClientOriginalName(), PATHINFO_FILENAME),
             'type'              => $validated['type'],
             'category_id'       => $isFind ? ($validated['category_id'] ?? null) : null,
             'original_filename' => $file->getClientOriginalName(),
@@ -172,14 +186,23 @@ class BulkController extends Controller
 
         if ($term = $this->strParam($request, 'q')) {
             $escaped = $this->likePattern($term);
-            $query->where(fn ($q) => $q->where('input', 'like', $escaped)->orWhere('result_value', 'like', $escaped));
+            // `extra` holds the lead's address on sequence-action runs (and the company on verify runs).
+            $query->where(fn ($q) => $q->where('input', 'like', $escaped)
+                ->orWhere('result_value', 'like', $escaped)
+                ->orWhere('extra', 'like', $escaped));
         }
+
+        $items = $query->paginate($this->perPage($request))->withQueryString();
 
         $data = [
             'bulk'       => $bulk,
-            'items'      => $query->paginate($this->perPage($request))->withQueryString(),
+            'items'      => $items,
+            'itemLeads'  => $this->leadsForItems($bulk, $items),
             'breakdown'  => $this->breakdown($bulk),
             'filters'    => ['result' => $result, 'q' => $term],
+            // A draft import shows its first rows and the column mapping to confirm.
+            'preview'    => $bulk->isImport() && $bulk->status === Bulk::STATUS_DRAFT ? $this->importer->preview($bulk) : null,
+            'importFields' => [...array_keys(BulkImportService::ALIASES), 'custom'],
         ];
 
         if ($request->ajax()) {
@@ -187,6 +210,35 @@ class BulkController extends Controller
         }
 
         return view('bulks.show', $data);
+    }
+
+    /**
+     * The lead behind each row of a sequence-action run, so the table can name it
+     * instead of showing a bare id. Enroll / unsubscribe rows hold a lead id;
+     * pause / resume / remove rows hold an enrollment id.
+     *
+     * @return array<int, Lead>  keyed by bulk item id
+     */
+    private function leadsForItems(Bulk $bulk, $items): array
+    {
+        if (! $bulk->isSequenceAction() || $items->isEmpty()) {
+            return [];
+        }
+
+        $ids = $items->pluck('input')->map(fn ($id) => (int) $id)->all();
+
+        $leads = in_array($bulk->type, [Bulk::TYPE_ENROLL, Bulk::TYPE_UNSUBSCRIBE], true)
+            ? Lead::whereIn('id', $ids)->get()->keyBy('id')
+            : SequenceEnrollment::with('lead')->whereIn('id', $ids)->get()->mapWithKeys(fn ($e) => [$e->id => $e->lead]);
+
+        $map = [];
+        foreach ($items as $item) {
+            if ($lead = $leads[(int) $item->input] ?? null) {
+                $map[$item->id] = $lead;
+            }
+        }
+
+        return $map;
     }
 
     /**
@@ -211,6 +263,52 @@ class BulkController extends Controller
         ]);
     }
 
+    /**
+     * Step 1 of a lead import: store the CSV as a draft run and show the preview.
+     * Nothing is imported until the mapping is confirmed.
+     */
+    private function storeImport(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name'            => ['nullable', 'string', 'max:120'],
+            'file'            => ['required', 'file', 'mimes:csv,txt', 'max:'.config('sequencer.import.max_upload_kb', 20480)],
+            'category_id'     => ['nullable', 'exists:categories,id'],
+            'update_existing' => ['nullable', 'boolean'],
+        ]);
+
+        $bulk = $this->importer->createDraft(
+            $request->file('file'),
+            ! empty($validated['category_id']) ? Category::find($validated['category_id']) : null,
+            $request->boolean('update_existing'),
+            $validated['name'] ?? null,
+        );
+
+        return redirect()->route('bulks.show', $bulk->id)
+            ->with('success', "{$bulk->total_records} row(s) read. Check the column mapping below, then confirm the import.");
+    }
+
+    /** Step 2 of a lead import: save the column mapping and queue the run. */
+    public function confirmImport(Request $request, int $id): RedirectResponse
+    {
+        $bulk = Bulk::where('type', Bulk::TYPE_IMPORT)->findOrFail($id);
+
+        $data = $request->validate([
+            'mapping'         => ['required', 'array'],
+            'mapping.*'       => ['nullable', 'string', 'max:20'],
+            'update_existing' => ['nullable', 'boolean'],
+        ]);
+
+        $wasDraft = $bulk->status === Bulk::STATUS_DRAFT;
+        $this->importer->confirm($bulk, $data['mapping'], $request->has('update_existing') ? $request->boolean('update_existing') : null);
+
+        if ($wasDraft) {   // a double submit must not queue the run twice
+            ProcessBulkJob::dispatch($bulk->id)->onQueue('default');
+        }
+
+        return redirect()->route('bulks.show', $bulk->id)
+            ->with('success', 'Import queued. Progress updates automatically below; you can leave this page.');
+    }
+
     /** Stop a run. Items already processed keep their results. */
     public function cancel(Request $request, int $id): RedirectResponse
     {
@@ -231,6 +329,10 @@ class BulkController extends Controller
     public function retry(int $id): RedirectResponse
     {
         $bulk = Bulk::findOrFail($id);
+
+        if ($bulk->isImport()) {
+            return back()->with('error', 'An import cannot be retried. Upload the corrected file as a new import; existing leads are skipped.');
+        }
 
         $reset = $bulk->items()
             ->whereIn('status', [BulkItem::STATUS_FAILED, BulkItem::STATUS_PROCESSING])
@@ -260,6 +362,16 @@ class BulkController extends Controller
     {
         $bulk   = Bulk::findOrFail($id);
         $isFind = $bulk->type === Bulk::TYPE_FIND;
+
+        // Imports and sequence actions: one line per row / record with what happened to it.
+        if ($bulk->isImport() || $bulk->isSequenceAction()) {
+            return $this->streamCsv(
+                'bulk-'.$bulk->id.'-results',
+                [$bulk->isImport() ? 'Email' : 'Record ID', $bulk->isImport() ? 'Company' : 'Email', 'Result', 'Notes'],
+                $bulk->items()->orderBy('id')->cursor(),
+                fn (BulkItem $item) => [$item->input, $item->extra, $item->result_status, $item->message],
+            );
+        }
 
         return $this->streamCsv(
             'bulk-'.$bulk->id.'-results',
@@ -377,9 +489,12 @@ class BulkController extends Controller
             ->groupBy('result_status')
             ->pluck('total', 'result_status');
 
-        $keys = $bulk->type === Bulk::TYPE_FIND
-            ? ['found', 'not_found', 'unknown']
-            : ['valid', 'risky', 'invalid', 'unknown'];
+        $keys = match (true) {
+            $bulk->type === Bulk::TYPE_FIND => ['found', 'not_found', 'unknown'],
+            $bulk->isImport() => ['imported', 'updated', 'duplicate', 'invalid'],
+            $bulk->isSequenceAction() => ['done', 'skipped'],
+            default => ['valid', 'risky', 'invalid', 'unknown'],
+        };
 
         $out = [];
 

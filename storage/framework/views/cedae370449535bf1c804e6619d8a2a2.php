@@ -8,291 +8,116 @@
 
 <?php $__env->startSection('content'); ?>
 
-<?php
-    $smtpEnc = old('encryption', $smtp->encryption ?? 'tls');
-    $imapEnc = old('encryption', $imap->encryption ?? 'ssl');
-?>
-
 <div class="row">
     <div class="col-xl-12">
         <div class="card">
-            <div class="card-header py-3 d-block">
-                <h4 class="card-title"><i class="bi bi-envelope-gear me-2 text-primary"></i>Mail Settings</h4>
-                <p class="mb-0 fs-13">Credentials saved here are used to send emails. If nothing is saved, the values from <code>.env</code> are used.</p>
+            <div class="card-header py-3 d-sm-flex d-block align-items-center justify-content-between">
+                <div>
+                    <h4 class="card-title"><i class="bi bi-envelope-gear me-2 text-primary"></i>Mail Settings</h4>
+                    <p class="mb-0 fs-13">Sending accounts. The <strong>default</strong> account sends emails from the Leads page; sequences can use any active account.
+                        If no account is saved, the values from <code>.env</code> are used. Passwords are stored encrypted and never shown.</p>
+                </div>
+                <a href="<?php echo e(route('mail-settings.create')); ?>" class="btn btn-primary btn-sm m-1 text-nowrap"><i class="bi bi-plus-lg me-1"></i>Add Account</a>
             </div>
 
-            <div class="card-body">
-                <ul class="nav nav-tabs mb-4" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link <?php echo e(old('_tab') === 'imap' ? '' : 'active'); ?>" data-bs-toggle="tab" data-bs-target="#tab-smtp" type="button">
-                            <i class="bi bi-send me-1"></i>SMTP (Sending)
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link <?php echo e(old('_tab') === 'imap' ? 'active' : ''); ?>" data-bs-toggle="tab" data-bs-target="#tab-imap" type="button">
-                            <i class="bi bi-inbox me-1"></i>IMAP (Sent folder)
-                        </button>
-                    </li>
-                </ul>
-
-                <div class="tab-content">
-
-                    
-                    <div class="tab-pane fade <?php echo e(old('_tab') === 'imap' ? '' : 'show active'); ?>" id="tab-smtp">
-                        <form method="POST" action="<?php echo e(route('mail-settings.smtp')); ?>" id="smtpForm" data-test-url="<?php echo e(route('mail-settings.test', 'smtp')); ?>">
-                            <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
-                            <input type="hidden" name="_tab" value="smtp">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">SMTP Host <span class="text-danger">*</span></label>
-                                    <input type="text" name="host" class="form-control <?php $__errorArgs = ['host'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                                           value="<?php echo e(old('host', $smtp->host ?? '')); ?>" placeholder="smtp.example.com" required>
-                                    <?php $__errorArgs = ['host'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <label class="form-label">Port <span class="text-danger">*</span></label>
-                                    <input type="number" name="port" class="form-control <?php $__errorArgs = ['port'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                                           value="<?php echo e(old('port', $smtp->port ?? 587)); ?>" required>
-                                    <?php $__errorArgs = ['port'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <label class="form-label">Encryption</label>
-                                    <select name="encryption" class="form-select">
-                                        <option value="tls"  <?php echo e($smtpEnc === 'tls'  ? 'selected' : ''); ?>>TLS (STARTTLS, 587)</option>
-                                        <option value="ssl"  <?php echo e($smtpEnc === 'ssl'  ? 'selected' : ''); ?>>SSL (465)</option>
-                                        <option value="none" <?php echo e($smtpEnc === 'none' ? 'selected' : ''); ?>>None</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Username</label>
-                                    <input type="text" name="username" class="form-control" autocomplete="off"
-                                           value="<?php echo e(old('username', $smtp->username ?? '')); ?>">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Password</label>
-                                    <input type="password" name="password" class="form-control" autocomplete="new-password"
-                                           placeholder="<?php echo e($smtp?->getRawOriginal('password') ? '•••••••• (leave blank to keep current)' : ''); ?>">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">From Email <span class="text-danger">*</span></label>
-                                    <input type="email" name="from_address" class="form-control <?php $__errorArgs = ['from_address'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                                           value="<?php echo e(old('from_address', $smtp->from_address ?? '')); ?>" required>
-                                    <?php $__errorArgs = ['from_address'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">From Name</label>
-                                    <input type="text" name="from_name" class="form-control"
-                                           value="<?php echo e(old('from_name', $smtp->from_name ?? '')); ?>">
-                                </div>
-                            </div>
-                            <div class="form-check form-switch mb-3">
-                                <input type="checkbox" class="form-check-input" name="is_active" value="1" id="smtpActive"
-                                       <?php echo e(old('is_active', $smtp->is_active ?? true) ? 'checked' : ''); ?>>
-                                <label class="form-check-label" for="smtpActive">Active (use these settings for sending)</label>
-                            </div>
-                            <div class="d-flex gap-2 align-items-center">
-                                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save SMTP</button>
-                                <button type="button" class="btn btn-light btn-test"><i class="bi bi-plug me-1"></i>Test Connection</button>
-                                <span class="test-result fs-13"></span>
-                            </div>
-                        </form>
+            <?php if($accounts->isEmpty()): ?>
+                <div class="card-body">
+                    <div class="empty-state">
+                        <i class="bi bi-envelope-gear empty-state-icon"></i>
+                        No accounts yet. <a href="<?php echo e(route('mail-settings.create')); ?>">Add your first sending account</a>.
                     </div>
-
-                    
-                    <div class="tab-pane fade <?php echo e(old('_tab') === 'imap' ? 'show active' : ''); ?>" id="tab-imap">
-                        <form method="POST" action="<?php echo e(route('mail-settings.imap')); ?>" id="imapForm" data-test-url="<?php echo e(route('mail-settings.test', 'imap')); ?>">
-                            <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
-                            <input type="hidden" name="_tab" value="imap">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">IMAP Host <span class="text-danger">*</span></label>
-                                    <input type="text" name="host" class="form-control <?php $__errorArgs = ['host'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                                           value="<?php echo e(old('host', $imap->host ?? '')); ?>" placeholder="imap.example.com" required>
-                                    <?php $__errorArgs = ['host'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <label class="form-label">Port <span class="text-danger">*</span></label>
-                                    <input type="number" name="port" class="form-control <?php $__errorArgs = ['port'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                                           value="<?php echo e(old('port', $imap->port ?? 993)); ?>" required>
-                                    <?php $__errorArgs = ['port'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <label class="form-label">Encryption</label>
-                                    <select name="encryption" class="form-select">
-                                        <option value="ssl"   <?php echo e($imapEnc === 'ssl'   ? 'selected' : ''); ?>>SSL (993)</option>
-                                        <option value="tls"   <?php echo e($imapEnc === 'tls'   ? 'selected' : ''); ?>>TLS (STARTTLS, 143)</option>
-                                        <option value="notls" <?php echo e($imapEnc === 'notls' ? 'selected' : ''); ?>>None</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Username <span class="text-danger">*</span></label>
-                                    <input type="text" name="username" class="form-control <?php $__errorArgs = ['username'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>" autocomplete="off"
-                                           value="<?php echo e(old('username', $imap->username ?? '')); ?>" required>
-                                    <?php $__errorArgs = ['username'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Password</label>
-                                    <input type="password" name="password" class="form-control" autocomplete="new-password"
-                                           placeholder="<?php echo e($imap?->getRawOriginal('password') ? '•••••••• (leave blank to keep current)' : ''); ?>">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Sent Folder <span class="text-danger">*</span></label>
-                                    <input type="text" name="folder" class="form-control <?php $__errorArgs = ['folder'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                                           value="<?php echo e(old('folder', $imap->folder ?? 'INBOX.Sent')); ?>" required>
-                                    <div class="form-text">Sent emails are copied here (e.g. <code>INBOX.Sent</code> or <code>[Gmail]/Sent Mail</code>).</div>
-                                    <?php $__errorArgs = ['folder'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                                </div>
-                            </div>
-                            <div class="form-check form-switch mb-3">
-                                <input type="checkbox" class="form-check-input" name="is_active" value="1" id="imapActive"
-                                       <?php echo e(old('is_active', $imap->is_active ?? true) ? 'checked' : ''); ?>>
-                                <label class="form-check-label" for="imapActive">Active (copy sent emails to this mailbox)</label>
-                            </div>
-                            <div class="d-flex gap-2 align-items-center">
-                                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Save IMAP</button>
-                                <button type="button" class="btn btn-light btn-test"><i class="bi bi-plug me-1"></i>Test Connection</button>
-                                <span class="test-result fs-13"></span>
-                            </div>
-                        </form>
-                    </div>
-
+                </div>
+            <?php else: ?>
+            <div class="card-body table-card-body px-0 pt-0 pb-2">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="mw-150">Account</th>
+                                <th class="mw-150">SMTP (sending)</th>
+                                <th class="mw-150 d-none d-md-table-cell">IMAP (sent copy + replies)</th>
+                                <th class="d-none d-lg-table-cell">Limits</th>
+                                <th style="width:110px">Status</th>
+                                <th style="width:80px" class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php $__currentLoopData = $accounts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $account): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <tr>
+                                <td>
+                                    <h6 class="mb-0 cell-wrap"><?php echo e($account->name); ?> <?php if($account->is_default): ?><span class="badge badge-primary light ms-1">Default</span><?php endif; ?></h6>
+                                    <div class="fs-13 text-muted"><?php echo e($account->from_name ? $account->from_name.' · ' : ''); ?><?php echo e($account->senderEmail()); ?></div>
+                                    <?php if($unreadable = $account->unreadableSecrets()): ?>
+                                        <div class="fs-13 text-danger mt-1">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                            Saved <?php echo e(implode(' and ', $unreadable)); ?> password can't be read (app key changed).
+                                            <a href="<?php echo e(route('mail-settings.edit', $account)); ?>">Re-enter it</a>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <span><?php echo e($account->host ?: '—'); ?><?php echo e($account->host ? ':'.$account->port : ''); ?></span>
+                                    <div class="fs-13">
+                                        <?php if($account->smtp_ok === true): ?><span class="text-success"><i class="bi bi-check-circle"></i> OK</span>
+                                        <?php elseif($account->smtp_ok === false): ?><span class="text-danger"><i class="bi bi-x-circle"></i> Failed</span>
+                                        <?php else: ?><span class="text-muted">Not tested</span><?php endif; ?>
+                                    </div>
+                                </td>
+                                <td class="d-none d-md-table-cell">
+                                    <?php if($account->hasImap()): ?>
+                                        <span><?php echo e($account->imap_host); ?>:<?php echo e($account->imap_port); ?></span>
+                                        <div class="fs-13">
+                                            <?php if($account->imap_ok === true): ?><span class="text-success"><i class="bi bi-check-circle"></i> OK</span>
+                                            <?php elseif($account->imap_ok === false): ?><span class="text-danger" title="<?php echo e($account->imap_last_error); ?>"><i class="bi bi-x-circle"></i> <?php echo e(Str::limit($account->imap_last_error ?: 'Failed', 40)); ?></span>
+                                            <?php else: ?><span class="text-muted">Not tested</span><?php endif; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="text-muted">Not configured</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="d-none d-lg-table-cell fs-13"><?php echo e($account->rate_limit_per_minute); ?>/min<br><?php echo e($account->daily_limit ? $account->daily_limit.'/day' : 'no daily cap'); ?></td>
+                                <td>
+                                    <?php if($account->is_active): ?><span class="badge badge-success light">Active</span>
+                                    <?php else: ?><span class="badge badge-secondary light">Inactive</span><?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light btn-square" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Actions" title="Actions">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="<?php echo e(route('mail-settings.edit', $account)); ?>"><i class="bi bi-pencil me-2 text-warning"></i>Edit</a></li>
+                                            <li>
+                                                <form method="POST" action="<?php echo e(route('mail-settings.check', $account)); ?>"><?php echo csrf_field(); ?>
+                                                    <button type="submit" class="dropdown-item"><i class="bi bi-plug me-2 text-primary"></i>Test connection</button>
+                                                </form>
+                                            </li>
+                                            <?php if (! ($account->is_default)): ?>
+                                            <li>
+                                                <form method="POST" action="<?php echo e(route('mail-settings.default', $account)); ?>"><?php echo csrf_field(); ?>
+                                                    <button type="submit" class="dropdown-item"><i class="bi bi-star me-2 text-success"></i>Make default</button>
+                                                </form>
+                                            </li>
+                                            <?php endif; ?>
+                                            <li>
+                                                <form method="POST" action="<?php echo e(route('mail-settings.destroy', $account)); ?>" onsubmit="return confirm('Delete this account?')"><?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+                                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Delete</button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
 <?php $__env->stopSection(); ?>
-
-<?php $__env->startPush('scripts'); ?>
-<script>
-    document.querySelectorAll('.btn-test').forEach(function (btn) {
-        btn.addEventListener('click', async function () {
-            const form   = btn.closest('form');
-            const result = form.querySelector('.test-result');
-            const body   = new FormData(form);
-            body.delete('_method');
-
-            btn.disabled = true;
-            result.className = 'test-result fs-13 text-muted';
-            result.textContent = 'Testing…';
-
-            try {
-                const res  = await fetch(form.dataset.testUrl, {
-                    method: 'POST',
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                    body: body,
-                });
-                const json = await res.json();
-                result.className = 'test-result fs-13 ' + (json.ok ? 'text-success' : 'text-danger');
-                result.textContent = json.message || (res.ok ? 'OK' : 'Request failed.');
-            } catch (e) {
-                result.className = 'test-result fs-13 text-danger';
-                result.textContent = 'Request failed.';
-            } finally {
-                btn.disabled = false;
-            }
-        });
-    });
-</script>
-<?php $__env->stopPush(); ?>
 
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/html/resources/views/mail-settings/index.blade.php ENDPATH**/ ?>

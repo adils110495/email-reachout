@@ -29,7 +29,12 @@
                         </span>
                     </h4>
                     <p class="mb-0 fs-13">
-                        {{ $bulk->type === 'find' ? 'Finding an address for each domain' : 'Verifying each address' }}
+                        {{ match(true) {
+                            $bulk->type === 'find' => 'Finding an address for each domain',
+                            $bulk->type === 'verify' => 'Verifying each address',
+                            $bulk->isImport() => 'Importing each row as a lead',
+                            default => $bulk->type_label,
+                        } }}
                         @if($bulk->original_filename) · {{ $bulk->original_filename }} @endif
                         @if($bulk->category) · filed under <strong>{{ $bulk->category->name }}</strong> @endif
                     </p>
@@ -40,14 +45,14 @@
                     </a>
 
                     @if($bulk->isRunning())
-                        <form method="POST" action="{{ route('bulks.cancel', $bulk->id) }}" class="d-inline"
+                        <form method="POST" action="{{ route('bulks.cancel', $bulk->id) }}" class="d-inline" id="bulkCancelForm"
                               onsubmit="return confirm('Cancel this run? Results collected so far are kept.')">
                             @csrf
                             <button type="submit" class="btn btn-warning light btn-sm m-1">
                                 <i class="bi bi-stop-circle me-1"></i>Cancel
                             </button>
                         </form>
-                    @elseif($bulk->failed_records > 0 || in_array($bulk->status, ['failed', 'cancelled'], true))
+                    @elseif(! $bulk->isImport() && $bulk->status !== 'draft' && ($bulk->failed_records > 0 || in_array($bulk->status, ['failed', 'cancelled'], true)))
                         <form method="POST" action="{{ route('bulks.retry', $bulk->id) }}" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-success light btn-sm m-1">
@@ -68,6 +73,56 @@
                         <i class="bi bi-exclamation-triangle-fill mt-1"></i>
                         <div><strong>This run failed.</strong> <span class="fs-13">{{ $bulk->error }}</span></div>
                     </div>
+                @endif
+
+                {{-- Draft import: first rows + column mapping. Nothing is imported until confirmed. --}}
+                @if($preview)
+                    <div class="alert alert-info d-flex flex-wrap align-items-center gap-2" role="status">
+                        <i class="bi bi-eye-fill"></i>
+                        <span>Preview of the first {{ count($preview['rows']) }} of {{ number_format($preview['total']) }} rows:</span>
+                        <span class="badge badge-success light">{{ $preview['stats']['valid'] }} valid</span>
+                        <span class="badge badge-warning light">{{ $preview['stats']['duplicate'] }} duplicate</span>
+                        <span class="badge badge-danger light">{{ $preview['stats']['invalid'] }} invalid</span>
+                    </div>
+                    @error('mapping')<div class="alert alert-danger">{{ $message }}</div>@enderror
+
+                    <form method="POST" action="{{ route('bulks.confirm', $bulk->id) }}" class="mb-4">
+                        @csrf
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        @foreach($preview['headers'] as $i => $header)
+                                            <th style="min-width:170px">
+                                                <div class="fs-13 text-muted mb-1">{{ $header }}</div>
+                                                <select class="form-select form-select-sm" name="mapping[{{ $i }}]" aria-label="Map column {{ $header }}">
+                                                    <option value="">— ignore —</option>
+                                                    @foreach($importFields as $field)
+                                                        <option value="{{ $field }}" @selected(($bulk->options['mapping'][$i] ?? null) === $field)>{{ $field === 'custom' ? 'custom field' : str_replace('_', ' ', $field) }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($preview['rows'] as $row)
+                                        <tr class="{{ $row['problem'] === 'invalid' ? 'table-danger' : ($row['problem'] === 'duplicate' ? 'table-warning' : '') }}">
+                                            <td>{{ $row['number'] }}</td>
+                                            @foreach($preview['headers'] as $i => $header)<td>{{ $row['cells'][$i] ?? '' }}</td>@endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <input type="hidden" name="update_existing" value="0">
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="importUpdateExisting" name="update_existing" value="1" @checked($bulk->options['update_existing'] ?? false)>
+                            <label class="form-check-label" for="importUpdateExisting">Update leads that already exist (blank cells never erase data)</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Import {{ number_format($preview['total']) }} rows</button>
+                    </form>
                 @endif
 
                 {{-- Progress bar --}}
@@ -177,9 +232,12 @@
                         <select id="itemResult" class="form-select select2" data-param="result" data-placeholder="All Results">
                             <option value="">All Results</option>
                             @php
-                                $resultOptions = $bulk->type === 'find'
-                                    ? ['found' => 'Found', 'not_found' => 'Not found', 'unknown' => 'Unknown']
-                                    : ['valid' => 'Valid', 'risky' => 'Risky', 'invalid' => 'Invalid', 'unknown' => 'Unknown'];
+                                $resultOptions = match (true) {
+                                    $bulk->type === 'find' => ['found' => 'Found', 'not_found' => 'Not found', 'unknown' => 'Unknown'],
+                                    $bulk->isImport() => ['imported' => 'Imported', 'updated' => 'Updated', 'duplicate' => 'Duplicate', 'invalid' => 'Invalid'],
+                                    $bulk->isSequenceAction() => ['done' => 'Done', 'skipped' => 'Skipped'],
+                                    default => ['valid' => 'Valid', 'risky' => 'Risky', 'invalid' => 'Invalid', 'unknown' => 'Unknown'],
+                                };
                             @endphp
                             @foreach($resultOptions as $value => $label)
                                 <option value="{{ $value }}" {{ $filters['result'] === $value ? 'selected' : '' }}>{{ $label }}</option>
@@ -294,8 +352,16 @@
                 paint(data);
 
                 if (! data.running) {
+                    // The run is over: nothing left to cancel, and the rows below were
+                    // rendered while it was still queued - refresh them in place.
+                    const cancelForm = document.getElementById('bulkCancelForm');
+                    if (cancelForm) cancelForm.remove();
+
+                    const results = document.querySelector('[data-ajax-root]');
+                    if (results) results.dispatchEvent(new CustomEvent('ajax-filters:reload'));
+
                     stop('<i class="bi bi-check-circle-fill text-success me-1"></i>' +
-                         'Finished. <a href="' + window.location.pathname + '">Reload</a> to refresh the results table.');
+                         'Finished. The results below are up to date.');
                 }
             })
             .catch(function () {

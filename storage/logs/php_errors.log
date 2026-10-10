@@ -1,0 +1,1 @@
+[09-Oct-2026 09:38:48 UTC] PHP Fatal error:  Cannot redefine class constant App\Jobs\ProcessBulkJob::CHUNK_ACTION in /var/www/html/app/Jobs/ProcessBulkJob.php on line 57

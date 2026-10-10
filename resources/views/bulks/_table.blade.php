@@ -64,7 +64,7 @@
                                      updates them too - the wide columns it normally
                                      writes to are display:none here. --}}
                                 <div class="d-lg-none fs-13 text-muted">
-                                    {{ $bulk->type === 'find' ? 'Finder' : 'Verify' }}
+                                    {{ match($bulk->type) { 'find' => 'Finder', 'verify' => 'Verify', default => $bulk->type_label } }}
                                     · <span data-cell="successful-sm">{{ number_format($bulk->successful_records) }}</span> ok
                                     · <span data-cell="failed-sm">{{ number_format($bulk->failed_records) }}</span> failed
                                 </div>
@@ -73,6 +73,8 @@
                             <td class="d-none d-lg-table-cell">
                                 @if($bulk->type === 'find')
                                     <span class="badge badge-info light"><i class="bi bi-search me-1"></i>Finder</span>
+                                @elseif($bulk->type !== 'verify')
+                                    <span class="badge badge-success light"><i class="bi {{ $bulk->isImport() ? 'bi-person-plus' : 'bi-diagram-3' }} me-1"></i>{{ $bulk->type_label }}</span>
                                 @else
                                     <span class="badge badge-primary light"><i class="bi bi-patch-check me-1"></i>Verify</span>
                                 @endif

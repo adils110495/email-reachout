@@ -61,7 +61,10 @@
                         <td data-val="<?php echo e($lead->id); ?>" class="d-none d-md-table-cell"><span><?php echo e(($leads->currentPage() - 1) * $leads->perPage() + $loop->iteration); ?></span></td>
 
                         <td data-val="<?php echo e(strtolower($lead->company_name)); ?>">
-                            <h6 class="mb-0 cell-wrap"><?php echo e($lead->company_name); ?></h6>
+                            <h6 class="mb-0 cell-wrap"><?php echo e($lead->company_name ?: $lead->displayName()); ?></h6>
+                            <?php if(trim($lead->first_name.' '.$lead->last_name) !== ''): ?>
+                                <div class="fs-13 text-muted"><?php echo e(trim($lead->first_name.' '.$lead->last_name)); ?><?php if($lead->job_title): ?> · <?php echo e($lead->job_title); ?><?php endif; ?></div>
+                            <?php endif; ?>
                             
                             <div class="d-lg-none fs-13 text-muted">
                                 <?php if($lead->platform): ?><?php echo e($lead->platform->name); ?> · <?php endif; ?>
@@ -99,6 +102,10 @@
                                 };
                             ?>
                             <span class="badge <?php echo e($badgeClass); ?> light"><?php echo e(ucfirst($lead->status)); ?></span>
+                            
+                            <?php if($lead->contact_status && $lead->contact_status->value !== 'active'): ?>
+                                <span class="badge badge-<?php echo e($lead->contact_status->badge()); ?> light"><?php echo e($lead->contact_status->label()); ?></span>
+                            <?php endif; ?>
                         </td>
 
                         <td data-val="<?php echo e(strtolower($lead->platform?->name ?? '')); ?>" class="d-none d-lg-table-cell">
@@ -147,6 +154,13 @@
                                             data-id="<?php echo e($lead->id); ?>">
                                             <i class="bi bi-eye me-2 text-secondary"></i>View Details
                                         </button>
+                                    </li>
+
+                                    
+                                    <li>
+                                        <a class="dropdown-item" href="<?php echo e(route('outreach.activity.index', ['lead' => $lead->id])); ?>">
+                                            <i class="bi bi-activity me-2 text-info"></i>Activity
+                                        </a>
                                     </li>
 
                                     
@@ -207,7 +221,7 @@
                                         <form method="POST" action="<?php echo e(route('cash-leads.from-lead', $lead->id)); ?>">
                                             <?php echo csrf_field(); ?>
                                             <button type="submit" class="dropdown-item">
-                                                <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Cash Lead
+                                                <i class="bi bi-cash-coin me-2 text-success"></i>Mark as Deal
                                             </button>
                                         </form>
                                     </li>

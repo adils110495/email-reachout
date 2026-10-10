@@ -29,6 +29,7 @@
                         <th>Sent</th>
                         <th>Activity</th>
                         <th class="text-center">Opens</th>
+                        <th class="text-center">Clicks</th>
                         <th>Last opened</th>
                         <th>Replied</th>
                     </tr>
@@ -39,10 +40,15 @@
                         <tr>
                             <td><?php echo e($emails->firstItem() + $loop->index); ?></td>
                             <td>
-                                <h6 class="mb-0"><?php echo e($email->lead?->company_name ?? '—'); ?></h6>
-                                <small class="text-muted"><?php echo e($email->lead?->email); ?></small>
+                                <h6 class="mb-0"><?php echo e($email->lead?->displayName() ?? '—'); ?></h6>
+                                <small class="text-muted"><?php echo e($email->to_email ?: $email->lead?->email); ?></small>
                             </td>
-                            <td><?php echo e($email->subject); ?></td>
+                            <td><?php echo e($email->subject); ?>
+
+                                <?php if($email->sequence): ?>
+                                    <div class="fs-13 text-muted"><i class="bi bi-diagram-3 me-1"></i><?php echo e($email->sequence->name); ?><?php if($email->step): ?> · step <?php echo e($email->step->step_number); ?><?php endif; ?></div>
+                                <?php endif; ?>
+                            </td>
                             <td><?php echo e($email->sent_at?->format('d M Y, h:i A')); ?></td>
                             <td>
                                 <span class="badge <?php echo e($b['class']); ?> light">
@@ -51,6 +57,7 @@
                                 </span>
                             </td>
                             <td class="text-center"><?php echo e($email->open_count); ?></td>
+                            <td class="text-center"><?php echo e($email->click_count); ?></td>
                             <td><?php echo e($email->last_opened_at?->diffForHumans() ?? '—'); ?></td>
                             <td><?php echo e($email->replied_at?->format('d M Y, h:i A') ?? '—'); ?></td>
                         </tr>

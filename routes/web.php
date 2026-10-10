@@ -28,7 +28,12 @@ use Illuminate\Support\Facades\Route;
 
 // Open-tracking pixel. Hit by the recipient's mail client, which has no
 // session - it must stay outside the auth group or opens are never recorded.
-Route::get('/t/o/{token}.gif', [TrackingController::class, 'open'])->name('track.open');
+Route::middleware('throttle:tracking')->group(function () {
+    Route::get('/t/o/{token}.gif', [TrackingController::class, 'open'])->name('track.open');
+    // Sequence emails use these two (same controller, same lead_emails rows).
+    Route::get('/track/open/{token}', [TrackingController::class, 'open'])->name('track.open.plain');
+    Route::get('/track/click/{token}', [TrackingController::class, 'click'])->name('track.click');
+});
 
 // Sign in / sign up. Guests only; a signed-in user is sent to the dashboard.
 Route::middleware('guest')->group(function () {
@@ -69,6 +74,7 @@ Route::post('/bulks',                 [BulkController::class, 'store'])->name('b
 Route::get('/bulks/{id}',             [BulkController::class, 'show'])->name('bulks.show')->whereNumber('id');
 Route::get('/bulks/{id}/status',      [BulkController::class, 'status'])->name('bulks.status')->whereNumber('id');
 Route::get('/bulks/{id}/export',      [BulkController::class, 'export'])->name('bulks.export')->whereNumber('id');
+Route::post('/bulks/{id}/confirm',    [BulkController::class, 'confirmImport'])->name('bulks.confirm')->whereNumber('id');
 Route::post('/bulks/{id}/cancel',     [BulkController::class, 'cancel'])->name('bulks.cancel')->whereNumber('id');
 Route::post('/bulks/{id}/retry',      [BulkController::class, 'retry'])->name('bulks.retry')->whereNumber('id');
 Route::delete('/bulks/{id}',          [BulkController::class, 'destroy'])->name('bulks.destroy')->whereNumber('id');
@@ -132,6 +138,9 @@ Route::delete('/leads/{id}', [LeadController::class, 'destroy'])->name('leads.de
 // Bulk actions
 Route::post('/leads/bulk-delete', [LeadController::class, 'bulkDelete'])->name('leads.bulk-delete');
 Route::post('/leads/bulk-status', [LeadController::class, 'bulkStatus'])->name('leads.bulk-status');
+Route::post('/leads/bulk-enroll', [LeadController::class, 'bulkEnroll'])->name('leads.bulk-enroll');
+Route::post('/leads/bulk-category', [LeadController::class, 'bulkCategory'])->name('leads.bulk-category');
+Route::post('/leads/bulk-unsubscribe', [LeadController::class, 'bulkUnsubscribe'])->name('leads.bulk-unsubscribe');
 
 // Export CSV
 Route::get('/export', [LeadController::class, 'export'])->name('leads.export');
@@ -173,10 +182,17 @@ Route::put('/settings/addresses/{id}',     [AddressController::class, 'update'])
 Route::delete('/settings/addresses/{id}',  [AddressController::class, 'destroy'])->name('addresses.destroy');
 
 // Mail Settings — SMTP (sending) and IMAP (Sent folder copy)
-Route::get('/settings/mail',             [MailSettingController::class, 'index'])->name('mail-settings.index');
-Route::put('/settings/mail/smtp',        [MailSettingController::class, 'updateSmtp'])->name('mail-settings.smtp');
-Route::put('/settings/mail/imap',        [MailSettingController::class, 'updateImap'])->name('mail-settings.imap');
-Route::post('/settings/mail/test/{type}', [MailSettingController::class, 'test'])->name('mail-settings.test');
+// One row per sending account; the default one serves the Leads compose window,
+// sequences can use any active account.
+Route::get('/settings/mail',                  [MailSettingController::class, 'index'])->name('mail-settings.index');
+Route::get('/settings/mail/create',           [MailSettingController::class, 'create'])->name('mail-settings.create');
+Route::post('/settings/mail',                 [MailSettingController::class, 'store'])->name('mail-settings.store');
+Route::post('/settings/mail/test',            [MailSettingController::class, 'test'])->middleware('throttle:10,1')->name('mail-settings.test');
+Route::get('/settings/mail/{account}/edit',   [MailSettingController::class, 'edit'])->name('mail-settings.edit');
+Route::put('/settings/mail/{account}',        [MailSettingController::class, 'update'])->name('mail-settings.update');
+Route::delete('/settings/mail/{account}',     [MailSettingController::class, 'destroy'])->name('mail-settings.destroy');
+Route::post('/settings/mail/{account}/default', [MailSettingController::class, 'makeDefault'])->name('mail-settings.default');
+Route::post('/settings/mail/{account}/check', [MailSettingController::class, 'check'])->middleware('throttle:10,1')->name('mail-settings.check');
 
 // Templates JSON for compose modal dropdown
 Route::get('/api/templates', fn() => response()->json(

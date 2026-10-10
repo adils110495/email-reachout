@@ -19,7 +19,12 @@
         body { background: var(--bs-light, #f5f6fa); }
         .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; }
         .auth-card { width: 100%; max-width: 26rem; }
-        .auth-logo { display: block; margin: 0 auto 1.25rem; max-width: 13rem; height: auto; }
+        .auth-logo { display: block; margin: 0 auto 1.25rem; max-width: 13rem; height: auto; mix-blend-mode: multiply; /* logo has a white backdrop; let the page colour show through */ }
+        /* Mobile: tighter gutters so the form is not squeezed. */
+        @media (max-width: 575.98px) {
+            .auth-wrap { padding: 1rem 0.75rem; }
+            .auth-card .card-body { padding: 1.25rem !important; }
+        }
     </style>
 </head>
 <body>

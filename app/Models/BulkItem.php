@@ -37,9 +37,10 @@ class BulkItem extends Model
     public function getResultColourAttribute(): string
     {
         return match ($this->result_status) {
-            'valid', 'found' => 'success',
+            'valid', 'found', 'imported', 'done' => 'success',
+            'updated'        => 'info',
             'invalid'        => 'danger',
-            'risky'          => 'warning',
+            'risky', 'duplicate', 'skipped' => 'warning',
             'not_found'      => 'secondary',
             default          => 'dark',
         };

@@ -48,18 +48,19 @@ endif;
 unset($__errorArgs, $__bag); ?>
     </div>
 
-    <div class="form-check mb-4">
-        <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
-        <label class="form-check-label" for="remember">Remember me</label>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="form-check mb-0">
+            <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
+            <label class="form-check-label" for="remember">Remember me</label>
+        </div>
+        <a href="<?php echo e(route('password.request')); ?>" class="fs-13">Forgot password?</a>
     </div>
 
     <button type="submit" class="btn btn-primary w-100">
         <i class="bi bi-box-arrow-in-right me-1"></i>Sign in
     </button>
 
-    <p class="text-center fs-13 mt-3 mb-0">
-        New here? <a href="<?php echo e(route('signup')); ?>">Create an account</a>
-    </p>
+    
 </form>
 <?php $__env->stopSection(); ?>
 

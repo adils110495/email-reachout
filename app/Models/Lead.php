@@ -2,9 +2,25 @@
 
 namespace App\Models;
 
+use App\Sequencer\Enums\ContactStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
+/**
+ * A prospect. Also the sequencer's contact: person fields, custom fields, list
+ * membership (categories), and a contactability status separate from the outreach
+ * `status`:
+ *
+ *   status          new | sent | failed | replied            (where outreach stands)
+ *   contact_status  active | unsubscribed | bounced | invalid | archived  (may we email at all)
+ *
+ * contact_status, the unsubscribe token and the bounce / unsubscribe times are
+ * system-managed and never mass-assigned.
+ */
 class Lead extends Model
 {
     use HasFactory;
@@ -24,6 +40,12 @@ class Lead extends Model
         'status',
         'platform_id',
         'category_id',
+        'first_name',
+        'last_name',
+        'job_title',
+        'phone',
+        'country',
+        'custom_fields',
     ];
 
     /**
@@ -36,6 +58,18 @@ class Lead extends Model
      */
     protected static function booted(): void
     {
+        static::creating(function (Lead $lead) {
+            $lead->unsubscribe_token ??= Str::random(48);
+            $lead->contact_status ??= ContactStatus::Active;
+        });
+
+        // The primary category is always also a list membership.
+        static::saved(function (Lead $lead) {
+            if ($lead->category_id && ($lead->wasRecentlyCreated || $lead->wasChanged('category_id'))) {
+                $lead->categories()->syncWithoutDetaching([$lead->category_id => ['created_at' => now()]]);
+            }
+        });
+
         static::saving(function (Lead $lead) {
             if ($lead->isDirty('emails')) {
                 $list = static::normalizeEmails($lead->emails);
@@ -104,9 +138,68 @@ class Lead extends Model
 
     protected $casts = [
         'emails'     => 'array',
+        'custom_fields' => 'array',
+        'contact_status' => ContactStatus::class,
+        'unsubscribed_at' => 'datetime',
+        'bounced_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /** Every list (category) the lead belongs to, including its primary category. */
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'category_lead')->withPivot('created_at');
+    }
+
+    public function leadEmails(): HasMany
+    {
+        return $this->hasMany(LeadEmail::class);
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(SequenceEnrollment::class);
+    }
+
+    /** "Ann Lee", falling back to the company, then the address. */
+    public function displayName(): string
+    {
+        return trim(($this->first_name ?? '').' '.($this->last_name ?? ''))
+            ?: ($this->company_name ?: (string) $this->email);
+    }
+
+    /** Only active leads with an address may receive sequence email. */
+    public function canReceiveEmail(): bool
+    {
+        return $this->hasEmail() && ($this->contact_status?->canReceiveEmail() ?? true);
+    }
+
+    /** Free-text search across name, company and every address. */
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        $term = trim((string) $term);
+        if ($term === '') {
+            return $query;
+        }
+
+        $like = '%'.addcslashes($term, '%_\\').'%';
+
+        return $query->where(fn (Builder $q) => $q
+            ->where('email', 'like', $like)
+            ->orWhere('company_name', 'like', $like)
+            ->orWhere('first_name', 'like', $like)
+            ->orWhere('last_name', 'like', $like)
+            ->orWhere('website', 'like', $like));
+    }
+
+    /** Leads in a list: their primary category or any extra membership. */
+    public function scopeInCategory(Builder $query, int $categoryId): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('category_id', $categoryId)
+            ->orWhereHas('categories', fn (Builder $c) => $c->where('categories.id', $categoryId)));
+    }
 
     /**
      * Scope: only leads that haven't been emailed yet.

@@ -66,6 +66,15 @@ $message = $__bag->first($__errorArgs[0]); ?><div class="text-danger fs-13 mt-1"
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
+        
+        <div class="form-text">
+            Variables (subject and body):
+            <?php $__currentLoopData = \App\Sequencer\Services\TemplateRendererService::VARIABLES; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $variable): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php $tag = '{'.'{'.$variable.'}'.'}'; ?>
+                <code><?php echo e($tag); ?></code>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            · fallback: <code>{{first_name|there}}</code> · custom field: <code>{{custom.key}}</code>
+        </div>
     </div>
 
     

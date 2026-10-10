@@ -19,13 +19,15 @@ return [
             'after_commit' => false,
         ],
 
+        // retry_after must exceed the longest job (send job 90s, bulk chunk 85s).
+        // after_commit: a job dispatched inside a DB transaction is pushed only once it commits.
         'redis' => [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => (int) env('QUEUE_RETRY_AFTER', 90),
+            'retry_after' => (int) env('QUEUE_RETRY_AFTER', 180),
             'block_for' => null,
-            'after_commit' => false,
+            'after_commit' => true,
         ],
 
     ],

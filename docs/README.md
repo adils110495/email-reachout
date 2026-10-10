@@ -30,6 +30,9 @@ hai, kyun banaya gaya hai, aur har cheez kaam kaise karti hai.**
 | [frontend.md](frontend.md) | Blade layout, `ajax-filters.js`, CSS components |
 | [configuration.md](configuration.md) | `.env`, `config/`, sidebar, routes |
 | [security-and-performance.md](security-and-performance.md) | SSRF guard, timeouts, N+1, validation |
+| [sequencer/README.md](sequencer/README.md) | **Mail Sequencer** module: architecture, API, deployment (English) |
+| [sequencer-readme.md](sequencer-readme.md) | **Sequences ka flow** — shuru se end tak kaise chalta hai |
+| [sequencer/flow-and-testing.md](sequencer/flow-and-testing.md) | Sequences ka step-by-step manual testing guide |
 
 ### Modules
 | Module | URL | File |
@@ -39,7 +42,23 @@ hai, kyun banaya gaya hai, aur har cheez kaam kaise karti hai.**
 | Verifier | `/verifier` | [modules/verifier.md](modules/verifier.md) |
 | Bulks | `/bulks` | [modules/bulks.md](modules/bulks.md) |
 | Leads | `/leads` | [modules/leads.md](modules/leads.md) |
+| Sequences | `/outreach/sequences` | [sequencer/README.md](sequencer/README.md) |
 | Settings | `/settings/*` | [modules/settings.md](modules/settings.md) |
+
+### Sequences ne kya expand kiya
+
+Sequences ke liye naye contacts/lists/templates/accounts **nahi** banaye — existing modules hi expand kiye:
+
+| Existing module | Kya add hua |
+|---|---|
+| **Leads** | first/last name, job title, phone, country, custom fields, email status (`contact_status`), unsubscribe token; bulk enroll / add to category / unsubscribe toolbar |
+| **Categories** | description; ek lead ab kai categories me ho sakta hai (`category_lead`) |
+| **Email Templates** | sequence steps inko use kar sakte hain; `{{variables}}` help |
+| **Mail Settings** | ab multiple accounts (SMTP + IMAP ek saath), daily/per-minute limit, health, default account |
+| **Email Activity** | sequence emails bhi yahin; sequence filter, clicks column |
+| **Bulks** | naye types: CSV import (preview + column mapping), enroll, pause, resume, remove, unsubscribe |
+| **Dashboard** | sequences cards + opens/clicks/replies chart |
+| **ImapService / ReplyCheckerService / `emails:check-replies`** | har account ka reply + bounce detection, sequence ko auto-stop |
 
 ---
 

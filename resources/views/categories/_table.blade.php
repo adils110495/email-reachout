@@ -24,6 +24,7 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th class="mw-150">Name</th>
+                        <th style="width:110px">Leads</th>
                         <th style="width:130px">Status</th>
                         <th style="width:80px" class="text-center">Action</th>
                     </tr>
@@ -32,7 +33,9 @@
                     @foreach($categories as $i => $category)
                     <tr data-search="{{ strtolower($category->name . ' ' . $category->status) }}">
                         <td><span>{{ $i + 1 }}</span></td>
-                        <td><h6 class="mb-0">{{ $category->name }}</h6></td>
+                        <td><h6 class="mb-0">{{ $category->name }}</h6>@if($category->description)<div class="fs-13 text-muted">{{ $category->description }}</div>@endif</td>
+                        {{-- Every lead in this list: primary category or extra membership. --}}
+                        <td><a href="{{ route('leads.index', ['category' => $category->id]) }}">{{ $category->leads_count }}</a></td>
                         <td>
                             @if($category->status === 'active')
                                 <span class="badge badge-success light">Active</span>
@@ -51,6 +54,7 @@
                                         <button class="dropdown-item btn-edit-category"
                                                 data-id="{{ $category->id }}"
                                                 data-name="{{ $category->name }}"
+                                                data-description="{{ $category->description }}"
                                                 data-status="{{ $category->status }}">
                                             <i class="bi bi-pencil me-2 text-warning"></i>Edit
                                         </button>

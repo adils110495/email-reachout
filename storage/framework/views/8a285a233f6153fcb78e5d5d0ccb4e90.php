@@ -194,6 +194,52 @@ unset($__errorArgs, $__bag); ?>
                         </form>
 
                         
+                        <?php if($sequences->isNotEmpty()): ?>
+                        <form method="POST" action="<?php echo e(route('leads.bulk-enroll')); ?>" class="d-flex gap-2">
+                            <?php echo csrf_field(); ?>
+                            <div id="bulkEnrollIds"></div>
+                            <select name="sequence_id" class="form-select form-select-sm" style="width:170px" required aria-label="Sequence">
+                                <option value="">Sequence…</option>
+                                <?php $__currentLoopData = $sequences; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $seq): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($seq->id); ?>"><?php echo e($seq->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-success light">
+                                <i class="bi bi-diagram-3 me-1"></i>Enroll
+                            </button>
+                        </form>
+                        <?php endif; ?>
+
+                        
+                        <form method="POST" action="<?php echo e(route('leads.bulk-category')); ?>" class="d-flex gap-2">
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="_redirect_back" value="<?php echo e(request()->getQueryString() ? '?'.request()->getQueryString() : ''); ?>">
+                            <div id="bulkCategoryIds"></div>
+                            <select name="category_id" class="form-select form-select-sm" style="width:150px" required aria-label="Category">
+                                <option value="">Category…</option>
+                                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($cat->id); ?>"><?php echo e($cat->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                            <button type="submit" name="mode" value="add" class="btn btn-sm btn-info light" title="Add to category">
+                                <i class="bi bi-folder-plus"></i>
+                            </button>
+                            <button type="submit" name="mode" value="remove" class="btn btn-sm btn-light" title="Remove from category">
+                                <i class="bi bi-folder-minus"></i>
+                            </button>
+                        </form>
+
+                        
+                        <form method="POST" action="<?php echo e(route('leads.bulk-unsubscribe')); ?>">
+                            <?php echo csrf_field(); ?>
+                            <div id="bulkUnsubscribeIds"></div>
+                            <button type="submit" class="btn btn-sm btn-warning light"
+                                    onclick="return confirm('Unsubscribe the selected leads? This cannot be undone.')">
+                                <i class="bi bi-person-dash me-1"></i>Unsubscribe
+                            </button>
+                        </form>
+
+                        
                         <form method="POST" action="<?php echo e(route('leads.bulk-delete')); ?>" id="bulkDeleteForm">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="_redirect_back" value="<?php echo e(request()->getQueryString() ? '?'.request()->getQueryString() : ''); ?>">
@@ -388,6 +434,36 @@ unset($__errorArgs, $__bag); ?>
                             <label class="form-label">LinkedIn URL</label>
                             <input type="url" name="linkedin" id="edit_linkedin" class="form-control" placeholder="https://linkedin.com/company/...">
                         </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" id="edit_first_name" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" id="edit_last_name" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Job Title</label>
+                            <input type="text" name="job_title" id="edit_job_title" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" id="edit_phone" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Country</label>
+                            <input type="text" name="country" id="edit_country" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email Status</label>
+                            <select name="contact_status" id="edit_contact_status" class="form-select">
+                                <?php $__currentLoopData = \App\Sequencer\Enums\ContactStatus::cases(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cs): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($cs->value); ?>"><?php echo e($cs->label()); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                            <div class="form-text">Only <strong>Active</strong> leads receive sequence emails. Unsubscribed cannot be undone.</div>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">Emails</label>
                             
@@ -470,6 +546,26 @@ unset($__errorArgs, $__bag); ?>
                         <div class="col-md-6">
                             <label class="form-label">LinkedIn URL</label>
                             <input type="url" name="linkedin" class="form-control" placeholder="https://linkedin.com/company/...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" class="form-control" value="<?php echo e(old('first_name')); ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" value="<?php echo e(old('last_name')); ?>">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Job Title</label>
+                            <input type="text" name="job_title" class="form-control" value="<?php echo e(old('job_title')); ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control" value="<?php echo e(old('phone')); ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Country</label>
+                            <input type="text" name="country" class="form-control" value="<?php echo e(old('country')); ?>">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Emails</label>
@@ -913,8 +1009,9 @@ function updateBulkToolbar() {
         toolbar.classList.remove('d-none');
 
         // Populate hidden id inputs for both bulk forms
-        ['bulkStatusIds', 'bulkDeleteIds'].forEach(function (containerId) {
+        ['bulkStatusIds', 'bulkDeleteIds', 'bulkEnrollIds', 'bulkCategoryIds', 'bulkUnsubscribeIds'].forEach(function (containerId) {
             const container = document.getElementById(containerId);
+            if (! container) return;   // e.g. no sequences yet
             container.innerHTML = '';
             checked.forEach(function (cb) {
                 const input = document.createElement('input');
@@ -1209,6 +1306,12 @@ document.addEventListener('click', function (event) {
                 document.getElementById('edit_website').value       = lead.website      || '';
                 setEmailTags(document.getElementById('edit_emails'), emailsOf(lead));
                 document.getElementById('edit_linkedin').value      = lead.linkedin     || '';
+                ['first_name', 'last_name', 'job_title', 'phone', 'country'].forEach(function (f) {
+                    document.getElementById('edit_' + f).value = lead[f] || '';
+                });
+                const contactStatus = document.getElementById('edit_contact_status');
+                contactStatus.value    = lead.contact_status || 'active';
+                contactStatus.disabled = lead.contact_status === 'unsubscribed';
                 document.getElementById('edit_status').value        = lead.status       || 'new';
                 document.getElementById('edit_platform_id').value   = lead.platform_id  || '';
                 document.getElementById('edit_category_id').value   = lead.category_id  || '';

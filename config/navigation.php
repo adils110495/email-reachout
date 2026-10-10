@@ -73,6 +73,25 @@ return [
                     'active' => ['cash-leads.*'],
                     'icon'   => 'bi-cash-coin',
                 ],
+                // Multi-step email sequences. They enroll Leads, send from Mail Settings
+                // accounts, and their emails appear under Email Activity.
+                [
+                    'label'    => 'Sequences',
+                    'active'   => ['outreach.sequences.*', 'outreach.steps.*', 'outreach.enrollments.*', 'outreach.activity.*'],
+                    'icon'     => 'bi-diagram-3',
+                    'children' => [
+                        [
+                            'label'  => 'All Sequences',
+                            'route'  => 'outreach.sequences.index',
+                            'active' => ['outreach.sequences.*', 'outreach.steps.*', 'outreach.enrollments.*'],
+                        ],
+                        [
+                            'label'  => 'Timeline',
+                            'route'  => 'outreach.activity.index',
+                            'active' => ['outreach.activity.*'],
+                        ],
+                    ],
+                ],
                 [
                     'label'  => 'Email Activity',
                     'route'  => 'email-activity.index',

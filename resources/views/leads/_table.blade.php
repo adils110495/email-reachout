@@ -65,7 +65,10 @@
                         <td data-val="{{ $lead->id }}" class="d-none d-md-table-cell"><span>{{ ($leads->currentPage() - 1) * $leads->perPage() + $loop->iteration }}</span></td>
 
                         <td data-val="{{ strtolower($lead->company_name) }}">
-                            <h6 class="mb-0 cell-wrap">{{ $lead->company_name }}</h6>
+                            <h6 class="mb-0 cell-wrap">{{ $lead->company_name ?: $lead->displayName() }}</h6>
+                            @if(trim($lead->first_name.' '.$lead->last_name) !== '')
+                                <div class="fs-13 text-muted">{{ trim($lead->first_name.' '.$lead->last_name) }}@if($lead->job_title) · {{ $lead->job_title }}@endif</div>
+                            @endif
                             {{-- Platform and Found are hidden below lg - carry them here. --}}
                             <div class="d-lg-none fs-13 text-muted">
                                 @if($lead->platform){{ $lead->platform->name }} · @endif
@@ -101,6 +104,10 @@
                                 };
                             @endphp
                             <span class="badge {{ $badgeClass }} light">{{ ucfirst($lead->status) }}</span>
+                            {{-- Email status is only worth a badge when the lead can no longer be emailed. --}}
+                            @if($lead->contact_status && $lead->contact_status->value !== 'active')
+                                <span class="badge badge-{{ $lead->contact_status->badge() }} light">{{ $lead->contact_status->label() }}</span>
+                            @endif
                         </td>
 
                         <td data-val="{{ strtolower($lead->platform?->name ?? '') }}" class="d-none d-lg-table-cell">
@@ -148,6 +155,13 @@
                                             data-id="{{ $lead->id }}">
                                             <i class="bi bi-eye me-2 text-secondary"></i>View Details
                                         </button>
+                                    </li>
+
+                                    {{-- Sequence / email timeline for this lead --}}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('outreach.activity.index', ['lead' => $lead->id]) }}">
+                                            <i class="bi bi-activity me-2 text-info"></i>Activity
+                                        </a>
                                     </li>
 
                                     {{-- Edit --}}

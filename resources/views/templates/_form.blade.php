@@ -24,6 +24,15 @@
         {{-- Hidden textarea that holds the HTML for form submission --}}
         <textarea name="body" id="body-input" class="d-none @error('body') is-invalid @enderror">{{ old('body', $template->body ?? '') }}</textarea>
         @error('body')<div class="text-danger fs-13 mt-1">{{ $message }}</div>@enderror
+        {{-- Variables are filled in per lead when the template is sent from Leads or used in a sequence step. --}}
+        <div class="form-text">
+            Variables (subject and body):
+            @foreach(\App\Sequencer\Services\TemplateRendererService::VARIABLES as $variable)
+                @php $tag = '{'.'{'.$variable.'}'.'}'; @endphp
+                <code>{{ $tag }}</code>
+            @endforeach
+            · fallback: <code>@{{first_name|there}}</code> · custom field: <code>@{{custom.key}}</code>
+        </div>
     </div>
 
     {{-- Attachments --}}

@@ -63,6 +63,81 @@
     @endforeach
 </div>
 
+{{-- ===================== SEQUENCES ===================== --}}
+<div class="row">
+    @php
+        $sequenceCards = [
+            ['label' => 'Sequences',        'value' => $outreach['sequences'],    'meta' => $outreach['active_sequences'].' active',            'icon' => 'bi-diagram-3',            'tint' => 'primary', 'url' => route('outreach.sequences.index')],
+            ['label' => 'Emails Scheduled', 'value' => $outreach['scheduled'],    'meta' => $outreach['enrolled'].' leads in sequences',        'icon' => 'bi-clock-history',        'tint' => 'info',    'url' => route('outreach.sequences.index')],
+            ['label' => 'Replies',          'value' => $outreach['replies'],      'meta' => $outreach['reply_rate'].'% reply rate',             'icon' => 'bi-reply-fill',           'tint' => 'success', 'url' => route('email-activity.index', ['activity' => 'replied'])],
+            ['label' => 'Bounces',          'value' => $outreach['bounces'],      'meta' => $outreach['bounce_rate'].'% bounce rate',           'icon' => 'bi-exclamation-triangle', 'tint' => 'danger',  'url' => route('outreach.activity.index', ['type' => 'bounce_received'])],
+            ['label' => 'Unsubscribes',     'value' => $outreach['unsubscribes'], 'meta' => 'never emailed again',                              'icon' => 'bi-person-dash',          'tint' => 'warning', 'url' => route('leads.index', ['contact_status' => 'unsubscribed'])],
+            ['label' => 'Opened',           'value' => $outreach['opened'],       'meta' => $outreach['open_rate'].'% open · '.$outreach['click_rate'].'% click', 'icon' => 'bi-envelope-open', 'tint' => 'info', 'url' => route('email-activity.index', ['activity' => 'opened'])],
+        ];
+    @endphp
+
+    @foreach($sequenceCards as $card)
+        <div class="col-xl-2 col-md-4 col-6 mb-4">
+            <a href="{{ $card['url'] }}" class="card stat-card h-100 mb-0 text-decoration-none">
+                <div class="card-body">
+                    <div class="stat-icon tint-{{ $card['tint'] }}"><i class="bi {{ $card['icon'] }}"></i></div>
+                    <div class="stat-body">
+                        <div class="stat-value">{{ number_format($card['value']) }}</div>
+                        <div class="stat-label">{{ $card['label'] }}</div>
+                        <div class="stat-meta">{{ $card['meta'] }}</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    @endforeach
+</div>
+
+<div class="row">
+    <div class="col-xl-12 mb-4">
+        <div class="card engagement-viz">
+            <div class="card-header py-3 d-sm-flex d-block align-items-center justify-content-between">
+                <div class="clearfix">
+                    <h4 class="card-title"><i class="bi bi-envelope-check me-2 text-primary"></i>Email Engagement — Last 14 Days</h4>
+                    <p class="mb-0 fs-13">Every sent email (Leads and sequences): sent, opened, clicked, replied, bounced per day.</p>
+                </div>
+                <div class="chart-legend mt-2 mt-sm-0" aria-hidden="true">
+                    <span><span class="swatch" style="background:var(--viz-1)"></span>Sent</span>
+                    <span><span class="swatch" style="background:var(--viz-2)"></span>Opened</span>
+                    <span><span class="swatch" style="background:var(--viz-3)"></span>Clicked</span>
+                    <span><span class="swatch" style="background:var(--viz-4)"></span>Replied</span>
+                    <span><span class="swatch" style="background:var(--viz-5)"></span>Bounced</span>
+                </div>
+            </div>
+            <div class="card-body">
+                @if(array_sum($engagement['sent']) + array_sum($engagement['opened']) + array_sum($engagement['replied']) + array_sum($engagement['bounced']) === 0)
+                    <div class="empty-state">
+                        <i class="bi bi-envelope-check empty-state-icon"></i>
+                        <p class="mb-1 fw-semibold">No emails in the last 14 days</p>
+                        <p class="fs-13 mb-0">Create a <a href="{{ route('outreach.sequences.index') }}">sequence</a> and enroll leads to see engagement here.</p>
+                    </div>
+                @else
+                    <div style="position:relative;height:280px">
+                        <canvas id="engagementChart" role="img" aria-label="Daily emails sent, opened, clicked, replied and bounced"></canvas>
+                    </div>
+                    <details class="mt-3">
+                        <summary class="fs-13 text-muted">View as table</summary>
+                        <div class="table-responsive" style="max-height:260px">
+                            <table class="table table-sm mb-0">
+                                <thead><tr><th>Day</th><th>Sent</th><th>Opened</th><th>Clicked</th><th>Replied</th><th>Bounced</th></tr></thead>
+                                <tbody>
+                                    @foreach($engagement['labels'] as $i => $label)
+                                        <tr><td>{{ $label }}</td><td>{{ $engagement['sent'][$i] }}</td><td>{{ $engagement['opened'][$i] }}</td><td>{{ $engagement['clicked'][$i] }}</td><td>{{ $engagement['replied'][$i] }}</td><td>{{ $engagement['bounced'][$i] }}</td></tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
 
     {{-- ===================== ACTIVITY ===================== --}}
@@ -465,3 +540,46 @@
 </div>
 
 @endsection
+
+{{-- Engagement chart: five series on one axis, colours validated for colour-blind
+     separation (identity is also carried by the legend and the table view). --}}
+@push('styles')
+<style>
+    .engagement-viz { --viz-1:#2a78d6; --viz-2:#eb6834; --viz-3:#1baf7a; --viz-4:#eda100; --viz-5:#e87ba4; }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const canvas = document.getElementById('engagementChart');
+    if (! canvas || typeof Chart === 'undefined') return;
+
+    const series = @json($engagement);
+    const css    = getComputedStyle(document.querySelector('.engagement-viz'));
+    const colour = name => css.getPropertyValue(name).trim();
+    const line   = (label, key, token) => ({
+        label, data: series[key], borderColor: colour(token), backgroundColor: colour(token),
+        borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: 0.25,
+    });
+
+    new Chart(canvas, {
+        type: 'line',
+        data: { labels: series.labels, datasets: [
+            line('Sent', 'sent', '--viz-1'), line('Opened', 'opened', '--viz-2'), line('Clicked', 'clicked', '--viz-3'),
+            line('Replied', 'replied', '--viz-4'), line('Bounced', 'bounced', '--viz-5'),
+        ]},
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(128,128,128,.15)' } },
+                x: { grid: { display: false } },
+            },
+        },
+    });
+}());
+</script>
+@endpush

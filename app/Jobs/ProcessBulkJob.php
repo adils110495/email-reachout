@@ -7,7 +7,13 @@ use App\Models\Bulk;
 use App\Models\BulkItem;
 use App\Models\EmailVerification;
 use App\Models\Lead;
+use App\Models\MailSetting;
 use App\Models\Platform;
+use App\Models\Sequence;
+use App\Models\SequenceEnrollment;
+use App\Sequencer\Services\EnrollmentService;
+use App\Sequencer\Services\UnsubscribeService;
+use App\Services\BulkImportService;
 use App\Services\EmailFinderService;
 use App\Services\EmailVerifierService;
 use Illuminate\Bus\Queueable;
@@ -44,6 +50,9 @@ class ProcessBulkJob implements ShouldQueue
 
     private const CHUNK_FIND = 3;
 
+    /** Sequence actions are a few quick queries each. */
+    private const CHUNK_ACTION = 100;
+
     /**
      * Wall-clock budget for one find item, in seconds.
      *
@@ -61,12 +70,12 @@ class ProcessBulkJob implements ShouldQueue
 
     public function __construct(public readonly int $bulkId) {}
 
-    public function handle(EmailVerifierService $verifier, EmailFinderService $finder): void
+    public function handle(EmailVerifierService $verifier, EmailFinderService $finder, BulkImportService $importer): void
     {
         $bulk = Bulk::find($this->bulkId);
 
         if (! $bulk || ! $bulk->isRunning()) {
-            return; // Deleted, cancelled, or already finished.
+            return; // Deleted, cancelled, still a draft, or already finished.
         }
 
         if ($bulk->status === Bulk::STATUS_PENDING) {
@@ -76,10 +85,30 @@ class ProcessBulkJob implements ShouldQueue
             ]);
         }
 
+        // Imports read the CSV in checkpointed slices; every row becomes an item with its outcome.
+        if ($bulk->isImport()) {
+            $done = $importer->processSlice($bulk);
+            $this->syncCounters($bulk);
+
+            if (! $done) {
+                self::dispatch($bulk->id)->onQueue('default');
+
+                return;
+            }
+
+            $this->complete($bulk);
+
+            return;
+        }
+
         $items = $bulk->items()
             ->where('status', BulkItem::STATUS_PENDING)
             ->orderBy('id')
-            ->limit($bulk->type === Bulk::TYPE_FIND ? self::CHUNK_FIND : self::CHUNK_VERIFY)
+            ->limit(match (true) {
+                $bulk->type === Bulk::TYPE_FIND => self::CHUNK_FIND,
+                $bulk->isSequenceAction() => self::CHUNK_ACTION,
+                default => self::CHUNK_VERIFY,
+            })
             ->get();
 
         foreach ($items as $item) {
@@ -87,9 +116,11 @@ class ProcessBulkJob implements ShouldQueue
             $item->update(['status' => BulkItem::STATUS_PROCESSING]);
 
             try {
-                $bulk->type === Bulk::TYPE_FIND
-                    ? $this->findFor($item, $bulk, $finder)
-                    : $this->verifyFor($item, $bulk, $verifier);
+                match (true) {
+                    $bulk->isSequenceAction() => $this->sequenceActionFor($item, $bulk),
+                    $bulk->type === Bulk::TYPE_FIND => $this->findFor($item, $bulk, $finder),
+                    default => $this->verifyFor($item, $bulk, $verifier),
+                };
             } catch (Throwable $e) {
                 Log::warning('ProcessBulkJob: item failed', [
                     'bulk_id' => $bulk->id,
@@ -100,7 +131,7 @@ class ProcessBulkJob implements ShouldQueue
 
                 $item->update([
                     'status'        => BulkItem::STATUS_FAILED,
-                    'result_status' => $bulk->type === Bulk::TYPE_FIND ? 'not_found' : 'unknown',
+                    'result_status' => $bulk->type === Bulk::TYPE_FIND ? 'not_found' : ($bulk->isSequenceAction() ? 'skipped' : 'unknown'),
                     'message'       => 'Processing error: '.$e->getMessage(),
                 ]);
             }
@@ -126,6 +157,11 @@ class ProcessBulkJob implements ShouldQueue
                 'message'       => 'Interrupted before the result was recorded.',
             ]);
 
+        $this->complete($bulk);
+    }
+
+    private function complete(Bulk $bulk): void
+    {
         $this->syncCounters($bulk);
 
         $bulk->update([
@@ -268,6 +304,59 @@ class ProcessBulkJob implements ShouldQueue
     }
 
     /**
+     * One sequence action. The item's input is a lead id (enroll, unsubscribe) or an
+     * enrollment id (pause, resume, remove). "skipped" carries the reason in message.
+     */
+    private function sequenceActionFor(BulkItem $item, Bulk $bulk): void
+    {
+        $id = (int) $item->input;
+        $options = $bulk->options ?? [];
+        $enrollments = app(EnrollmentService::class);
+        $skip = null;
+
+        switch ($bulk->type) {
+            case Bulk::TYPE_ENROLL:
+                $sequence = Sequence::find($options['sequence_id'] ?? 0);
+                $lead = Lead::find($id);
+                if (! $sequence || ! $lead) {
+                    $skip = 'not_found';
+                    break;
+                }
+                $account = ! empty($options['mail_setting_id']) ? MailSetting::find($options['mail_setting_id']) : null;
+                $result = $enrollments->enroll($sequence, $lead, $account);
+                $skip = $result->wasEnrolled() ? null : ($result->reason ?? $result->outcome);
+                $item->extra = $lead->email;
+                break;
+
+            case Bulk::TYPE_UNSUBSCRIBE:
+                $lead = Lead::find($id);
+                $item->extra = $lead?->email;
+                $skip = $lead ? (app(UnsubscribeService::class)->unsubscribe($lead, null, 'bulk') ? null : 'already_unsubscribed') : 'not_found';
+                break;
+
+            default:
+                $enrollment = SequenceEnrollment::with('lead:id,email')->find($id);
+                if (! $enrollment) {
+                    $skip = 'not_found';
+                    break;
+                }
+                $item->extra = $enrollment->lead?->email;
+                $ok = match ($bulk->type) {
+                    Bulk::TYPE_PAUSE => $enrollments->pause($enrollment),
+                    Bulk::TYPE_RESUME => $enrollments->resume($enrollment),
+                    Bulk::TYPE_REMOVE => $enrollments->remove($enrollment),
+                };
+                $skip = $ok ? null : 'not_applicable';
+        }
+
+        $item->fill([
+            'status' => BulkItem::STATUS_DONE,
+            'result_status' => $skip === null ? 'done' : 'skipped',
+            'message' => $skip === null ? null : str_replace('_', ' ', $skip),
+        ])->save();
+    }
+
+    /**
      * Recompute the run's counters from the item rows.
      *
      * Derived rather than incremented so a retried chunk can never double-count.
@@ -284,7 +373,7 @@ class ProcessBulkJob implements ShouldQueue
 
         $successful = $bulk->items()
             ->where('status', BulkItem::STATUS_DONE)
-            ->whereIn('result_status', ['valid', 'risky', 'found'])
+            ->whereIn('result_status', ['valid', 'risky', 'found', 'imported', 'updated', 'done'])
             ->count();
 
         $bulk->update([

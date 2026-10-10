@@ -3,7 +3,13 @@
     search, per-page and pagination change by assets/js/ajax-filters.js, so it
     must stay self-contained: no <script> here, one single .ajax-content root.
 --}}
-@php $isFind = $bulk->type === 'find'; @endphp
+@php
+    $isFind = $bulk->type === 'find';
+    $isSeq  = $bulk->isSequenceAction();
+    // Only verify / find runs produce a confidence score.
+    $showScore = ! $isSeq && ! $bulk->isImport();
+    $itemLeads = $itemLeads ?? [];
+@endphp
 
 <div class="ajax-content">
 @if($items->isEmpty())
@@ -19,7 +25,7 @@
                 <p class="mb-1 fw-semibold">Waiting for the first results</p>
                 <p class="fs-13 mb-0">Records appear here as the queue works through them.</p>
             @else
-                <p class="mb-1 fw-semibold">This run has no records</p>
+                <p class="mb-1 fw-semibold">{{ $bulk->status === 'draft' ? 'Waiting for you to confirm the import above' : 'This run has no records' }}</p>
                 <p class="fs-13 mb-0">Nothing usable was found in the uploaded file.</p>
             @endif
         </div>
@@ -31,12 +37,14 @@
                 <thead class="table-light">
                     <tr>
                         <th style="width:60px" class="d-none d-md-table-cell">#</th>
-                        <th class="mw-150">{{ $isFind ? 'Domain' : 'Email' }}</th>
+                        <th class="mw-150">{{ $isFind ? 'Domain' : ($isSeq ? 'Lead' : 'Email') }}</th>
                         @if($isFind)
                             <th class="mw-150">Email found</th>
                         @endif
                         <th style="width:120px">Result</th>
-                        <th style="width:150px" class="d-none d-md-table-cell">Confidence</th>
+                        @if($showScore)
+                            <th style="width:150px" class="d-none d-md-table-cell">Confidence</th>
+                        @endif
                         <th class="mw-150 d-none d-lg-table-cell">Notes</th>
                         <th style="width:70px" class="text-center">Action</th>
                     </tr>
@@ -49,9 +57,25 @@
                             </td>
 
                             <td class="cell-wrap mw-220">
-                                <h6 class="mb-0 cell-wrap">{{ $item->input }}</h6>
-                                @if($item->extra)
-                                    <span class="fs-13 text-muted">{{ $item->extra }}</span>
+                                @if($isSeq)
+                                    {{-- Sequence actions store an id; show the lead it points at. --}}
+                                    @php $lead = $itemLeads[$item->id] ?? null; @endphp
+                                    @if($lead)
+                                        <h6 class="mb-0 cell-wrap">
+                                            <a href="{{ route('outreach.activity.index', ['lead' => $lead->id]) }}" title="Open this lead's timeline">{{ $lead->displayName() }}</a>
+                                        </h6>
+                                        <span class="fs-13 text-muted">{{ $lead->email ?: ($item->extra ?: 'no email address') }}</span>
+                                    @else
+                                        <h6 class="mb-0 cell-wrap text-muted">Record #{{ $item->input }} (no longer exists)</h6>
+                                        @if($item->extra)
+                                            <span class="fs-13 text-muted">{{ $item->extra }}</span>
+                                        @endif
+                                    @endif
+                                @else
+                                    <h6 class="mb-0 cell-wrap">{{ $item->input }}</h6>
+                                    @if($item->extra)
+                                        <span class="fs-13 text-muted">{{ $item->extra }}</span>
+                                    @endif
                                 @endif
 
                                 {{-- Carries the columns hidden at this width. --}}
@@ -89,18 +113,20 @@
                                 @endif
                             </td>
 
-                            <td class="d-none d-md-table-cell">
-                                @if($item->score !== null)
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="score-meter flex-grow-1">
-                                            <span class="bg-{{ $item->result_colour }}" style="width: {{ $item->score }}%"></span>
+                            @if($showScore)
+                                <td class="d-none d-md-table-cell">
+                                    @if($item->score !== null)
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="score-meter flex-grow-1">
+                                                <span class="bg-{{ $item->result_colour }}" style="width: {{ $item->score }}%"></span>
+                                            </div>
+                                            <span class="fs-13 text-muted">{{ $item->score }}%</span>
                                         </div>
-                                        <span class="fs-13 text-muted">{{ $item->score }}%</span>
-                                    </div>
-                                @else
-                                    <span class="fs-13 text-muted">—</span>
-                                @endif
-                            </td>
+                                    @else
+                                        <span class="fs-13 text-muted">—</span>
+                                    @endif
+                                </td>
+                            @endif
 
                             <td class="fs-13 cell-wrap d-none d-lg-table-cell">{{ $item->message ?: '—' }}</td>
 
@@ -108,10 +134,15 @@
                                 @php
                                     // The address worth acting on: the one that was
                                     // verified, or the one the finder discovered.
-                                    $address = $isFind ? $item->result_value : $item->input;
+                                    $address = $bulk->isSequenceAction() ? null : ($isFind ? $item->result_value : $item->input);
                                 @endphp
 
-                                @if($address)
+                                @if($isSeq && ($itemLeads[$item->id] ?? null))
+                                    <a href="{{ route('outreach.activity.index', ['lead' => $itemLeads[$item->id]->id]) }}"
+                                       class="btn btn-sm btn-light btn-square" title="Lead timeline" aria-label="Lead timeline">
+                                        <i class="bi bi-clock-history"></i>
+                                    </a>
+                                @elseif($address)
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-light btn-square"
                                                 data-bs-toggle="dropdown" data-bs-strategy="fixed"

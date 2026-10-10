@@ -1,0 +1,8 @@
+# /etc/cron.d/cold-email  -  Laravel scheduler, once a minute.
+# The scheduler only DISPATCHES jobs (sequencer:dispatch-due every minute,
+# emails:check-replies every 2 minutes, sequencer:prune daily); Supervisor's
+# queue worker does the actual sending / IMAP polling.
+# (In Docker the `scheduler` service runs `php artisan schedule:work` instead.)
+#
+# Run it on ONE server only (or set CACHE_STORE=redis so withoutOverlapping locks are shared).
+* * * * * www-data cd /var/www/html && php artisan schedule:run >> /dev/null 2>&1

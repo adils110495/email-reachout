@@ -22,9 +22,12 @@
         @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 
-    <div class="form-check mb-4">
-        <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
-        <label class="form-check-label" for="remember">Remember me</label>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="form-check mb-0">
+            <input type="checkbox" class="form-check-input" id="remember" name="remember" value="1">
+            <label class="form-check-label" for="remember">Remember me</label>
+        </div>
+        <a href="{{ route('password.request') }}" class="fs-13">Forgot password?</a>
     </div>
 
     <button type="submit" class="btn btn-primary w-100">

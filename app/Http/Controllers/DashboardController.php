@@ -8,6 +8,7 @@ use App\Models\EmailTemplate;
 use App\Models\EmailVerification;
 use App\Models\Lead;
 use App\Models\LeadEmail;
+use App\Sequencer\Services\AnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -42,6 +43,7 @@ class DashboardController extends Controller
                 'total'   => $data['bulkStats']['total'],
                 'running' => $data['bulkStats']['running'],
             ],
+            'outreach'      => $data['outreach'],
             'generated_at'  => now()->toIso8601String(),
         ]);
     }
@@ -118,6 +120,9 @@ class DashboardController extends Controller
             'recentLeads'    => Lead::with('category')->latest('id')->limit(8)->get(),
             'runningBulks'   => Bulk::latest('id')->limit(5)->get(),
             'templateCount'  => (int) EmailTemplate::where('status', 'active')->count(),
+            // Sequences: totals, rates and the daily engagement series (viewer's timezone).
+            'outreach'       => app(AnalyticsService::class)->outreachTotals(),
+            'engagement'     => app(AnalyticsService::class)->dailySeries(auth()->user()?->timezoneName() ?? config('app.timezone'), self::ACTIVITY_DAYS),
         ];
     }
 

@@ -6,7 +6,9 @@ return [
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),
     'url' => env('APP_URL', 'http://localhost'),
-    'timezone' => 'UTC',
+    // India Standard Time. Everything follows this one setting: now(), the scheduler, every
+    // date shown in the UI, and the MySQL session (see config/database.php).
+    'timezone' => env('APP_TIMEZONE', 'Asia/Kolkata'),
     'locale' => 'en',
     'fallback_locale' => 'en',
     'faker_locale' => 'en_US',

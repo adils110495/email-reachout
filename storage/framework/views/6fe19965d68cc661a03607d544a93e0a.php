@@ -20,6 +20,7 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th class="mw-150">Name</th>
+                        <th style="width:110px">Leads</th>
                         <th style="width:130px">Status</th>
                         <th style="width:80px" class="text-center">Action</th>
                     </tr>
@@ -28,7 +29,9 @@
                     <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr data-search="<?php echo e(strtolower($category->name . ' ' . $category->status)); ?>">
                         <td><span><?php echo e($i + 1); ?></span></td>
-                        <td><h6 class="mb-0"><?php echo e($category->name); ?></h6></td>
+                        <td><h6 class="mb-0"><?php echo e($category->name); ?></h6><?php if($category->description): ?><div class="fs-13 text-muted"><?php echo e($category->description); ?></div><?php endif; ?></td>
+                        
+                        <td><a href="<?php echo e(route('leads.index', ['category' => $category->id])); ?>"><?php echo e($category->leads_count); ?></a></td>
                         <td>
                             <?php if($category->status === 'active'): ?>
                                 <span class="badge badge-success light">Active</span>
@@ -47,6 +50,7 @@
                                         <button class="dropdown-item btn-edit-category"
                                                 data-id="<?php echo e($category->id); ?>"
                                                 data-name="<?php echo e($category->name); ?>"
+                                                data-description="<?php echo e($category->description); ?>"
                                                 data-status="<?php echo e($category->status); ?>">
                                             <i class="bi bi-pencil me-2 text-warning"></i>Edit
                                         </button>

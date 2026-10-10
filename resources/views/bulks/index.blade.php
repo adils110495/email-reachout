@@ -73,6 +73,9 @@
                             <option value="">All Types</option>
                             <option value="verify" {{ $filters['type'] === 'verify' ? 'selected' : '' }}>Verification</option>
                             <option value="find"   {{ $filters['type'] === 'find'   ? 'selected' : '' }}>Email finder</option>
+                            <option value="import" {{ $filters['type'] === 'import' ? 'selected' : '' }}>Lead import</option>
+                            <option value="enroll" {{ $filters['type'] === 'enroll' ? 'selected' : '' }}>Sequence enroll</option>
+                            <option value="unsubscribe" {{ $filters['type'] === 'unsubscribe' ? 'selected' : '' }}>Unsubscribe</option>
                         </select>
                     </div>
 
@@ -122,7 +125,7 @@
                         <div class="col-12">
                             <label class="form-label">What should this run do? <span class="text-danger">*</span></label>
                             <div class="row g-2">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <input type="radio" class="btn-check" name="type" id="typeVerify" value="verify"
                                            {{ old('type', 'verify') === 'verify' ? 'checked' : '' }} required>
                                     <label class="btn btn-light w-100 text-start p-3" for="typeVerify">
@@ -131,13 +134,23 @@
                                         <div class="fs-13 text-muted mt-1">Your CSV contains email addresses.</div>
                                     </label>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <input type="radio" class="btn-check" name="type" id="typeFind" value="find"
                                            {{ old('type') === 'find' ? 'checked' : '' }}>
                                     <label class="btn btn-light w-100 text-start p-3" for="typeFind">
                                         <i class="bi bi-search me-1 text-primary"></i>
                                         <strong>Find addresses</strong>
                                         <div class="fs-13 text-muted mt-1">Your CSV contains company domains.</div>
+                                    </label>
+                                </div>
+                                {{-- Import: rows become leads. Columns are mapped on the next screen. --}}
+                                <div class="col-md-4">
+                                    <input type="radio" class="btn-check" name="type" id="typeImport" value="import"
+                                           {{ old('type') === 'import' ? 'checked' : '' }}>
+                                    <label class="btn btn-light w-100 text-start p-3" for="typeImport">
+                                        <i class="bi bi-person-plus me-1 text-primary"></i>
+                                        <strong>Import leads</strong>
+                                        <div class="fs-13 text-muted mt-1">Your CSV has a header row: email, first_name, company…</div>
                                     </label>
                                 </div>
                             </div>
@@ -161,22 +174,22 @@
                                    value="{{ old('name') }}" maxlength="120" placeholder="Defaults to the file name">
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-3 {{ old('type') === 'import' ? 'd-none' : '' }}" data-bulk-only="verify find">
                             <label class="form-label" for="bulkColumn">Data column</label>
                             <input type="number" name="column" id="bulkColumn" class="form-control"
                                    value="{{ old('column', 1) }}" min="1" max="50">
                             <div class="form-text">1 = first column.</div>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-3 {{ old('type') === 'import' ? 'd-none' : '' }}" data-bulk-only="verify find">
                             <label class="form-label" for="bulkNameColumn">Name column</label>
                             <input type="number" name="name_column" id="bulkNameColumn" class="form-control"
                                    value="{{ old('name_column') }}" min="1" max="50" placeholder="Optional">
                             <div class="form-text">Company name, if present.</div>
                         </div>
 
-                        {{-- Only a "find" run creates leads, so only it needs a category. --}}
-                        <div class="col-md-6 {{ old('type') === 'find' ? '' : 'd-none' }}" id="bulkCategoryField">
+                        {{-- "find" and "import" runs create leads, so they take a category. --}}
+                        <div class="col-md-6 {{ in_array(old('type'), ['find', 'import'], true) ? '' : 'd-none' }}" id="bulkCategoryField" data-bulk-only="find import">
                             <label class="form-label" for="bulkCategory">File new leads under</label>
                             <select name="category_id" id="bulkCategory" class="form-select">
                                 <option value="">— No category —</option>
@@ -189,7 +202,17 @@
                             <div class="form-text">The Leads module filters by category.</div>
                         </div>
 
-                        <div class="col-12">
+                        <div class="col-12 {{ old('type') === 'import' ? '' : 'd-none' }}" data-bulk-only="import">
+                            <div class="form-check">
+                                <input type="checkbox" name="update_existing" id="bulkUpdateExisting" value="1"
+                                       class="form-check-input" {{ old('update_existing') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="bulkUpdateExisting">
+                                    Update leads that already exist (otherwise they are skipped as duplicates)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12 {{ old('type') === 'import' ? 'd-none' : '' }}" data-bulk-only="verify find">
                             <div class="form-check">
                                 <input type="checkbox" name="has_header" id="bulkHasHeader" value="1"
                                        class="form-check-input" {{ old('has_header', true) ? 'checked' : '' }}>
@@ -233,10 +256,12 @@
     const submitBtn     = document.getElementById('bulkUploadSubmit');
     const spinner       = document.getElementById('bulkUploadSpinner');
 
-    // Only a "find" run creates leads, so the category picker follows the type.
+    // Each field declares the run types it applies to (data-bulk-only); show those.
     document.querySelectorAll('input[name="type"]').forEach(function (radio) {
         radio.addEventListener('change', function () {
-            categoryField.classList.toggle('d-none', radio.value !== 'find');
+            form.querySelectorAll('[data-bulk-only]').forEach(function (field) {
+                field.classList.toggle('d-none', ! field.dataset.bulkOnly.split(' ').includes(radio.value));
+            });
         });
     });
 

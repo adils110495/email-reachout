@@ -33,6 +33,7 @@
                         <th>Sent</th>
                         <th>Activity</th>
                         <th class="text-center">Opens</th>
+                        <th class="text-center">Clicks</th>
                         <th>Last opened</th>
                         <th>Replied</th>
                     </tr>
@@ -43,10 +44,14 @@
                         <tr>
                             <td>{{ $emails->firstItem() + $loop->index }}</td>
                             <td>
-                                <h6 class="mb-0">{{ $email->lead?->company_name ?? '—' }}</h6>
-                                <small class="text-muted">{{ $email->lead?->email }}</small>
+                                <h6 class="mb-0">{{ $email->lead?->displayName() ?? '—' }}</h6>
+                                <small class="text-muted">{{ $email->to_email ?: $email->lead?->email }}</small>
                             </td>
-                            <td>{{ $email->subject }}</td>
+                            <td>{{ $email->subject }}
+                                @if($email->sequence)
+                                    <div class="fs-13 text-muted"><i class="bi bi-diagram-3 me-1"></i>{{ $email->sequence->name }}@if($email->step) · step {{ $email->step->step_number }}@endif</div>
+                                @endif
+                            </td>
                             <td>{{ $email->sent_at?->format('d M Y, h:i A') }}</td>
                             <td>
                                 <span class="badge {{ $b['class'] }} light">
@@ -54,6 +59,7 @@
                                 </span>
                             </td>
                             <td class="text-center">{{ $email->open_count }}</td>
+                            <td class="text-center">{{ $email->click_count }}</td>
                             <td>{{ $email->last_opened_at?->diffForHumans() ?? '—' }}</td>
                             <td>{{ $email->replied_at?->format('d M Y, h:i A') ?? '—' }}</td>
                         </tr>

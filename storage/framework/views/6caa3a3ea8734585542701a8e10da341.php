@@ -39,6 +39,7 @@
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li class="px-3 py-2 fs-13 text-muted">Signed in as <strong><?php echo e(auth()->user()->username); ?></strong></li>
                         <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="<?php echo e(route('outreach.profile.edit')); ?>"><i class="bi bi-person-gear me-2"></i>Profile &amp; settings</a></li>
                         <li>
                             <form method="POST" action="<?php echo e(route('logout')); ?>">
                                 <?php echo csrf_field(); ?>
