@@ -7,20 +7,20 @@ use Illuminate\Support\Facades\Schema;
 
 class AppSetting extends Model
 {
-    // Branding keys - each holds a path relative to public/ (e.g. uploads/branding/x.png)
+    // Branding keys - each holds a path relative to public/ (e.g. uploads/branding/x.png).
+    // The admin logo is also the logo in outgoing emails.
     public const ADMIN_LOGO = 'admin_logo';
     public const ADMIN_ICON = 'admin_icon';
-    public const EMAIL_LOGO = 'email_logo';
 
     // Shipped artwork used until something is uploaded under Settings > Branding.
     public const DEFAULTS = [
         self::ADMIN_LOGO => 'images/sabright-logo.png',
         self::ADMIN_ICON => null, // falls back to the admin logo, cropped to its mark
-        self::EMAIL_LOGO => 'images/hes-email-logo.png',
     ];
 
-    // Email footer
-    public const COMPANY_NAME = 'company_name';
+    // Brand name - admin panel, email footer and AI prompts.
+    public const COMPANY_NAME         = 'company_name';
+    public const DEFAULT_COMPANY_NAME = 'SabRight';
 
     /** Footer social icons, in display order. An icon is shown only when its URL is set. */
     public const SOCIALS = [
@@ -91,20 +91,20 @@ class AppSetting extends Model
     }
 
     /**
-     * Absolute URL for the logo in outgoing emails. Built from APP_URL (not the
-     * request host) so it is also correct when rendered from a queue worker.
+     * Absolute URL of the admin logo for outgoing emails. Built from APP_URL (not
+     * the request host) so it is also correct when rendered from a queue worker.
      */
     public static function emailLogoUrl(): string
     {
-        $path = static::brandingPath(self::EMAIL_LOGO);
+        $path = static::brandingPath(self::ADMIN_LOGO);
 
         return rtrim((string) config('app.url'), '/').'/'.$path.'?v='.filemtime(public_path($path));
     }
 
-    /** Company name for emails and AI prompts; falls back to SENDER_COMPANY in .env. */
+    /** Brand name set under Settings > Branding. */
     public static function companyName(): string
     {
-        return static::read(self::COMPANY_NAME) ?: (string) env('SENDER_COMPANY', 'Our Company');
+        return static::read(self::COMPANY_NAME) ?: self::DEFAULT_COMPANY_NAME;
     }
 
     /** @return array<int, array{label: string, glyph: string, url: string}> */

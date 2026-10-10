@@ -129,24 +129,25 @@ Fields: `address`, `email`, `phone`, `alternate_phone`, `website`, `status`
 
 ## Branding
 
-**URL:** `/settings/branding` — logos upload karne ka page. Table: `app_settings` (key/value).
+**URL:** `/settings/branding` — brand name aur logo. Table: `app_settings` (key/value).
 
 | Key | Kahan dikhta hai | Default |
 |---|---|---|
-| `admin_logo` | Sidebar header, login/signup page | `images/sabright-logo.png` |
-| `admin_icon` | Collapsed sidebar, mobile header, favicon | admin logo (left side crop) |
-| `email_logo` | Outreach email ka header | `images/hes-email-logo.png` |
+| `company_name` | Brand name — email copyright line, AI prompts, logo alt text | `SabRight` |
+| `admin_logo` | Sidebar header, login/signup page **aur outreach email ka header** | `images/sabright-logo.png` |
+| `admin_icon` | Collapsed sidebar, mobile header, favicon | logo (left side crop) |
 
+- Brand name sirf yahin se aata hai — `.env` ka `SENDER_COMPANY` ab use nahi hota.
+- Email aur admin panel ka logo **ek hi** hai, isliye logo PNG/JPG/GIF hi ho sakta hai (mail clients WEBP/SVG nahi dikhate).
 - Files `public/uploads/branding/` me save hoti hain (git-ignored) — public URL chahiye
   taaki recipient ka mail client logo load kar sake. Isliye `APP_URL` sahi public domain hona chahiye.
 - Naya upload purani file delete kar deta hai; "Reset" default par wapas le jata hai.
-- Code me use: `AppSetting::adminLogoUrl()`, `adminIconUrl()`, `emailLogoUrl()`.
+- Code me use: `AppSetting::companyName()`, `adminLogoUrl()`, `adminIconUrl()`, `emailLogoUrl()`.
 
 **Email Footer** (same page, neeche wala card):
 
 | Key | Kaam |
 |---|---|
-| `company_name` | Copyright line + AI prompts ka sender company. Khaali → `.env` ka `SENDER_COMPANY` |
 | `social_linkedin`, `social_facebook`, `social_x`, `social_instagram`, `social_youtube` | Footer icons — sirf wahi dikhte hain jinka URL bhara ho |
 
 Footer ka address/email/phone/website **Addresses** se aata hai: compose modal me chuna hua

@@ -12,27 +12,19 @@
     $items = [
         [
             'key'     => AppSetting::ADMIN_LOGO,
-            'title'   => 'Admin Panel Logo',
-            'help'    => 'Shown in the sidebar header and on the login page. A wide logo works best (about 4:1). PNG, JPG or WEBP, max 2 MB.',
-            'accept'  => '.png,.jpg,.jpeg,.webp',
+            'title'   => 'Logo',
+            'help'    => 'Shown in the sidebar header, on the login page and at the top of every outreach email. A wide logo works best (about 4:1). PNG, JPG or GIF, max 2 MB.',
+            'accept'  => '.png,.jpg,.jpeg,.gif',
             'url'     => AppSetting::adminLogoUrl(),
             'default' => 'SabRight logo',
         ],
         [
             'key'     => AppSetting::ADMIN_ICON,
-            'title'   => 'Admin Panel Icon',
-            'help'    => 'Square mark used for the collapsed sidebar, mobile header and browser tab (favicon). If not set, the admin logo is used. PNG, JPG or WEBP, max 1 MB.',
+            'title'   => 'Icon',
+            'help'    => 'Square mark used for the collapsed sidebar, mobile header and browser tab (favicon). If not set, the logo is used. PNG, JPG or WEBP, max 1 MB.',
             'accept'  => '.png,.jpg,.jpeg,.webp',
             'url'     => AppSetting::adminIconUrl(),
-            'default' => 'admin logo',
-        ],
-        [
-            'key'     => AppSetting::EMAIL_LOGO,
-            'title'   => 'Email Logo',
-            'help'    => 'Shown at the top of every outreach email. PNG, JPG or GIF (most email clients do not show SVG/WEBP), max 2 MB.',
-            'accept'  => '.png,.jpg,.jpeg,.gif',
-            'url'     => AppSetting::emailLogoUrl(),
-            'default' => 'HES email logo',
+            'default' => 'logo',
         ],
     ];
 ?>
@@ -44,7 +36,7 @@
         <div class="card">
             <div class="card-header py-3 d-block">
                 <h4 class="card-title"><i class="bi bi-image me-2 text-primary"></i>Branding</h4>
-                <p class="mb-0 fs-13">Upload the logos used in the admin panel and in outgoing emails. Until you upload one, the default logo is used.</p>
+                <p class="mb-0 fs-13">Brand name and logo used in the admin panel and in outgoing emails.</p>
             </div>
 
             <div class="card-body">
@@ -52,9 +44,34 @@
                     <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
 
                     <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label" for="company_name">Brand Name <span class="text-danger">*</span></label>
+                            <input type="text" name="<?php echo e(AppSetting::COMPANY_NAME); ?>" id="company_name" maxlength="255" required
+                                   class="form-control <?php $__errorArgs = [AppSetting::COMPANY_NAME];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                   value="<?php echo e(old(AppSetting::COMPANY_NAME, AppSetting::companyName())); ?>">
+                            <?php $__errorArgs = [AppSetting::COMPANY_NAME];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            <div class="form-text">Used in the email footer ("© <?php echo e(date('Y')); ?> … All rights reserved."), in AI-written emails and as the logo's alt text.</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
                         <?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <?php $custom = AppSetting::isCustom($item['key']); ?>
-                            <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="col-md-6 mb-4">
                                 <div class="border rounded p-3 h-100 d-flex flex-column">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <label class="form-label mb-0 fw-semibold" for="<?php echo e($item['key']); ?>"><?php echo e($item['title']); ?></label>
@@ -124,32 +141,6 @@ unset($__errorArgs, $__bag); ?>
             <div class="card-body">
                 <form method="POST" action="<?php echo e(route('branding.footer')); ?>">
                     <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label" for="company_name">Company Name</label>
-                            <input type="text" name="<?php echo e(AppSetting::COMPANY_NAME); ?>" id="company_name" maxlength="255"
-                                   class="form-control <?php $__errorArgs = [AppSetting::COMPANY_NAME];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>"
-                                   value="<?php echo e(old(AppSetting::COMPANY_NAME, AppSetting::read(AppSetting::COMPANY_NAME))); ?>"
-                                   placeholder="<?php echo e(env('SENDER_COMPANY', 'Our Company')); ?>">
-                            <?php $__errorArgs = [AppSetting::COMPANY_NAME];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                            <div class="form-text">Used in the "© <?php echo e(date('Y')); ?> … All rights reserved." line and in AI-written emails. Leave blank to use <code>SENDER_COMPANY</code> from <code>.env</code>.</div>
-                        </div>
-                    </div>
 
                     <h6 class="mb-1">Social Links</h6>
                     <p class="fs-13 text-muted mb-3">Only the icons with a URL are shown in the email.</p>

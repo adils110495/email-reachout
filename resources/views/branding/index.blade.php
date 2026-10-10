@@ -14,27 +14,19 @@
     $items = [
         [
             'key'     => AppSetting::ADMIN_LOGO,
-            'title'   => 'Admin Panel Logo',
-            'help'    => 'Shown in the sidebar header and on the login page. A wide logo works best (about 4:1). PNG, JPG or WEBP, max 2 MB.',
-            'accept'  => '.png,.jpg,.jpeg,.webp',
+            'title'   => 'Logo',
+            'help'    => 'Shown in the sidebar header, on the login page and at the top of every outreach email. A wide logo works best (about 4:1). PNG, JPG or GIF, max 2 MB.',
+            'accept'  => '.png,.jpg,.jpeg,.gif',
             'url'     => AppSetting::adminLogoUrl(),
             'default' => 'SabRight logo',
         ],
         [
             'key'     => AppSetting::ADMIN_ICON,
-            'title'   => 'Admin Panel Icon',
-            'help'    => 'Square mark used for the collapsed sidebar, mobile header and browser tab (favicon). If not set, the admin logo is used. PNG, JPG or WEBP, max 1 MB.',
+            'title'   => 'Icon',
+            'help'    => 'Square mark used for the collapsed sidebar, mobile header and browser tab (favicon). If not set, the logo is used. PNG, JPG or WEBP, max 1 MB.',
             'accept'  => '.png,.jpg,.jpeg,.webp',
             'url'     => AppSetting::adminIconUrl(),
-            'default' => 'admin logo',
-        ],
-        [
-            'key'     => AppSetting::EMAIL_LOGO,
-            'title'   => 'Email Logo',
-            'help'    => 'Shown at the top of every outreach email. PNG, JPG or GIF (most email clients do not show SVG/WEBP), max 2 MB.',
-            'accept'  => '.png,.jpg,.jpeg,.gif',
-            'url'     => AppSetting::emailLogoUrl(),
-            'default' => 'HES email logo',
+            'default' => 'logo',
         ],
     ];
 @endphp
@@ -46,7 +38,7 @@
         <div class="card">
             <div class="card-header py-3 d-block">
                 <h4 class="card-title"><i class="bi bi-image me-2 text-primary"></i>Branding</h4>
-                <p class="mb-0 fs-13">Upload the logos used in the admin panel and in outgoing emails. Until you upload one, the default logo is used.</p>
+                <p class="mb-0 fs-13">Brand name and logo used in the admin panel and in outgoing emails.</p>
             </div>
 
             <div class="card-body">
@@ -54,9 +46,20 @@
                     @csrf @method('PUT')
 
                     <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label" for="company_name">Brand Name <span class="text-danger">*</span></label>
+                            <input type="text" name="{{ AppSetting::COMPANY_NAME }}" id="company_name" maxlength="255" required
+                                   class="form-control @error(AppSetting::COMPANY_NAME) is-invalid @enderror"
+                                   value="{{ old(AppSetting::COMPANY_NAME, AppSetting::companyName()) }}">
+                            @error(AppSetting::COMPANY_NAME)<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">Used in the email footer ("© {{ date('Y') }} … All rights reserved."), in AI-written emails and as the logo's alt text.</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
                         @foreach ($items as $item)
                             @php $custom = AppSetting::isCustom($item['key']); @endphp
-                            <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="col-md-6 mb-4">
                                 <div class="border rounded p-3 h-100 d-flex flex-column">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <label class="form-label mb-0 fw-semibold" for="{{ $item['key'] }}">{{ $item['title'] }}</label>
@@ -111,18 +114,6 @@
             <div class="card-body">
                 <form method="POST" action="{{ route('branding.footer') }}">
                     @csrf @method('PUT')
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label" for="company_name">Company Name</label>
-                            <input type="text" name="{{ AppSetting::COMPANY_NAME }}" id="company_name" maxlength="255"
-                                   class="form-control @error(AppSetting::COMPANY_NAME) is-invalid @enderror"
-                                   value="{{ old(AppSetting::COMPANY_NAME, AppSetting::read(AppSetting::COMPANY_NAME)) }}"
-                                   placeholder="{{ env('SENDER_COMPANY', 'Our Company') }}">
-                            @error(AppSetting::COMPANY_NAME)<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="form-text">Used in the "© {{ date('Y') }} … All rights reserved." line and in AI-written emails. Leave blank to use <code>SENDER_COMPANY</code> from <code>.env</code>.</div>
-                        </div>
-                    </div>
 
                     <h6 class="mb-1">Social Links</h6>
                     <p class="fs-13 text-muted mb-3">Only the icons with a URL are shown in the email.</p>

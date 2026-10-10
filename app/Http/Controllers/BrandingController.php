@@ -14,45 +14,43 @@ class BrandingController extends Controller
     /** Uploads live under public/ so email clients can fetch them by URL. */
     private const UPLOAD_DIR = 'uploads/branding';
 
-    private const KEYS = [AppSetting::ADMIN_LOGO, AppSetting::ADMIN_ICON, AppSetting::EMAIL_LOGO];
+    private const KEYS = [AppSetting::ADMIN_LOGO, AppSetting::ADMIN_ICON];
 
     public function index(): View
     {
         return view('branding.index');
     }
 
+    /** Brand name plus any logo/icon chosen in the form. */
     public function update(Request $request): RedirectResponse
     {
-        // No SVG: it can carry scripts, and most email clients will not render it.
-        $request->validate([
-            AppSetting::ADMIN_LOGO => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
-            AppSetting::ADMIN_ICON => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:1024'],
-            AppSetting::EMAIL_LOGO => ['nullable', 'image', 'mimes:png,jpg,jpeg,gif', 'max:2048'],
+        // The logo also goes into emails: no SVG (can carry scripts) or WEBP (most mail clients will not show it).
+        $data = $request->validate([
+            AppSetting::COMPANY_NAME => ['required', 'string', 'max:255'],
+            AppSetting::ADMIN_LOGO   => ['nullable', 'image', 'mimes:png,jpg,jpeg,gif', 'max:2048'],
+            AppSetting::ADMIN_ICON   => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:1024'],
         ], [], [
-            AppSetting::ADMIN_LOGO => 'admin panel logo',
-            AppSetting::ADMIN_ICON => 'admin panel icon',
-            AppSetting::EMAIL_LOGO => 'email logo',
+            AppSetting::COMPANY_NAME => 'brand name',
+            AppSetting::ADMIN_LOGO   => 'logo',
+            AppSetting::ADMIN_ICON   => 'icon',
         ]);
 
-        $saved = 0;
+        AppSetting::write(AppSetting::COMPANY_NAME, trim($data[AppSetting::COMPANY_NAME]));
+
         foreach (self::KEYS as $key) {
             if ($request->hasFile($key)) {
                 $this->store($key, $request->file($key));
-                $saved++;
             }
         }
 
-        return redirect()->route('branding.index')->with(
-            $saved ? 'success' : 'error',
-            $saved ? 'Branding updated.' : 'Choose at least one image to upload.',
-        );
+        return redirect()->route('branding.index')->with('success', 'Branding updated.');
     }
 
-    /** Company name and social links shown in the outreach email footer. */
+    /** Social links shown in the outreach email footer. */
     public function updateFooter(Request $request): RedirectResponse
     {
-        $rules = [AppSetting::COMPANY_NAME => ['nullable', 'string', 'max:255']];
-        $names = [AppSetting::COMPANY_NAME => 'company name'];
+        $rules = [];
+        $names = [];
         foreach (AppSetting::SOCIALS as $key => $social) {
             $rules[$key] = ['nullable', 'url:http,https', 'max:255'];
             $names[$key] = $social['label'].' URL';

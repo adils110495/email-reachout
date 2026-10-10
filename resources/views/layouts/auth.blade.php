@@ -33,7 +33,7 @@
 <body>
 <div class="auth-wrap">
     <div class="auth-card">
-        <img class="auth-logo" src="{{ $logo }}" alt="SabRight">
+        <img class="auth-logo" src="{{ $logo }}" alt="{{ \App\Models\AppSetting::companyName() }}">
 
         <div class="card">
             <div class="card-body p-4">

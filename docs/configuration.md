@@ -90,7 +90,6 @@ OPENAI_MODEL=gpt-3.5-turbo
 
 # Outreach identity
 SENDER_NAME="Your Name"
-SENDER_COMPANY="Your Company"
 
 # Lead search
 LEAD_COUNTRY=                    # khaali = global
