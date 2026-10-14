@@ -14,45 +14,54 @@ use App\Models\Platform;
 trait SavesFinderResults
 {
     /**
-     * Write every candidate from one search into the Finder's own table.
+     * Write one search into the Finder's own table: one row per website.
      *
-     * Keyed on (domain, email): searching the same company again refreshes each
-     * address's score and verdict rather than stacking duplicate rows.
+     * Every address found goes into the row's `emails` JSON list; `email` and
+     * the verdict columns describe the best-ranked candidate. Searching the same
+     * domain again adds any new addresses to the list rather than a new row.
      *
      * @param  array<string,mixed>       $result  what EmailFinderService returned
      * @param  array<string,mixed>|null  $saved   the lead created, if any
      */
     protected function recordResults(array $result, string $mode, ?array $saved): void
     {
-        $savedEmail = $saved ? strtolower((string) $saved['email']) : null;
+        $best = $result['candidates'][0] ?? null;
 
-        foreach ($result['candidates'] as $candidate) {
-            // lead_id is deliberately absent here. Writing it on every refresh
-            // would clear the link on an address the user saved during an
-            // earlier search - re-running a search must not un-save anything.
-            $row = FinderResult::updateOrCreate(
-                [
-                    'domain' => $result['domain'],
-                    'email'  => $candidate['email'],
-                ],
-                [
-                    'mode'    => $mode,
-                    'person'  => $result['person'] ?? null,
-                    'company' => $result['company'] ?? null,
-                    'status'  => $candidate['status'],
-                    'score'   => $candidate['score'],
-                    'reason'  => $candidate['reason'],
-                    'source'  => $candidate['source'],
-                    'guessed' => $candidate['guessed'],
-                    'type'    => $candidate['type'],
-                    'pattern' => $candidate['pattern'],
-                ],
-            );
-
-            if ($saved && $savedEmail === strtolower($candidate['email'])) {
-                $row->update(['lead_id' => $saved['lead_id']]);
-            }
+        if (! $best) {
+            return;
         }
+
+        $row = FinderResult::firstOrNew(['domain' => $result['domain']]);
+
+        // Candidates arrive ranked, so the new best leads the list; addresses
+        // from earlier searches are kept after it.
+        $emails = Lead::normalizeEmails(array_merge(
+            array_column($result['candidates'], 'email'),
+            $row->email_list,
+        ));
+
+        // lead_id is only ever set here, never cleared - re-running a search
+        // must not un-save anything.
+        $row->fill([
+            'mode'    => $mode,
+            'person'  => $result['person'] ?? null,
+            'company' => $result['company'] ?? $row->company,
+            'email'   => strtolower($best['email']),
+            'emails'  => $emails,
+            'status'  => $best['status'],
+            'score'   => $best['score'],
+            'reason'  => $best['reason'],
+            'source'  => $best['source'],
+            'guessed' => $best['guessed'],
+            'type'    => $best['type'],
+            'pattern' => $best['pattern'],
+        ]);
+
+        if ($saved) {
+            $row->lead_id = $saved['lead_id'];
+        }
+
+        $row->save();
     }
 
     /**
@@ -62,20 +71,28 @@ trait SavesFinderResults
      * domain search, so both behave identically: one lead per website, and an
      * address the user already has is never overwritten.
      *
+     * $email is the primary address; $others are the rest found on the same
+     * website, which join the lead's `emails` list behind it.
+     *
+     * @param  array<int, string>  $others
      * @return array{ok:bool, created:bool, lead_id:int, email:string, message:string}
      */
-    protected function saveLead(string $domain, string $email, ?string $companyName, ?int $categoryId): array
+    protected function saveLead(string $domain, string $email, ?string $companyName, ?int $categoryId, array $others = []): array
     {
         $website = 'https://'.$domain;
+        $found   = Lead::normalizeEmails(array_merge([$email], $others));
 
         $lead = Lead::where('website', $website)
             ->orWhere('website', $website.'/')
             ->first();
 
         if ($lead) {
-            // Never clobber an address the user already has on the lead.
-            if (empty($lead->email)) {
-                $lead->update(['email' => $email]);
+            // Existing addresses stay first, so the primary is never clobbered;
+            // new ones are added after them.
+            $merged = Lead::normalizeEmails(array_merge($lead->email_list, $found));
+
+            if ($merged !== $lead->email_list) {
+                $lead->update(['emails' => $merged]);
             }
 
             return [
@@ -90,7 +107,7 @@ trait SavesFinderResults
         $lead = Lead::create([
             'company_name' => $companyName ?: $domain,
             'website'      => $website,
-            'email'        => $email,
+            'emails'       => $found,
             'status'       => Lead::STATUS_NEW,
             'platform_id'  => Platform::where('name', 'Google')->value('id'),
             'category_id'  => $categoryId ?: null,

@@ -141,18 +141,21 @@ class FinderController extends Controller
             return response()->json(['ok' => false, 'message' => 'Invalid domain.'], 422);
         }
 
+        // The website's row carries every address found for it; published
+        // ones go onto the lead with the chosen address as primary.
+        $row = FinderResult::where('domain', $domain)->first();
+
         $saved = $this->saveLead(
             $domain,
             $validated['email'],
             $validated['company_name'] ?? null,
             $validated['category_id'] ?? null,
+            $row && ! $row->guessed ? $row->email_list : [],
         );
 
         // Mark it saved in the Finder's own table too, so the row stops
         // offering a Save button it has already been through.
-        FinderResult::where('domain', $domain)
-            ->where('email', strtolower($validated['email']))
-            ->update(['lead_id' => $saved['lead_id']]);
+        $row?->update(['lead_id' => $saved['lead_id']]);
 
         return response()->json($saved);
     }
@@ -162,11 +165,11 @@ class FinderController extends Controller
     {
         return $this->streamCsv(
             'finder-results',
-            ['ID', 'Email', 'Domain', 'Company', 'Person', 'Mode', 'Result', 'Score', 'Guessed', 'Pattern', 'Saved As Lead', 'Found At'],
+            ['ID', 'Emails', 'Domain', 'Company', 'Person', 'Mode', 'Result', 'Score', 'Guessed', 'Pattern', 'Saved As Lead', 'Found At'],
             $this->filtered($request)->cursor(),
             fn (FinderResult $row) => [
                 $row->id,
-                $row->email,
+                implode(', ', $row->email_list),
                 $row->domain,
                 $row->company,
                 $row->person,
@@ -198,6 +201,7 @@ class FinderController extends Controller
 
             $query->where(function ($q) use ($escaped) {
                 $q->where('email', 'like', $escaped)
+                  ->orWhere('emails', 'like', $escaped)
                   ->orWhere('domain', 'like', $escaped)
                   ->orWhere('company', 'like', $escaped)
                   ->orWhere('person', 'like', $escaped);

@@ -23,7 +23,7 @@
                     <tr>
                         
                         <th style="width:60px" class="d-none d-md-table-cell">#</th>
-                        <th class="mw-150">Email</th>
+                        <th class="mw-150">Emails</th>
                         <th class="mw-150 d-none d-lg-table-cell">Company</th>
                         <th style="width:120px">Result</th>
                         <th style="width:140px" class="d-none d-md-table-cell">Confidence</th>
@@ -41,8 +41,11 @@
                             </td>
 
                             <td class="cell-wrap mw-220">
+                                
                                 <h6 class="mb-0 cell-wrap">
-                                    <a href="mailto:<?php echo e($row->email); ?>"><?php echo e($row->email); ?></a>
+                                    <?php $__currentLoopData = $row->email_list; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $address): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <a href="mailto:<?php echo e($address); ?>"><?php echo e($address); ?></a><?php if(! $loop->last): ?>, <?php endif; ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </h6>
                                 <span class="fs-13 text-muted"><?php echo e($row->domain); ?></span>
 

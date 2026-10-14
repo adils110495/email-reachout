@@ -19,6 +19,7 @@ class FinderResult extends Model
         'person',
         'company',
         'email',
+        'emails',
         'status',
         'score',
         'reason',
@@ -30,6 +31,7 @@ class FinderResult extends Model
     ];
 
     protected $casts = [
+        'emails'  => 'array',
         'guessed' => 'boolean',
         'score'   => 'integer',
     ];
@@ -38,6 +40,21 @@ class FinderResult extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class);
+    }
+
+    /**
+     * Every address found for this website (falls back to the single `email`
+     * column for rows written before `emails` existed).
+     *
+     * @return array<int, string>
+     */
+    public function getEmailListAttribute(): array
+    {
+        if (! empty($this->emails)) {
+            return $this->emails;
+        }
+
+        return $this->email ? [$this->email] : [];
     }
 
     /** Already in the lead database? */

@@ -41,19 +41,24 @@ class FinderSearchJob implements ShouldQueue
             ? $finder->findByPerson($this->name, $this->domain)
             : $finder->findByDomain($this->domain);
 
-        // A domain search found a real, published address - file it against the
-        // company's lead straight away. Only the best NON-guessed candidate:
-        // a person search produces patterns, not confirmed addresses, and a
-        // lead is keyed on its website so one address per company is enough.
+        // A domain search found real, published addresses - file them against
+        // the company's lead straight away, best first. Never guessed ones: a
+        // person search produces patterns, not confirmed addresses.
         $saved = null;
         $best  = $result['candidates'][0] ?? null;
 
         if ($best && ! $best['guessed']) {
+            $published = array_column(
+                array_filter($result['candidates'], fn ($c) => ! $c['guessed']),
+                'email',
+            );
+
             $saved = $this->saveLead(
                 $result['domain'],
                 $best['email'],
                 $result['company'] ?? null,
                 $this->categoryId,
+                $published,
             );
         }
 

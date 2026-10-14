@@ -28,7 +28,7 @@
                         {{-- Secondary columns drop out on narrow screens; their values
                              are carried into the Email cell below so nothing is lost. --}}
                         <th style="width:60px" class="d-none d-md-table-cell">#</th>
-                        <th class="mw-150">Email</th>
+                        <th class="mw-150">Emails</th>
                         <th class="mw-150 d-none d-lg-table-cell">Company</th>
                         <th style="width:120px">Result</th>
                         <th style="width:140px" class="d-none d-md-table-cell">Confidence</th>
@@ -46,8 +46,11 @@
                             </td>
 
                             <td class="cell-wrap mw-220">
+                                {{-- Every address found on this website, comma separated. --}}
                                 <h6 class="mb-0 cell-wrap">
-                                    <a href="mailto:{{ $row->email }}">{{ $row->email }}</a>
+                                    @foreach($row->email_list as $address)
+                                        <a href="mailto:{{ $address }}">{{ $address }}</a>@if(! $loop->last), @endif
+                                    @endforeach
                                 </h6>
                                 <span class="fs-13 text-muted">{{ $row->domain }}</span>
 
