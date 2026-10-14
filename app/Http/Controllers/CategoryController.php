@@ -61,7 +61,7 @@ class CategoryController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name'   => ['required', 'string', 'max:255', 'unique:categories,name'],
+            'name'   => ['required', 'string', 'max:255', $this->access()->uniqueRule('categories', 'name')],
             'status' => ['required', 'in:active,inactive'],
         ]);
 
@@ -72,12 +72,15 @@ class CategoryController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
+        $category = Category::findOrFail($id);
+
+        // Unique among the category owner's own names.
         $request->validate([
-            'name'   => ['required', 'string', 'max:255', 'unique:categories,name,' . $id],
+            'name'   => ['required', 'string', 'max:255', $this->access()->uniqueRule('categories', 'name', $category->user_id)->ignore($category->id)],
             'status' => ['required', 'in:active,inactive'],
         ]);
 
-        Category::findOrFail($id)->update($request->only('name', 'status'));
+        $category->update($request->only('name', 'status'));
 
         return redirect()->route('categories.index', $this->redirectQuery($request))->with('success', 'Category updated successfully.');
     }

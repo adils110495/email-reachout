@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Concerns\RunsAsOwner;
 use App\Models\AppNotification;
 use App\Models\Bulk;
 use App\Models\BulkItem;
@@ -31,6 +32,7 @@ use Throwable;
 class ProcessBulkJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use RunsAsOwner;
 
     /**
      * Items handled per run, sized so a chunk finishes well inside $timeout.
@@ -59,7 +61,17 @@ class ProcessBulkJob implements ShouldQueue
     /** Kept under the worker's --timeout=90 so the worker does not kill it mid-chunk. */
     public int $timeout = 85;
 
-    public function __construct(public readonly int $bulkId) {}
+    /** $userId is the bulk's owner, so a run started by a super admin still files under them. */
+    public function __construct(
+        public readonly int $bulkId,
+        public readonly ?int $userId = null,
+    ) {}
+
+    public function ownerId(): ?int
+    {
+        // ?? also covers a payload queued before this property existed.
+        return $this->userId ?? null;
+    }
 
     public function handle(EmailVerifierService $verifier, EmailFinderService $finder): void
     {
@@ -111,7 +123,7 @@ class ProcessBulkJob implements ShouldQueue
         $remaining = $bulk->items()->where('status', BulkItem::STATUS_PENDING)->exists();
 
         if ($remaining) {
-            self::dispatch($bulk->id)->onQueue('default');
+            self::dispatch($bulk->id, $this->ownerId())->onQueue('default');
 
             return;
         }
@@ -303,12 +315,14 @@ class ProcessBulkJob implements ShouldQueue
             'error'   => $e->getMessage(),
         ]);
 
-        Bulk::where('id', $this->bulkId)->update([
-            'status'       => Bulk::STATUS_FAILED,
-            'error'        => $e->getMessage(),
-            'completed_at' => now(),
-        ]);
+        $this->asOwner(function () use ($e) {
+            Bulk::where('id', $this->bulkId)->update([
+                'status'       => Bulk::STATUS_FAILED,
+                'error'        => $e->getMessage(),
+                'completed_at' => now(),
+            ]);
 
-        AppNotification::raise('error', 'Bulk run failed', $e->getMessage(), route('bulks.show', $this->bulkId, false));
+            AppNotification::raise('error', 'Bulk run failed', $e->getMessage(), route('bulks.show', $this->bulkId, false));
+        });
     }
 }

@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // hitting /login or /signup go to the dashboard.
         $middleware->redirectGuestsTo('/login');
         $middleware->redirectUsersTo('/');
+
+        $middleware->alias([
+            'active' => \App\Http\Middleware\EnsureUserIsActive::class,
+            'module' => \App\Http\Middleware\EnsureModuleAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

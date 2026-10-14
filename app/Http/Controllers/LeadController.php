@@ -8,6 +8,7 @@ use App\Mail\OutreachMail;
 use App\Models\Address;
 use App\Models\AppSetting;
 use App\Models\Category;
+use App\Models\EmailTemplate;
 use App\Models\Lead;
 use App\Models\LeadEmail;
 use App\Models\Platform;
@@ -94,8 +95,8 @@ class LeadController extends Controller
             'emails'       => ['nullable', 'array', 'max:20'],
             'emails.*'     => ['nullable', 'email', 'max:255'],
             'linkedin'     => ['nullable', 'url', 'max:255'],
-            'platform_id'  => ['nullable', 'exists:platforms,id'],
-            'category_id'  => ['nullable', 'exists:categories,id'],
+            'platform_id'  => ['nullable', $this->access()->existsRule('platforms')],
+            'category_id'  => ['nullable', $this->access()->existsRule('categories')],
         ]);
 
         $raw = $request->input('category_id');
@@ -122,7 +123,7 @@ class LeadController extends Controller
     {
         $request->validate([
             'keyword'         => ['required', 'string', 'min:2', 'max:200'],
-            'search_category' => ['required', 'exists:categories,id'],
+            'search_category' => ['required', $this->access()->existsRule('categories')],
         ]);
 
         $keyword    = $request->input('keyword');
@@ -136,6 +137,7 @@ class LeadController extends Controller
             categoryId: $categoryId,
             country:    env('LEAD_COUNTRY',  null) ?: null,
             language:   env('LEAD_LANGUAGE', null) ?: null,
+            userId:     $request->user()->id,
         )->onQueue('default');
 
         // The page submits this by fetch() and stays put; the notification
@@ -158,15 +160,51 @@ class LeadController extends Controller
 
     public function downloadAttachment(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
-        $path         = $request->query('path');
-        $originalName = $request->query('name');
+        $path         = (string) $request->query('path', '');
+        $originalName = basename((string) $request->query('name', '')) ?: basename($path);
 
-        abort_if(!$path, 400);
+        // The path comes from the query string: serve it only when it is an
+        // attachment of a lead or template this user can see. Anything else -
+        // another user's file, "../../.env" - is a plain 404.
+        abort_unless($this->canReadAttachment($path), 404, 'Attachment not found.');
 
-        $fullPath = storage_path('app/' . $path);
-        abort_if(!file_exists($fullPath), 404, 'Attachment not found.');
+        return response()->download(storage_path('app/' . $path), $originalName);
+    }
 
-        return response()->download($fullPath, $originalName);
+    /**
+     * Attachments are stored as lead-attachments/{lead id}/file or
+     * template-attachments/{template id}/file. Only that exact shape is
+     * accepted, and the lead or template must be visible to the acting user
+     * (the global scope decides that).
+     */
+    private function canReadAttachment(string $path): bool
+    {
+        if (str_contains($path, '..') || ! preg_match('#^(lead|template)-attachments/(\d+)/[^/\\\\]+$#', $path, $m)) {
+            return false;
+        }
+
+        $owner = $m[1] === 'lead'
+            ? Lead::find((int) $m[2])
+            : EmailTemplate::find((int) $m[2]);
+
+        return $owner !== null && is_file(storage_path('app/' . $path));
+    }
+
+    /**
+     * A template attachment posted from the compose modal must really belong
+     * to a template the user can see - otherwise any file on the server could
+     * be attached to an outgoing email.
+     */
+    private function isTemplateAttachment(string $path): bool
+    {
+        if (str_contains($path, '..') || ! preg_match('#^template-attachments/(\d+)/[^/\\\\]+$#', $path, $m)) {
+            return false;
+        }
+
+        $template = EmailTemplate::find((int) $m[1]);
+
+        return $template !== null
+            && collect($template->attachments ?? [])->pluck('path')->contains($path);
     }
 
     public function sentEmail(int $id): \Illuminate\Http\JsonResponse
@@ -205,8 +243,8 @@ class LeadController extends Controller
             'emails.*'     => ['nullable', 'email', 'max:255'],
             'linkedin'     => ['nullable', 'url', 'max:255'],
             'status'       => ['required', 'in:new,sent,failed,replied'],
-            'platform_id'  => ['nullable', 'exists:platforms,id'],
-            'category_id'  => ['nullable', 'exists:categories,id'],
+            'platform_id'  => ['nullable', $this->access()->existsRule('platforms')],
+            'category_id'  => ['nullable', $this->access()->existsRule('categories')],
         ]);
 
         // Always written, even when empty: clearing every chip must clear the lead's emails.
@@ -351,7 +389,7 @@ class LeadController extends Controller
         $request->validate([
             'subject'                    => ['required', 'string', 'max:255'],
             'body'                       => ['required', 'string'],
-            'address_id'                 => ['nullable', 'exists:addresses,id'],
+            'address_id'                 => ['nullable', $this->access()->existsRule('addresses')],
             'to_email'                   => ['nullable', 'email', 'max:255'],
             'attachments'                => ['nullable', 'array'],
             'attachments.*'              => ['file', 'max:10240'],
@@ -389,11 +427,34 @@ class LeadController extends Controller
                 ->with('error', "\"{$recipient}\" is not one of this lead's email addresses.");
         }
 
+        foreach ($request->input('template_attachment_paths', []) as $storedPath) {
+            if (! $this->isTemplateAttachment((string) $storedPath)) {
+                return redirect()->route('leads.index', $redirectQuery)
+                    ->with('error', 'One of the template attachments is not available.');
+            }
+        }
+
+        $address = $request->filled('address_id') ? Address::find((int) $request->input('address_id')) : null;
+
+        // Send as the lead's owner - their SMTP, their footer address, their
+        // activity log - also when a super admin sends on their behalf.
+        return $this->access()->runAs(
+            $lead->user_id ?? $request->user()->id,
+            fn () => $this->deliver($request, $lead, $recipient, $address, $redirectQuery),
+        );
+    }
+
+    /**
+     * Build, send and record one outreach email. Runs as the lead's owner.
+     *
+     * @param  array<string, mixed>  $redirectQuery
+     */
+    private function deliver(Request $request, Lead $lead, string $recipient, ?Address $address, array $redirectQuery): RedirectResponse
+    {
         $senderName    = env('SENDER_NAME', 'Sales Team');
         $senderCompany = AppSetting::companyName();
         $subject       = $request->input('subject');
         $body          = $request->input('body');
-        $address       = $request->filled('address_id') ? Address::find((int) $request->input('address_id')) : null;
 
         // Store attachments permanently under lead-attachments/{lead_id}/
         $attachmentMeta = [];

@@ -6,6 +6,10 @@ use App\Models\AppNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * The header bell. mine(), not the global scope: notifications are personal,
+ * so a super admin's bell shows their own jobs, not every user's.
+ */
 class NotificationController extends Controller
 {
     /**
@@ -13,7 +17,7 @@ class NotificationController extends Controller
      */
     public function index(): JsonResponse
     {
-        $items = AppNotification::latest('id')->limit(15)->get()->map(fn (AppNotification $n) => [
+        $items = AppNotification::mine()->latest('id')->limit(15)->get()->map(fn (AppNotification $n) => [
             'id'      => $n->id,
             'type'    => $n->type,
             'title'   => $n->title,
@@ -24,7 +28,7 @@ class NotificationController extends Controller
         ]);
 
         return response()->json([
-            'unread' => AppNotification::whereNull('read_at')->count(),
+            'unread' => AppNotification::mine()->whereNull('read_at')->count(),
             'items'  => $items,
         ]);
     }
@@ -34,7 +38,8 @@ class NotificationController extends Controller
      */
     public function read(Request $request): JsonResponse
     {
-        AppNotification::whereNull('read_at')
+        AppNotification::mine()
+            ->whereNull('read_at')
             ->when($request->filled('id'), fn ($q) => $q->where('id', (int) $request->input('id')))
             ->update(['read_at' => now()]);
 

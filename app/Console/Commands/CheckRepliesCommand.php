@@ -3,17 +3,20 @@
 namespace App\Console\Commands;
 
 use App\Services\ReplyCheckerService;
+use App\Services\UserAccessService;
 use Illuminate\Console\Command;
 
 class CheckRepliesCommand extends Command
 {
     protected $signature   = 'emails:check-replies';
-    protected $description = 'Scan the IMAP inbox and mark sent emails that received a reply';
+    protected $description = 'Scan every user\'s IMAP inbox and mark sent emails that received a reply';
 
-    public function handle(ReplyCheckerService $checker): int
+    public function handle(ReplyCheckerService $checker, UserAccessService $access): int
     {
         try {
-            $count = $checker->check();
+            // System-wide on purpose: the scheduler covers every user's emails.
+            // The service still reads each owner's inbox as that owner.
+            $count = $access->asSystem(fn () => $checker->check());
         } catch (\RuntimeException $e) {
             $this->error($e->getMessage());
             return self::FAILURE;

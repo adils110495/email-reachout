@@ -179,15 +179,17 @@ nahi karta.
 
 ---
 
-## 8. Kya nahi hai
+## 8. Authentication aur access control
 
-> ⚠️ **Is app me authentication nahi hai.** Koi login, koi user model, koi permissions.
-> Ye internal tool assume kiya gaya hai. Public internet par deploy karne se pehle **auth
-> layer add karna zaroori hai** — warna koi bhi saara lead data, email templates aur
-> credentials-driven features access kar sakta hai.
->
+Login (username **ya** email + password) aur signup (name, **email zaroori**, password —
+username form me nahi, email se apne aap banta hai) hain. Har user ka apna workspace hai, Super Admin sab dekhta hai, aur modules
+per-user on/off hote hain — sab server par enforce. Poori detail:
+[access-control.md](access-control.md)
+
+Login aur signup dono `throttle:10,1` par hain (ek IP se 10 try / minute).
+
 > Layout me `<meta name="robots" content="noindex, nofollow">` hai, par ye sirf search
-> engines ko rokta hai — access control **nahi** hai.
+> engines ko rokta hai — access control wo **nahi**, upar wala hai.
 
 ---
 

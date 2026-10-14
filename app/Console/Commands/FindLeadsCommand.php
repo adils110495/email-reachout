@@ -3,9 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Models\Lead;
+use App\Models\User;
 use App\Services\EmailExtractorService;
 use App\Services\LeadFinderService;
 use App\Services\ScraperService;
+use App\Services\UserAccessService;
 use Illuminate\Console\Command;
 
 class FindLeadsCommand extends Command
@@ -14,11 +16,12 @@ class FindLeadsCommand extends Command
      * The name and signature of the console command.
      *
      * Usage:  php artisan leads:find "web design agency"
-     *         php artisan leads:find "plumbing company" --limit=20
+     *         php artisan leads:find "plumbing company" --limit=20 --user=jane
      */
     protected $signature = 'leads:find
         {keyword : The keyword to search for (e.g. "web design agency London")}
-        {--limit=10 : Maximum number of leads to find}';
+        {--limit=10 : Maximum number of leads to find}
+        {--user= : Username or id of the account the leads belong to (default: the first super admin)}';
 
     protected $description = 'Find new leads by keyword using Google/DuckDuckGo and extract contact emails';
 
@@ -30,7 +33,21 @@ class FindLeadsCommand extends Command
         parent::__construct();
     }
 
-    public function handle(): int
+    public function handle(UserAccessService $access): int
+    {
+        // A console run has no signed-in user, so say whose workspace the leads
+        // go into - duplicates are also checked within that workspace only.
+        $owner = User::resolveForConsole($this->option('user'));
+
+        if (! $owner) {
+            $this->error('No such user: ' . ($this->option('user') ?? '(no super admin found)'));
+            return self::FAILURE;
+        }
+
+        return $access->runAs($owner, fn () => $this->find());
+    }
+
+    private function find(): int
     {
         $keyword = $this->argument('keyword');
         $limit   = (int) $this->option('limit');

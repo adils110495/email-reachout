@@ -204,6 +204,7 @@
                                     @endif
 
                                     {{-- Cash Lead: we expect this one to turn into a paying customer --}}
+                                    @can('module', 'deals')
                                     <li>
                                         <form method="POST" action="{{ route('cash-leads.from-lead', $lead->id) }}">
                                             @csrf
@@ -212,6 +213,7 @@
                                             </button>
                                         </form>
                                     </li>
+                                    @endcan
 
                                     {{-- Delete --}}
                                     <li>

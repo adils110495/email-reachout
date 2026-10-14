@@ -54,6 +54,21 @@
                         </select>
                     </div>
 
+                    {{-- User filter: super admin only (the activity of every user) --}}
+                    @if($isSuperAdmin)
+                        <div class="col-6 col-md-4 col-xl-3 mb-3">
+                            <label class="form-label" for="activityUserFilter">User</label>
+                            <select id="activityUserFilter" class="form-select select2" data-param="user" data-placeholder="All Users">
+                                <option value="">All Users</option>
+                                @foreach($users as $u)
+                                    <option value="{{ $u->id }}" {{ $owner === $u->id ? 'selected' : '' }}>
+                                        {{ $u->name }} ({{ $u->username }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
                     {{-- Clear --}}
                     <div class="col-6 col-md-2 col-xl-2 mb-3">
                         {{-- Spacer keeps the button on the same baseline as the labelled controls. --}}

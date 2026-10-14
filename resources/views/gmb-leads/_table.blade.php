@@ -69,6 +69,7 @@
                                                 </a>
                                             </li>
                                         @endif
+                                        @can('module', 'deals')
                                         <li>
                                             <form method="POST" action="{{ route('cash-leads.from-gmb', $lead->id) }}">
                                                 @csrf
@@ -77,6 +78,7 @@
                                                 </button>
                                             </form>
                                         </li>
+                                        @endcan
                                         <li>
                                             <form method="POST" action="{{ route('gmb-leads.destroy', $lead->id) }}"
                                                   onsubmit="return confirm('Delete \'{{ addslashes($lead->name) }}\'?')">

@@ -16,7 +16,7 @@
         <div class="empty-state">
             <i class="bi bi-activity empty-state-icon"></i>
             No sent emails match.
-            @if($activity || $search)
+            @if($activity || $search || $owner)
                 <a href="{{ route('email-activity.index') }}">Clear the filters</a>.
             @endif
         </div>
@@ -29,6 +29,9 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th class="mw-150">Lead</th>
+                        @if($isSuperAdmin)
+                            <th>User</th>
+                        @endif
                         <th class="mw-200">Subject</th>
                         <th>Sent</th>
                         <th>Activity</th>
@@ -46,6 +49,9 @@
                                 <h6 class="mb-0">{{ $email->lead?->company_name ?? '—' }}</h6>
                                 <small class="text-muted">{{ $email->lead?->email }}</small>
                             </td>
+                            @if($isSuperAdmin)
+                                <td class="text-nowrap">{{ $email->user?->name ?? '—' }}</td>
+                            @endif
                             <td>{{ $email->subject }}</td>
                             <td>{{ $email->sent_at?->format('d M Y, h:i A') }}</td>
                             <td>

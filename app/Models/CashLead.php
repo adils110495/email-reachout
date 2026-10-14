@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 
 class CashLead extends Model
 {
+    use BelongsToUser;
+
     public const SOURCE_MANUAL = 'manual';
     public const SOURCE_LEAD   = 'lead';
     public const SOURCE_GMB    = 'gmb';

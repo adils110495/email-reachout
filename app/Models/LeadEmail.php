@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 
 class LeadEmail extends Model
 {
+    use BelongsToUser;
+
     public const ACTIVITY_NOT_OPENED = 'not_opened';
     public const ACTIVITY_OPENED     = 'opened';
     public const ACTIVITY_REPLIED    = 'replied';

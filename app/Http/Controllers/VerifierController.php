@@ -177,11 +177,15 @@ class VerifierController extends Controller
             ->with('success', 'Verification record deleted.');
     }
 
-    /** Clear the whole history (respecting the active status filter). */
+    /**
+     * Clear the user's own history (respecting the active status filter).
+     * mine() even for a super admin: one click must never wipe every user's
+     * history - single rows can still be deleted from the table.
+     */
     public function clear(Request $request): RedirectResponse
     {
         $status = $this->enumParam($request, 'status', array_keys(EmailVerification::STATUSES));
-        $query  = EmailVerification::query();
+        $query  = EmailVerification::mine();
 
         if ($status !== '') {
             $query->where('status', $status);
@@ -264,7 +268,7 @@ class VerifierController extends Controller
             ], $chunk));
         }
 
-        ProcessBulkJob::dispatch($bulk->id)->onQueue('default');
+        ProcessBulkJob::dispatch($bulk->id, $bulk->user_id)->onQueue('default');
 
         return $bulk;
     }
@@ -280,7 +284,8 @@ class VerifierController extends Controller
             'reason'  => $result['reason'],
             'checks'  => $result['checks'],
             'source'  => $source,
-            'lead_id' => Lead::holdingAddress($result['email'])->value('id'),
+            // mine(): the record is the user's, so link only their own lead.
+            'lead_id' => Lead::mine()->holdingAddress($result['email'])->value('id'),
         ]);
     }
 

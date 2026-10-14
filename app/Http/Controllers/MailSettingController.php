@@ -10,13 +10,17 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 
+/**
+ * Each user's own SMTP / IMAP. Always mine() - a super admin manages their own
+ * mailbox here too, never another user's credentials.
+ */
 class MailSettingController extends Controller
 {
     public function index(): View
     {
         return view('mail-settings.index', [
-            'smtp' => MailSetting::where('type', MailSetting::TYPE_SMTP)->first(),
-            'imap' => MailSetting::where('type', MailSetting::TYPE_IMAP)->first(),
+            'smtp' => MailSetting::mine()->where('type', MailSetting::TYPE_SMTP)->first(),
+            'imap' => MailSetting::mine()->where('type', MailSetting::TYPE_IMAP)->first(),
         ]);
     }
 
@@ -66,7 +70,7 @@ class MailSettingController extends Controller
             'port' => ['required', 'integer'],
         ]);
 
-        $saved    = MailSetting::where('type', $type)->first();
+        $saved    = MailSetting::mine()->where('type', $type)->first();
         $password = $request->filled('password') ? $request->input('password') : (string) $saved?->password;
         $username = (string) $request->input('username');
         $host     = $request->input('host');
@@ -106,7 +110,7 @@ class MailSettingController extends Controller
      */
     private function save(string $type, array $data, bool $active): void
     {
-        $setting = MailSetting::firstOrNew(['type' => $type]);
+        $setting = MailSetting::mine()->firstOrNew(['type' => $type]);
 
         if (blank($data['password'] ?? null)) {
             unset($data['password']);

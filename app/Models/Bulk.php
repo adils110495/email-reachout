@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Bulk extends Model
 {
+    use BelongsToUser;
+
     public const TYPE_VERIFY = 'verify';
     public const TYPE_FIND   = 'find';
 

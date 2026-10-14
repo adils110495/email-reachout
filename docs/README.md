@@ -30,6 +30,7 @@ hai, kyun banaya gaya hai, aur har cheez kaam kaise karti hai.**
 | [frontend.md](frontend.md) | Blade layout, `ajax-filters.js`, CSS components |
 | [configuration.md](configuration.md) | `.env`, `config/`, sidebar, routes |
 | [security-and-performance.md](security-and-performance.md) | SSRF guard, timeouts, N+1, validation |
+| [access-control.md](access-control.md) | User-based workspaces, Super Admin, modules, Users module |
 
 ### Modules
 | Module | URL | File |

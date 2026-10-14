@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\LeadEmail;
+use App\Models\User;
 use App\Services\ReplyCheckerService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+/**
+ * Activity log of every email sent. The owner scope limits it to the user's own
+ * emails; a super admin sees everyone's and can narrow it down by user.
+ */
 class EmailActivityController extends Controller
 {
     public function index(Request $request): View
@@ -22,8 +27,16 @@ class EmailActivityController extends Controller
         $activity = array_key_exists((string) $request->input('activity'), $activityOptions) ? $request->input('activity') : null;
         $search   = trim((string) $request->input('q'));
 
+        // The user filter is a super admin tool. For anyone else it is ignored
+        // (the owner scope already limits them to their own emails).
+        $isSuperAdmin = $this->access()->isSuperAdmin();
+        $users        = $isSuperAdmin ? User::orderBy('name')->get(['id', 'name', 'username']) : collect();
+        $owner        = $isSuperAdmin && ctype_digit((string) $request->input('user')) ? (int) $request->input('user') : null;
+
         // Only emails we actually sent.
-        $base = LeadEmail::with('lead')->where('status', 'sent');
+        $base = LeadEmail::with('lead', 'user')
+            ->where('status', 'sent')
+            ->when($owner, fn (Builder $q) => $q->where('user_id', $owner));
 
         $query = (clone $base)
             ->when($activity, fn (Builder $q) => $this->filterActivity($q, $activity))
@@ -47,6 +60,9 @@ class EmailActivityController extends Controller
             'activity'        => $activity,
             'search'          => $search,
             'counts'          => $counts,
+            'isSuperAdmin'    => $isSuperAdmin,
+            'users'           => $users,
+            'owner'           => $owner,
         ];
 
         // A filter / search / page change fetches just the table partial so the
@@ -59,7 +75,9 @@ class EmailActivityController extends Controller
     }
 
     /**
-     * Scan the inbox now instead of waiting for the scheduler.
+     * Scan the inbox now instead of waiting for the scheduler. Covers the
+     * user's own emails - or every user's, each against their own inbox, for a
+     * super admin.
      */
     public function checkReplies(ReplyCheckerService $checker): RedirectResponse
     {

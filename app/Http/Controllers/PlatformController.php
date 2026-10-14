@@ -61,7 +61,7 @@ class PlatformController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name'   => ['required', 'string', 'max:255', 'unique:platforms,name'],
+            'name'   => ['required', 'string', 'max:255', $this->access()->uniqueRule('platforms', 'name')],
             'status' => ['required', 'in:active,inactive'],
         ]);
 
@@ -72,12 +72,15 @@ class PlatformController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
+        $platform = Platform::findOrFail($id);
+
+        // Unique among the platform owner's own names.
         $request->validate([
-            'name'   => ['required', 'string', 'max:255', 'unique:platforms,name,' . $id],
+            'name'   => ['required', 'string', 'max:255', $this->access()->uniqueRule('platforms', 'name', $platform->user_id)->ignore($platform->id)],
             'status' => ['required', 'in:active,inactive'],
         ]);
 
-        Platform::findOrFail($id)->update($request->only('name', 'status'));
+        $platform->update($request->only('name', 'status'));
 
         return redirect()->route('platforms.index', $this->redirectQuery($request))->with('success', 'Platform updated successfully.');
     }

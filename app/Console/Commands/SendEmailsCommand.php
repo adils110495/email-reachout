@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Lead;
+use App\Models\User;
 use App\Services\EmailSenderService;
+use App\Services\UserAccessService;
 use Illuminate\Console\Command;
 
 class SendEmailsCommand extends Command
@@ -13,9 +15,11 @@ class SendEmailsCommand extends Command
      *
      * Usage:  php artisan emails:send
      *         php artisan emails:send --dry-run
+     *         php artisan emails:send --user=jane
      */
     protected $signature = 'emails:send
-        {--dry-run : Preview which leads would receive emails without actually sending}';
+        {--dry-run : Preview which leads would receive emails without actually sending}
+        {--user= : Only this account\'s leads (username or id). Default: every account}';
 
     protected $description = 'Queue outreach emails to all new leads that have an email address';
 
@@ -25,7 +29,25 @@ class SendEmailsCommand extends Command
         parent::__construct();
     }
 
-    public function handle(): int
+    public function handle(UserAccessService $access): int
+    {
+        // Every account's leads unless --user narrows it. Each queued email
+        // still sends as its lead's owner (SendEmailJob runs as lead->user_id).
+        if ($this->option('user') === null) {
+            return $access->asSystem(fn () => $this->send());
+        }
+
+        $owner = User::resolveForConsole($this->option('user'));
+
+        if (! $owner) {
+            $this->error('No such user: ' . $this->option('user'));
+            return self::FAILURE;
+        }
+
+        return $access->runAs($owner, fn () => $this->send());
+    }
+
+    private function send(): int
     {
         $leads = Lead::new()->withEmail()->get();
 

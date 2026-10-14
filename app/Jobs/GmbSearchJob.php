@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Concerns\RunsAsOwner;
 use App\Models\AppNotification;
 use App\Models\GmbLead;
 use App\Services\GmbFinderService;
@@ -20,6 +21,7 @@ use Throwable;
 class GmbSearchJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use RunsAsOwner;
 
     /** A retry would spend SerpAPI credits again, so run once. */
     public int $tries = 1;
@@ -30,7 +32,14 @@ class GmbSearchJob implements ShouldQueue
     public function __construct(
         public readonly string $keyword,
         public readonly int $categoryId,
+        public readonly ?int $userId = null,
     ) {}
+
+    public function ownerId(): ?int
+    {
+        // ?? also covers a payload queued before this property existed.
+        return $this->userId ?? null;
+    }
 
     public function handle(GmbFinderService $finder): void
     {
@@ -71,6 +80,6 @@ class GmbSearchJob implements ShouldQueue
     {
         Log::error('GmbSearchJob: failed', ['keyword' => $this->keyword, 'error' => $e->getMessage()]);
 
-        AppNotification::raise('error', 'GMB search failed', "\"{$this->keyword}\": {$e->getMessage()}");
+        $this->asOwner(fn () => AppNotification::raise('error', 'GMB search failed', "\"{$this->keyword}\": {$e->getMessage()}"));
     }
 }

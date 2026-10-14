@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmailVerification extends Model
 {
+    use BelongsToUser;
+
     public const STATUS_VALID   = 'valid';
     public const STATUS_INVALID = 'invalid';
     public const STATUS_RISKY   = 'risky';

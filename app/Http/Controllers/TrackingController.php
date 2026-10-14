@@ -13,7 +13,9 @@ class TrackingController extends Controller
      */
     public function open(string $token): Response
     {
-        $email = LeadEmail::where('tracking_token', $token)->first();
+        // No session here (the recipient's mail client), so the lookup is
+        // system-wide; the 40-char random token is what identifies the email.
+        $email = $this->access()->asSystem(fn () => LeadEmail::where('tracking_token', $token)->first());
 
         if ($email) {
             $now = now();

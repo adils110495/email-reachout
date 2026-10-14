@@ -113,6 +113,7 @@
                                     </span>
                                 @else
                                     <button type="button" class="btn btn-sm btn-primary js-save-row"
+                                            data-id="{{ $row->id }}"
                                             data-email="{{ $row->email }}"
                                             data-domain="{{ $row->domain }}"
                                             data-company="{{ $row->company }}">

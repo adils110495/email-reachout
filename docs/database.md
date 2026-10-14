@@ -43,6 +43,20 @@
 
 ---
 
+## Ownership — har row ek user ki
+
+`bulk_items` aur `app_settings` ko chhod kar **har table me `user_id`** hai
+(FK → `users`, cascade delete). Model par `BelongsToUser` trait global scope lagata
+hai, isliye queries apne aap user ki rows tak simit rehti hain; Super Admin sab
+dekhta hai. `users` me `role`, `is_active`, `modules` columns hain.
+
+`categories.name`, `mail_settings.type`, `gmb_leads.place_id` aur
+`finder_results.domain` ab **per user** unique hain (`(user_id, …)`).
+
+Poori detail: [access-control.md](access-control.md)
+
+---
+
 ## Purane tables
 
 ### `leads`

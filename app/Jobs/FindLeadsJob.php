@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Concerns\RunsAsOwner;
 use App\Models\AppNotification;
 use App\Models\Lead;
 use App\Models\Platform;
@@ -28,6 +29,7 @@ use Throwable;
 class FindLeadsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use RunsAsOwner;
 
     public int $tries = 2;
 
@@ -39,7 +41,14 @@ class FindLeadsJob implements ShouldQueue
         public readonly int $categoryId,
         public readonly ?string $country = null,
         public readonly ?string $language = null,
+        public readonly ?int $userId = null,
     ) {}
+
+    public function ownerId(): ?int
+    {
+        // ?? also covers a payload queued before this property existed.
+        return $this->userId ?? null;
+    }
 
     public function handle(LeadFinderService $leadFinder): void
     {
@@ -68,7 +77,8 @@ class FindLeadsJob implements ShouldQueue
                 'category_id'  => $this->categoryId,
             ]);
 
-            // Extract the email in its own job so one slow site cannot stall the rest
+            // Extract the email in its own job so one slow site cannot stall the rest.
+            // That job runs as the lead's owner (lead->user_id).
             ScrapeLeadEmailJob::dispatch($lead)->onQueue('default');
 
             $newLeadsCount++;
@@ -98,6 +108,6 @@ class FindLeadsJob implements ShouldQueue
             'error'       => $e->getMessage(),
         ]);
 
-        AppNotification::raise('error', 'Lead search failed', "\"{$this->keyword}\": {$e->getMessage()}");
+        $this->asOwner(fn () => AppNotification::raise('error', 'Lead search failed', "\"{$this->keyword}\": {$e->getMessage()}"));
     }
 }

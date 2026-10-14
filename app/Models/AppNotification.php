@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 
 class AppNotification extends Model
 {
+    use BelongsToUser;
+
     protected $fillable = ['type', 'title', 'message', 'url', 'read_at'];
 
     protected $casts = ['read_at' => 'datetime'];

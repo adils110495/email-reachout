@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Http\Controllers\Concerns\SavesFinderResults;
+use App\Jobs\Concerns\RunsAsOwner;
 use App\Models\AppNotification;
 use App\Services\EmailFinderService;
 use Illuminate\Bus\Queueable;
@@ -20,7 +21,7 @@ use Throwable;
 class FinderSearchJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    use SavesFinderResults;
+    use RunsAsOwner, SavesFinderResults;
 
     /** A retry would scrape the site a second time for nothing, so run once. */
     public int $tries = 1;
@@ -33,7 +34,14 @@ class FinderSearchJob implements ShouldQueue
         public readonly string $domain,
         public readonly string $name = '',
         public readonly ?int $categoryId = null,
+        public readonly ?int $userId = null,
     ) {}
+
+    public function ownerId(): ?int
+    {
+        // ?? also covers a payload queued before this property existed.
+        return $this->userId ?? null;
+    }
 
     public function handle(EmailFinderService $finder): void
     {
@@ -85,6 +93,6 @@ class FinderSearchJob implements ShouldQueue
     {
         Log::error('FinderSearchJob: failed', ['domain' => $this->domain, 'error' => $e->getMessage()]);
 
-        AppNotification::raise('error', 'Finder search failed', "{$this->domain}: {$e->getMessage()}");
+        $this->asOwner(fn () => AppNotification::raise('error', 'Finder search failed', "{$this->domain}: {$e->getMessage()}"));
     }
 }

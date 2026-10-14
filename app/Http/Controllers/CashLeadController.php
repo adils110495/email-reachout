@@ -86,14 +86,15 @@ class CashLeadController extends Controller
             return back()->with('error', "\"{$lead->company_name}\" is already a deal.");
         }
 
-        CashLead::create([
+        // The deal belongs to the lead's owner, also when a super admin marks it.
+        $this->access()->runAs($lead->user_id ?? auth()->id(), fn () => CashLead::create([
             'source'       => CashLead::SOURCE_LEAD,
             'lead_id'      => $lead->id,
             'category_id'  => $lead->category_id,
             'company_name' => $lead->company_name,
             'email'        => implode(', ', $lead->email_list) ?: null,
             'website'      => $lead->website,
-        ]);
+        ]));
 
         return back()->with('success', "\"{$lead->company_name}\" added to Deals.");
     }
@@ -109,14 +110,14 @@ class CashLeadController extends Controller
             return back()->with('error', "\"{$gmb->name}\" is already a deal.");
         }
 
-        CashLead::create([
+        $this->access()->runAs($gmb->user_id ?? auth()->id(), fn () => CashLead::create([
             'source'       => CashLead::SOURCE_GMB,
             'gmb_lead_id'  => $gmb->id,
             'category_id'  => $gmb->category_id,
             'company_name' => $gmb->name,
             'phone'        => $gmb->phone,
             'address'      => $gmb->address,
-        ]);
+        ]));
 
         return back()->with('success', "\"{$gmb->name}\" added to Deals.");
     }
@@ -141,7 +142,7 @@ class CashLeadController extends Controller
     {
         return $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
-            'category_id'  => ['nullable', 'exists:categories,id'],
+            'category_id'  => ['nullable', $this->access()->existsRule('categories')],
             'email'        => ['nullable', 'email', 'max:255'],
             'phone'        => ['nullable', 'string', 'max:50'],
             'website'      => ['nullable', 'string', 'max:255'],

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Concerns\RunsAsOwner;
 use App\Mail\OutreachMail;
 use App\Models\AppSetting;
 use App\Models\Lead;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Mail;
 class SendEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use RunsAsOwner;
 
     /**
      * Maximum number of attempts before the job is marked as failed.
@@ -40,6 +42,12 @@ class SendEmailJob implements ShouldQueue
         public readonly string $subject = '',
         public readonly string $body    = '',
     ) {}
+
+    /** Sends as the lead's owner: their SMTP, their addresses, their activity log. */
+    public function ownerId(): ?int
+    {
+        return $this->lead->user_id;
+    }
 
     /**
      * Execute the queued job.

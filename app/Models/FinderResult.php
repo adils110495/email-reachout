@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FinderResult extends Model
 {
+    use BelongsToUser;
+
     public const MODE_DOMAIN = 'domain';
     public const MODE_PERSON = 'person';
 

@@ -66,7 +66,7 @@ class GmbLeadController extends Controller
     {
         $request->validate([
             'keyword'         => ['required', 'string', 'min:2', 'max:200'],
-            'search_category' => ['required', 'exists:categories,id'],
+            'search_category' => ['required', $this->access()->existsRule('categories')],
         ]);
 
         $keyword    = trim($request->input('keyword'));
@@ -74,7 +74,7 @@ class GmbLeadController extends Controller
 
         // The SerpAPI calls and inserts run on the queue; GmbSearchJob raises a
         // notification when it finishes.
-        GmbSearchJob::dispatch($keyword, $categoryId)->onQueue('default');
+        GmbSearchJob::dispatch($keyword, $categoryId, $request->user()->id)->onQueue('default');
 
         // The page submits this by fetch() and stays put; the notification
         // bell reports the result.

@@ -28,6 +28,7 @@ Ye documentation ab **[`docs/`](docs/) folder** me hai — module-wise alag file
 | Blade, AJAX, CSS | [docs/frontend.md](docs/frontend.md) |
 | `.env`, sidebar, routes | [docs/configuration.md](docs/configuration.md) |
 | SSRF, N+1, timeouts | [docs/security-and-performance.md](docs/security-and-performance.md) |
+| Users, Super Admin, module access | [docs/access-control.md](docs/access-control.md) |
 
 ---
 

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Jobs\Concerns\RunsAsOwner;
 use App\Models\Lead;
 use App\Services\EmailExtractorService;
 use App\Services\ScraperService;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 class ScrapeLeadEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use RunsAsOwner;
 
     public int $tries   = 2;
     public int $timeout = 60;
@@ -29,6 +31,11 @@ class ScrapeLeadEmailJob implements ShouldQueue
     private const MAX_EMAILS = 10;
 
     public function __construct(public readonly Lead $lead) {}
+
+    public function ownerId(): ?int
+    {
+        return $this->lead->user_id;
+    }
 
     public function handle(ScraperService $scraper, EmailExtractorService $extractor): void
     {

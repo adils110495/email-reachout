@@ -98,7 +98,7 @@ class FinderController extends Controller
             // The automatic save writes this to leads.category_id, which carries
             // a foreign key - an id that does not exist would be a 500, not a
             // validation message.
-            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'category_id' => ['nullable', 'integer', $this->access()->existsRule('categories')],
         ]);
 
         $domain = $this->finder->normaliseDomain($validated['domain']);
@@ -115,6 +115,7 @@ class FinderController extends Controller
             domain:     $domain,
             name:       (string) ($validated['name'] ?? ''),
             categoryId: isset($validated['category_id']) ? (int) $validated['category_id'] : null,
+            userId:     $request->user()->id,
         )->onQueue('default');
 
         return response()->json(['ok' => true, 'queued' => true]);
@@ -129,10 +130,11 @@ class FinderController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'result_id'    => ['nullable', 'integer'],
             'email'        => ['required', 'email', 'max:255'],
             'domain'       => ['required', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
-            'category_id'  => ['nullable', 'exists:categories,id'],
+            'category_id'  => ['nullable', 'integer', $this->access()->existsRule('categories')],
         ]);
 
         $domain = $this->finder->normaliseDomain($validated['domain']);
@@ -142,16 +144,21 @@ class FinderController extends Controller
         }
 
         // The website's row carries every address found for it; published
-        // ones go onto the lead with the chosen address as primary.
-        $row = FinderResult::where('domain', $domain)->first();
+        // ones go onto the lead with the chosen address as primary. The table
+        // sends the row id (a super admin may see several users' rows for one
+        // domain); without it, fall back to the user's own row.
+        $row = isset($validated['result_id'])
+            ? FinderResult::findOrFail((int) $validated['result_id'])
+            : FinderResult::mine()->where('domain', $domain)->first();
 
-        $saved = $this->saveLead(
+        // The lead goes into the row's owner's workspace.
+        $saved = $this->access()->runAs($row?->user_id ?? $request->user()->id, fn () => $this->saveLead(
             $domain,
             $validated['email'],
             $validated['company_name'] ?? null,
-            $validated['category_id'] ?? null,
+            isset($validated['category_id']) ? (int) $validated['category_id'] : null,
             $row && ! $row->guessed ? $row->email_list : [],
-        );
+        ));
 
         // Mark it saved in the Finder's own table too, so the row stops
         // offering a Save button it has already been through.

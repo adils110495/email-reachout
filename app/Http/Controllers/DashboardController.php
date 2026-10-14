@@ -177,7 +177,10 @@ class DashboardController extends Controller
             ->select('categories.id', 'categories.name')
             ->selectRaw('COUNT(leads.id) as leads_count')
             ->selectRaw("SUM(CASE WHEN leads.email IS NOT NULL AND leads.email != '' THEN 1 ELSE 0 END) as with_email")
-            ->join('leads', 'leads.category_id', '=', 'categories.id')
+            // The owner scope only reaches `categories`; matching user_id keeps
+            // the joined leads to the same owner's.
+            ->join('leads', fn ($join) => $join->on('leads.category_id', '=', 'categories.id')
+                ->on('leads.user_id', '=', 'categories.user_id'))
             ->groupBy('categories.id', 'categories.name')
             ->orderByDesc('leads_count')
             ->limit(5)

@@ -38,8 +38,18 @@
                         <span class="d-none d-md-inline">{{ auth()->user()->name }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li class="px-3 py-2 fs-13 text-muted">Signed in as <strong>{{ auth()->user()->username }}</strong></li>
+                        <li class="px-3 py-2 fs-13 text-muted">
+                            Signed in as <strong>{{ auth()->user()->username }}</strong>
+                            @if(auth()->user()->isSuperAdmin())
+                                <span class="badge badge-primary light ms-1">Super Admin</span>
+                            @endif
+                        </li>
                         <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('profile.index') }}">
+                                <i class="bi bi-person me-2"></i>My profile
+                            </a>
+                        </li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf

@@ -95,7 +95,7 @@ class BulkController extends Controller
             // 1-based column index chosen in the upload form.
             'column'      => ['nullable', 'integer', 'min:1', 'max:50'],
             'name_column' => ['nullable', 'integer', 'min:1', 'max:50'],
-            'category_id' => ['nullable', 'exists:categories,id'],
+            'category_id' => ['nullable', $this->access()->existsRule('categories')],
         ]);
 
         $file      = $request->file('file');
@@ -146,7 +146,7 @@ class BulkController extends Controller
             ], $chunk));
         }
 
-        ProcessBulkJob::dispatch($bulk->id)->onQueue('default');
+        ProcessBulkJob::dispatch($bulk->id, $bulk->user_id)->onQueue('default');
 
         Log::info('BulkController: bulk queued', [
             'bulk_id' => $bulk->id,
@@ -250,7 +250,7 @@ class BulkController extends Controller
             'completed_at' => null,
         ]);
 
-        ProcessBulkJob::dispatch($bulk->id)->onQueue('default');
+        ProcessBulkJob::dispatch($bulk->id, $bulk->user_id)->onQueue('default');
 
         return back()->with('success', "{$reset} record(s) re-queued.");
     }
