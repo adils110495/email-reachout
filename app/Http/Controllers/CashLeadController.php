@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\QueuesWhatsappBulk;
 use App\Http\Controllers\Concerns\RedirectsBack;
 use App\Models\CashLead;
 use App\Models\Category;
 use App\Models\GmbLead;
 use App\Models\Lead;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -17,31 +19,25 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class CashLeadController extends Controller
 {
     use ExportsCsv;
+    use QueuesWhatsappBulk;
     use RedirectsBack;
 
     public function index(Request $request): View
     {
-        $categories     = Category::active()->orderBy('name')->get();
-        $activeCategory = $request->filled('category') ? (int) $request->input('category') : null;
-        $activeSource   = array_key_exists((string) $request->input('source'), CashLead::SOURCES) ? (string) $request->input('source') : null;
-        $search         = trim((string) $request->input('q'));
+        $filters = $this->filters($request);
 
-        $cashLeads = CashLead::with('category')
-            ->when($activeCategory, fn (Builder $q) => $q->where('category_id', $activeCategory))
-            ->when($activeSource, fn (Builder $q) => $q->where('source', $activeSource))
-            ->when($search !== '', fn (Builder $q) => $q->where(function (Builder $w) use ($search) {
-                $w->where('company_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('website', 'like', "%{$search}%")
-                  ->orWhere('notes', 'like', "%{$search}%");
-            }))
+        $cashLeads = $this->filtered($filters)
+            ->with('category')
+            ->withCount('whatsappMessages')
             ->latest()
             ->paginate(20)
             ->withQueryString();
 
-        $sources = CashLead::SOURCES;
-        $data    = compact('cashLeads', 'categories', 'activeCategory', 'activeSource', 'search', 'sources');
+        $data = $filters + [
+            'cashLeads'  => $cashLeads,
+            'categories' => Category::active()->orderBy('name')->get(),
+            'sources'    => CashLead::SOURCES,
+        ];
 
         // A filter / search / page change fetches just the table partial.
         if ($request->ajax()) {
@@ -122,6 +118,21 @@ class CashLeadController extends Controller
         return back()->with('success', "\"{$gmb->name}\" added to Deals.");
     }
 
+    /**
+     * Bulk WhatsApp: an approved template to the selected deals, or to every
+     * deal matching the list's current filters.
+     */
+    public function whatsapp(Request $request): JsonResponse
+    {
+        $query = $request->boolean('all') ? $this->filtered($this->filters($request)) : CashLead::query();
+
+        return $this->queueWhatsappBulk($request, $query, fn (CashLead $deal) => [
+            'cash_lead_id' => $deal->id,
+            'name'         => $deal->company_name,
+            'phone'        => $deal->phone,
+        ]);
+    }
+
     public function export(): StreamedResponse
     {
         return $this->streamCsv(
@@ -149,5 +160,35 @@ class CashLeadController extends Controller
             'address'      => ['nullable', 'string', 'max:255'],
             'notes'        => ['nullable', 'string', 'max:5000'],
         ]);
+    }
+
+    /**
+     * The list's filters from the query string, normalised. The keys are the
+     * view's variable names. Shared by the list and Bulk WhatsApp, so "all
+     * matching" is exactly the rows on screen.
+     *
+     * @return array{activeCategory: ?int, activeSource: ?string, search: string}
+     */
+    private function filters(Request $request): array
+    {
+        return [
+            'activeCategory' => $request->filled('category') ? (int) $request->input('category') : null,
+            'activeSource'   => array_key_exists((string) $request->input('source'), CashLead::SOURCES) ? (string) $request->input('source') : null,
+            'search'         => trim((string) $request->input('q')),
+        ];
+    }
+
+    private function filtered(array $f): Builder
+    {
+        return CashLead::query()
+            ->when($f['activeCategory'], fn (Builder $q) => $q->where('category_id', $f['activeCategory']))
+            ->when($f['activeSource'], fn (Builder $q) => $q->where('source', $f['activeSource']))
+            ->when($f['search'] !== '', fn (Builder $q) => $q->where(function (Builder $w) use ($f) {
+                $w->where('company_name', 'like', "%{$f['search']}%")
+                  ->orWhere('email', 'like', "%{$f['search']}%")
+                  ->orWhere('phone', 'like', "%{$f['search']}%")
+                  ->orWhere('website', 'like', "%{$f['search']}%")
+                  ->orWhere('notes', 'like', "%{$f['search']}%");
+            }));
     }
 }

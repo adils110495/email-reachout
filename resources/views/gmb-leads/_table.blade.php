@@ -1,8 +1,10 @@
 {{--
     GMB leads table + empty state. Swapped in via AJAX on every filter, search
     or page change by assets/js/ajax-filters.js, so it must stay self-contained:
-    no <script> here.
+    no <script> here. The .wa-row-check boxes feed Bulk WhatsApp
+    (whatsapp/_bulk-bar + whatsapp/_compose).
 --}}
+@php $canWhatsapp = auth()->user()?->can('module', 'whatsapp'); @endphp
 <div class="ajax-content" data-total="{{ $gmbLeads->total() }}">
 @if($gmbLeads->isEmpty())
     <div class="card-body">
@@ -21,6 +23,11 @@
             <table class="table">
                 <thead class="table-light">
                     <tr>
+                        @if($canWhatsapp)
+                            <th style="width:40px">
+                                <input type="checkbox" class="form-check-input wa-check-all" aria-label="Select every lead on this page">
+                            </th>
+                        @endif
                         <th style="width:60px">#</th>
                         <th class="mw-200">Business</th>
                         <th>Category</th>
@@ -33,6 +40,13 @@
                 <tbody>
                     @foreach($gmbLeads as $lead)
                         <tr>
+                            @if($canWhatsapp)
+                                <td>
+                                    <input type="checkbox" class="form-check-input wa-row-check" value="{{ $lead->id }}"
+                                           data-name="{{ $lead->name }}" aria-label="Select {{ $lead->name }}"
+                                           @disabled(! $lead->phone) @if(! $lead->phone) title="No phone number" @endif>
+                                </td>
+                            @endif
                             <td>{{ $gmbLeads->firstItem() + $loop->index }}</td>
                             <td>
                                 <h6 class="mb-0">{{ $lead->name }}</h6>
@@ -41,7 +55,12 @@
                             <td>{{ $lead->category?->name ?? '—' }}</td>
                             <td>
                                 @if($lead->phone)
-                                    <a href="tel:{{ $lead->phone }}">{{ $lead->phone }}</a>
+                                    <a href="tel:{{ $lead->phone }}" class="text-nowrap">{{ $lead->phone }}</a>
+                                    @if($lead->whatsapp_messages_count)
+                                        <span class="badge badge-success light ms-1" title="WhatsApp messages sent: {{ $lead->whatsapp_messages_count }}">
+                                            <i class="bi bi-whatsapp"></i> {{ $lead->whatsapp_messages_count }}
+                                        </span>
+                                    @endif
                                 @else
                                     —
                                 @endif
@@ -62,6 +81,19 @@
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        @if($lead->phone)
+                                            @can('module', 'whatsapp')
+                                            <li>
+                                                <button type="button" class="dropdown-item btn-wa-compose"
+                                                        data-source="gmb"
+                                                        data-id="{{ $lead->id }}"
+                                                        data-name="{{ $lead->name }}"
+                                                        data-phone="{{ $lead->phone }}">
+                                                    <i class="bi bi-whatsapp me-2 text-success"></i>Send WhatsApp
+                                                </button>
+                                            </li>
+                                            @endcan
+                                        @endif
                                         @if($lead->maps_url)
                                             <li>
                                                 <a class="dropdown-item" href="{{ $lead->maps_url }}" target="_blank" rel="noopener">

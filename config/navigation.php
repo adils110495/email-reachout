@@ -92,11 +92,18 @@ return [
                     'icon'   => 'bi-activity',
                     'module' => 'email_activity',
                 ],
+                [
+                    'label'  => 'WhatsApp',
+                    'route'  => 'whatsapp.index',
+                    'active' => ['whatsapp.*'],
+                    'icon'   => 'bi-whatsapp',
+                    'module' => 'whatsapp',
+                ],
 
                 // Settings module - collapsible, holds every settings page.
                 [
                     'label'    => 'Settings',
-                    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*', 'mail-settings.*', 'branding.*', 'users.*'],
+                    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*', 'mail-settings.*', 'whatsapp-settings.*', 'branding.*', 'users.*'],
                     'icon'     => 'bi-gear',
                     'children' => [
                         [
@@ -140,6 +147,12 @@ return [
                             'route'  => 'mail-settings.index',
                             'active' => ['mail-settings.*'],
                             'module' => 'mail_settings',
+                        ],
+                        [
+                            'label'  => 'WhatsApp Settings',
+                            'route'  => 'whatsapp-settings.index',
+                            'active' => ['whatsapp-settings.*'],
+                            'module' => 'whatsapp',
                         ],
                         [
                             'label'  => 'Branding',

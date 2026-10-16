@@ -40,6 +40,7 @@ hai, kyun banaya gaya hai, aur har cheez kaam kaise karti hai.**
 | Verifier | `/verifier` | [modules/verifier.md](modules/verifier.md) |
 | Bulks | `/bulks` | [modules/bulks.md](modules/bulks.md) |
 | Leads | `/leads` | [modules/leads.md](modules/leads.md) |
+| WhatsApp | `/whatsapp` | [modules/whatsapp.md](modules/whatsapp.md) |
 | Settings | `/settings/*` | [modules/settings.md](modules/settings.md) |
 
 ---

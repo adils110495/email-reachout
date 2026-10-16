@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c4d55945795bae04c75e437d34a12208",
+    "content-hash": "42bd54f98d8531c94143128b55a655b8",
     "packages": [
         {
             "name": "brick/math",
@@ -1060,6 +1060,90 @@
                 }
             ],
             "time": "2026-08-24T09:15:32+00:00"
+        },
+        {
+            "name": "kstmostofa/laravel-whatsapp",
+            "version": "v1.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/kstmostofa/laravel-whatsapp.git",
+                "reference": "6252cf4dfcc470cab9977e730d1c260cd4f3c2b6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/kstmostofa/laravel-whatsapp/zipball/6252cf4dfcc470cab9977e730d1c260cd4f3c2b6",
+                "reference": "6252cf4dfcc470cab9977e730d1c260cd4f3c2b6",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.5",
+                "illuminate/console": "^11.0|^12.0|^13.0",
+                "illuminate/contracts": "^11.0|^12.0|^13.0",
+                "illuminate/http": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.2",
+                "symfony/process": "^7.0|^8.0"
+            },
+            "require-dev": {
+                "livewire/flux": "^2.0",
+                "livewire/livewire": "^3.4|^4.0",
+                "orchestra/testbench": "^9.0|^10.0|^11.0",
+                "phpunit/phpunit": "^10.5|^11.0|^12.0"
+            },
+            "suggest": {
+                "laravel/reverb": "^1.0 — enables live UI updates (incoming messages, QR codes, ack changes) via Laravel broadcasting.",
+                "livewire/flux": "^2.0 — the Flux UI component library the bundled UI is built on.",
+                "livewire/livewire": "^3.4 — enables the bundled admin UI."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "WhatsApp": "Kstmostofa\\LaravelWhatsApp\\Facades\\WhatsApp"
+                    },
+                    "providers": [
+                        "Kstmostofa\\LaravelWhatsApp\\LaravelWhatsAppServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Kstmostofa\\LaravelWhatsApp\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Md Mostafijur Rahman",
+                    "email": "mostofa122@gmail.com",
+                    "homepage": "https://github.com/kstmostofa"
+                }
+            ],
+            "description": "Dual-backend Laravel package for WhatsApp: Meta Cloud API + bundled whatsapp-web.js sidecar. Ships a Livewire/Flux admin UI, queued jobs, webhooks with HMAC, Eloquent models, broadcasting, and CLI lifecycle commands.",
+            "homepage": "https://kstmostofa.github.io/laravel-whatsapp/",
+            "keywords": [
+                "chatbot",
+                "flux",
+                "laravel",
+                "livewire",
+                "messaging",
+                "meta",
+                "webhooks",
+                "whatsapp",
+                "whatsapp-business",
+                "whatsapp-cloud-api",
+                "whatsapp-web",
+                "whatsapp-web-js"
+            ],
+            "support": {
+                "docs": "https://kstmostofa.github.io/laravel-whatsapp/",
+                "issues": "https://github.com/kstmostofa/laravel-whatsapp/issues",
+                "source": "https://github.com/kstmostofa/laravel-whatsapp"
+            },
+            "time": "2026-09-04T20:30:16+00:00"
         },
         {
             "name": "laravel/framework",

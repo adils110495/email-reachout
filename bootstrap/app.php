@@ -16,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo('/login');
         $middleware->redirectUsersTo('/');
 
+        // Meta's WhatsApp webhook has no session or CSRF token; it is
+        // authenticated by its signature instead (WhatsappWebhookController).
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
+
         $middleware->alias([
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
             'module' => \App\Http\Middleware\EnsureModuleAccess::class,

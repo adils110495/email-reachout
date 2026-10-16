@@ -71,6 +71,7 @@
                     <p class="mb-0 fs-13">Businesses with a Google Business Profile but no website.</p>
                 </div>
                 <div class="clearfix">
+                    @include('whatsapp._bulk-bar', ['bulkUrl' => route('gmb-leads.whatsapp'), 'source' => 'gmb', 'label' => 'GMB leads'])
                     <a href="{{ route('gmb-leads.export') }}" class="btn btn-light btn-sm m-1">
                         <i class="bi bi-download me-1"></i>Export CSV
                     </a>
@@ -128,6 +129,8 @@
         </div>
     </div>
 </div>
+
+@include('whatsapp._compose')
 
 @endsection
 

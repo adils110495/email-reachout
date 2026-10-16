@@ -47,7 +47,7 @@ hota — koi form use badal nahi sakta.
 | Web request, normal user | sirf uski rows |
 | Web request, Super Admin | sab rows (koi filter nahi) |
 | `runAs($user, fn)` | **sirf** us user ki rows — Super Admin ho tab bhi |
-| `asSystem(fn)` | sab rows — sirf scheduler / tracking pixel ke liye |
+| `asSystem(fn)` | sab rows — sirf scheduler / tracking pixel / WhatsApp webhook lookup ke liye |
 | Koi context nahi (console, job bina owner) | **kuch nahi** (fail closed) — aur create par exception |
 
 ### `mine()` — jab Super Admin ko bhi sirf apna chahiye
@@ -57,6 +57,7 @@ Kuch cheezein personal hain, Super Admin ke liye bhi:
 | Kahan | Kyun |
 |---|---|
 | Mail Settings (SMTP/IMAP) | Admin apne mailbox se bheje, kisi user ke credentials se nahi |
+| WhatsApp Settings | Same — admin apne number/token se, kisi user ke token se nahi |
 | Notification bell | Har kisi ke job notifications admin ki bell me nahi aane chahiye |
 | Verifier "Clear history" | Ek click se sab users ki history na ude |
 
@@ -79,6 +80,7 @@ Record jis user ka hai, kaam **usi ke naam par** hota hai (`runAs(owner)`):
 | Action | Kis ke naam par |
 |---|---|
 | Lead ko email bhejna | Lead ka owner — uska SMTP, uski address, uski Email Activity |
+| GMB lead / deal ko WhatsApp | Record ka owner — uska WhatsApp number/token, uska WhatsApp log |
 | Finder result "Save" | Row ka owner — lead usi ke workspace me |
 | "Mark as Deal" | Lead / GMB lead ka owner |
 | Bulk retry | Bulk ka owner |
@@ -95,6 +97,7 @@ user ka hai, aur `ActAsOwner` job middleware use usi user ke roop me chalata hai
 | `FindLeadsJob`, `FinderSearchJob`, `GmbSearchJob` | `userId` (dispatch karte waqt) |
 | `ProcessBulkJob` | `userId` = bulk ka owner (har chunk aage pass karta hai) |
 | `ScrapeLeadEmailJob`, `SendEmailJob` | `lead->user_id` |
+| `SendWhatsappMessageJob` | `userId` = bulk ke contacts ka owner (sab ek hi user ke hone chahiye) |
 
 - Bina owner wala job (deploy se pehle queue me pada) → **fail** hota hai, chupchap kuch galat nahi karta.
 - Owner delete ho chuka → job drop.

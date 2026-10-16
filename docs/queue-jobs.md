@@ -38,6 +38,7 @@ docker compose ps # service chal raha hai?
 | `ScrapeLeadEmailJob` | Har naye lead ke liye | `default` | 2 | 60s |
 | `SendEmailJob` | Automated email send | `default` | 3 | 120s |
 | `ProcessBulkJob` | **Naya** — bulk upload | `default` | 2 | 85s |
+| `SendWhatsappMessageJob` | Bulk WhatsApp ka ek message (delay = gap × position) | `default` | **1** (retry = double message) | 60s |
 
 Sab `default` par jaate hain, jo worker pehle se consume karta hai — **extra setup nahi chahiye**.
 

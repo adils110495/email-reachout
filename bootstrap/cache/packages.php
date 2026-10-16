@@ -1,4 +1,15 @@
 <?php return array (
+  'kstmostofa/laravel-whatsapp' => 
+  array (
+    'aliases' => 
+    array (
+      'WhatsApp' => 'Kstmostofa\\LaravelWhatsApp\\Facades\\WhatsApp',
+    ),
+    'providers' => 
+    array (
+      0 => 'Kstmostofa\\LaravelWhatsApp\\LaravelWhatsAppServiceProvider',
+    ),
+  ),
   'laravel/pail' => 
   array (
     'providers' => 

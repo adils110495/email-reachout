@@ -220,6 +220,54 @@ hoti hain, duplicate nahi banti.
 
 ---
 
+## WhatsApp tables
+
+3 migrations, `2026_10_15_*` (`000003` = bulk ke `batch_id` + `params`). Module detail: [modules/whatsapp.md](modules/whatsapp.md)
+
+### `whatsapp_settings` — har user ka Cloud API connection
+
+| Column | Type | Kaam |
+|---|---|---|
+| `user_id` | FK, **unique**, cascade | Ek user = ek row |
+| `default_country_code` | string(4), nullable | Bina code wale number ke aage (`91`) |
+| `phone_number_id` | string, nullable | Meta: bhejne wale number ki id |
+| `business_account_id` | string, nullable | Meta: WABA id — templates list karne ke liye |
+| `access_token` | text, **encrypted** | |
+| `app_secret` | text, **encrypted** | Webhook signature check |
+| `public_url` | string, nullable | Callback URL isi domain par banta hai (ngrok / live domain) |
+| `webhook_key` | string(64), unique | Random 40 — webhook URL me, user pehchanta hai |
+| `verify_token` | string(64) | Random 32 by default, user Webhook card me badal sakta hai — Meta webhook setup par echo karta hai |
+| `is_active` | bool | Off = sirf "Open in WhatsApp" |
+
+`webhook_key` / `verify_token` fillable **nahi** — model `creating` par khud banata hai.
+`verify_token` sirf Webhook form (`updateWebhook`, `forceFill`) se badalta hai. Migration
+`2026_10_16_000001` ne `public_url` add kiya.
+
+### `whatsapp_messages` — har bheja gaya message
+
+| Column | Type | Kaam |
+|---|---|---|
+| `gmb_lead_id` | FK → gmb_leads, **nullOnDelete** | Kis GMB lead ko |
+| `cash_lead_id` | FK → cash_leads, **nullOnDelete** | Kis deal ko |
+| `contact_name` | string, nullable | **Snapshot** — record delete ho to bhi log padhne layak |
+| `phone` | string(20) | Normalised digits, `+` nahi (`919876543210`) |
+| `channel` | string(10) | `api` (Cloud API) / `link` (wa.me) |
+| `type` | string(10) | `template` / `text` |
+| `batch_id` | uuid, indexed, nullable | Bulk send — ek bulk ke saare messages ka same |
+| `template_name`, `template_language` | nullable | Template message ho to |
+| `params` | json, nullable | Bulk: is contact ke template values (`{name}` bhar kar) — job inhi se bhejta hai |
+| `body` | text, nullable | Jo bheja (template ho to variables bhar kar) |
+| `wamid` | string, **unique**, nullable | Meta ki message id — webhook status isi se match |
+| `status` | string(15) | `queued` / `sending` / `sent` / `delivered` / `read` / `failed` / `cancelled` / `manual` |
+| `error` | text, nullable | Meta ka reason (failed par) |
+| `sent_at`, `delivered_at`, `read_at`, `replied_at` | timestamp | |
+| `reply_body` | text, nullable | Pehla reply |
+
+**Index:** `(user_id, phone)` — incoming reply par "is number ko last message kaunsa gaya" dhoondhna.
+`phone` naam isliye (`to` nahi) kyunki `TO` MySQL ka reserved word hai.
+
+---
+
 ## Design decisions — kyun aise banaya
 
 ### `bulks` aur `bulk_items` alag kyun hain

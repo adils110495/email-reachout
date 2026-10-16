@@ -6,6 +6,7 @@
     "require": {
         "php": "^8.2",
         "guzzlehttp/guzzle": "^7.2",
+        "kstmostofa/laravel-whatsapp": "^1.0",
         "laravel/framework": "^11.0",
         "laravel/tinker": "^2.9",
         "openai-php/client": "^0.10"

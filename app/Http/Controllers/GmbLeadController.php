@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\QueuesWhatsappBulk;
 use App\Http\Controllers\Concerns\RedirectsBack;
 use App\Models\Category;
 use App\Models\GmbLead;
 use App\Jobs\GmbSearchJob;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,40 +18,28 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class GmbLeadController extends Controller
 {
     use ExportsCsv;
+    use QueuesWhatsappBulk;
     use RedirectsBack;
+
+    /** Rating is a dropdown of "minimum stars". */
+    private const RATING_OPTIONS = ['3' => '3.0+', '3.5' => '3.5+', '4' => '4.0+', '4.5' => '4.5+'];
 
     public function index(Request $request): View
     {
-        $categories     = Category::where('status', 'active')->orderBy('name')->get();
-        $activeCategory = $request->filled('category') ? (int) $request->input('category') : null;
-        $search         = trim((string) $request->input('q'));
+        $filters = $this->filters($request);
 
-        // Min / max range filters; either end may be left empty. Non-numeric input is ignored.
-        $range = fn (string $key) => is_numeric($request->input($key)) ? $request->input($key) : null;
-
-        // Rating is a dropdown of "minimum stars".
-        $ratingOptions = ['3' => '3.0+', '3.5' => '3.5+', '4' => '4.0+', '4.5' => '4.5+'];
-        $activeRating  = array_key_exists((string) $request->input('rating'), $ratingOptions) ? (string) $request->input('rating') : null;
-
-        $reviewsMin = $range('reviews_min');
-        $reviewsMax = $range('reviews_max');
-
-        $gmbLeads = GmbLead::with('category')
-            ->when($activeCategory, fn (Builder $q) => $q->where('category_id', $activeCategory))
-            ->when($activeRating, fn (Builder $q) => $q->where('rating', '>=', (float) $activeRating))
-            ->when($reviewsMin !== null, fn (Builder $q) => $q->where('reviews', '>=', (int) $reviewsMin))
-            ->when($reviewsMax !== null, fn (Builder $q) => $q->where('reviews', '<=', (int) $reviewsMax))
-            ->when($search !== '', fn (Builder $q) => $q->where(function (Builder $w) use ($search) {
-                $w->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('keyword', 'like', "%{$search}%");
-            }))
+        $gmbLeads = $this->filtered($filters)
+            ->with('category')
+            ->withCount('whatsappMessages')
             ->latest()
             ->paginate(20)
             ->withQueryString();
 
-        $data = compact('categories', 'activeCategory', 'search', 'gmbLeads', 'ratingOptions', 'activeRating', 'reviewsMin', 'reviewsMax');
+        $data = $filters + [
+            'categories'    => Category::where('status', 'active')->orderBy('name')->get(),
+            'ratingOptions' => self::RATING_OPTIONS,
+            'gmbLeads'      => $gmbLeads,
+        ];
 
         // A filter / search / page change fetches just the table partial.
         if ($request->ajax()) {
@@ -86,6 +76,21 @@ class GmbLeadController extends Controller
             ->with('success', "Searching \"{$keyword}\" in the background. You will be notified when it is done.");
     }
 
+    /**
+     * Bulk WhatsApp: an approved template to the selected leads, or to every
+     * lead matching the list's current filters.
+     */
+    public function whatsapp(Request $request): JsonResponse
+    {
+        $query = $request->boolean('all') ? $this->filtered($this->filters($request)) : GmbLead::query();
+
+        return $this->queueWhatsappBulk($request, $query, fn (GmbLead $lead) => [
+            'gmb_lead_id' => $lead->id,
+            'name'        => $lead->name,
+            'phone'       => $lead->phone,
+        ]);
+    }
+
     public function destroy(Request $request, int $id): RedirectResponse
     {
         GmbLead::findOrFail($id)->delete();
@@ -104,5 +109,41 @@ class GmbLeadController extends Controller
                 $l->rating, $l->reviews, $l->keyword, $l->maps_url, $l->created_at->toDateTimeString(),
             ],
         );
+    }
+
+    /**
+     * The list's filters from the query string, normalised. The keys are the
+     * view's variable names. Shared by the list and Bulk WhatsApp, so "all
+     * matching" is exactly the rows on screen.
+     *
+     * @return array{activeCategory: ?int, search: string, activeRating: ?string, reviewsMin: mixed, reviewsMax: mixed}
+     */
+    private function filters(Request $request): array
+    {
+        // Min / max range filters; either end may be left empty. Non-numeric input is ignored.
+        $range = fn (string $key) => is_numeric($request->input($key)) ? $request->input($key) : null;
+
+        return [
+            'activeCategory' => $request->filled('category') ? (int) $request->input('category') : null,
+            'search'         => trim((string) $request->input('q')),
+            'activeRating'   => array_key_exists((string) $request->input('rating'), self::RATING_OPTIONS) ? (string) $request->input('rating') : null,
+            'reviewsMin'     => $range('reviews_min'),
+            'reviewsMax'     => $range('reviews_max'),
+        ];
+    }
+
+    private function filtered(array $f): Builder
+    {
+        return GmbLead::query()
+            ->when($f['activeCategory'], fn (Builder $q) => $q->where('category_id', $f['activeCategory']))
+            ->when($f['activeRating'], fn (Builder $q) => $q->where('rating', '>=', (float) $f['activeRating']))
+            ->when($f['reviewsMin'] !== null, fn (Builder $q) => $q->where('reviews', '>=', (int) $f['reviewsMin']))
+            ->when($f['reviewsMax'] !== null, fn (Builder $q) => $q->where('reviews', '<=', (int) $f['reviewsMax']))
+            ->when($f['search'] !== '', fn (Builder $q) => $q->where(function (Builder $w) use ($f) {
+                $w->where('name', 'like', "%{$f['search']}%")
+                  ->orWhere('phone', 'like', "%{$f['search']}%")
+                  ->orWhere('address', 'like', "%{$f['search']}%")
+                  ->orWhere('keyword', 'like', "%{$f['search']}%");
+            }));
     }
 }

@@ -54,6 +54,20 @@ VERIFY_BULK_MAX_ROWS=5000
 
 Details: [modules/verifier.md](modules/verifier.md)
 
+```env
+# ── WhatsApp ───────────────────────────────────────────────────
+
+# Meta Graph API version. Meta har version ~2 saal baad retire karta hai.
+WHATSAPP_API_VERSION=v25.0
+WHATSAPP_TIMEOUT=20
+
+# Bina country code wale numbers ke liye — jab user ne apna set na kiya ho (e.g. 91).
+WHATSAPP_DEFAULT_COUNTRY_CODE=
+```
+
+Token / Phone Number ID `.env` me **nahi** — har user apna Settings › WhatsApp me save
+karta hai (encrypted). Details: [modules/whatsapp.md](modules/whatsapp.md)
+
 ---
 
 ## `.env` — purane variables

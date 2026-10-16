@@ -28,4 +28,9 @@ class CashLead extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function whatsappMessages()
+    {
+        return $this->hasMany(WhatsappMessage::class);
+    }
 }

@@ -41,6 +41,21 @@ return [
         'key' => env('SERPAPI_KEY'),
     ],
 
+    // WhatsApp Business Cloud API (Meta). The credentials are per user, under
+    // Settings > WhatsApp; only the Graph API version and the fallback country
+    // code live here. Meta retires a Graph version about two years after release.
+    'whatsapp' => [
+        'graph_url'            => 'https://graph.facebook.com',
+        'api_version'          => env('WHATSAPP_API_VERSION', 'v25.0'),
+        'timeout'              => (int) env('WHATSAPP_TIMEOUT', 20),
+        // Put in front of numbers saved without one (098765 43210) when the
+        // user has not set their own default country code.
+        'default_country_code' => env('WHATSAPP_DEFAULT_COUNTRY_CODE'),
+        // Most contacts one bulk send may queue. 250 is the daily limit Meta
+        // gives a new business number for starting conversations.
+        'bulk_max'             => (int) env('WHATSAPP_BULK_MAX', 250),
+    ],
+
     // Email verification (Verifier / Bulks modules).
     //
     // The SMTP probe holds a real RCPT TO conversation with the recipient's

@@ -32,6 +32,7 @@ class User extends Authenticatable
         'gmb_leads'      => 'GMB Leads',
         'deals'          => 'Deals',
         'email_activity' => 'Email Activity',
+        'whatsapp'       => 'WhatsApp',
         'templates'      => 'Email Templates',
         'platforms'      => 'Platforms',
         'categories'     => 'Categories',

@@ -19,6 +19,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VerifierController;
+use App\Http\Controllers\WhatsappController;
+use App\Http\Controllers\WhatsappSettingController;
+use App\Http\Controllers\WhatsappWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -41,6 +44,11 @@ use Illuminate\Support\Facades\Route;
 // Open-tracking pixel. Hit by the recipient's mail client, which has no
 // session - it must stay outside the auth group or opens are never recorded.
 Route::get('/t/o/{token}.gif', [TrackingController::class, 'open'])->name('track.open');
+
+// WhatsApp webhook, called by Meta (no session). The key in the URL picks the
+// user; POSTs are signature-checked and exempt from CSRF in bootstrap/app.php.
+Route::get('/webhooks/whatsapp/{key}',  [WhatsappWebhookController::class, 'verify'])->name('webhooks.whatsapp.verify');
+Route::post('/webhooks/whatsapp/{key}', [WhatsappWebhookController::class, 'receive'])->name('webhooks.whatsapp');
 
 // Sign in / sign up. Guests only; a signed-in user is sent to the dashboard.
 Route::middleware('guest')->group(function () {
@@ -113,6 +121,10 @@ Route::middleware('module:deals')->group(function () {
     Route::delete('/cash-leads/{id}',          [CashLeadController::class, 'destroy'])->name('cash-leads.destroy')->whereNumber('id');
     Route::post('/cash-leads/from-lead/{id}',  [CashLeadController::class, 'fromLead'])->name('cash-leads.from-lead')->whereNumber('id');
     Route::post('/cash-leads/from-gmb/{id}',   [CashLeadController::class, 'fromGmb'])->name('cash-leads.from-gmb')->whereNumber('id');
+
+    // Bulk WhatsApp to selected / all filtered deals - needs the WhatsApp module too
+    Route::post('/cash-leads/whatsapp',        [CashLeadController::class, 'whatsapp'])
+        ->middleware(['module:whatsapp', 'throttle:10,1'])->name('cash-leads.whatsapp');
 });
 
 // GMB Leads — businesses with a Google Business Profile but no website
@@ -120,6 +132,10 @@ Route::middleware('module:gmb_leads')->group(function () {
     Route::get('/gmb-leads',             [GmbLeadController::class, 'index'])->name('gmb-leads.index');
     Route::get('/gmb-leads/export',      [GmbLeadController::class, 'export'])->name('gmb-leads.export');
     Route::post('/gmb-leads/search',     [GmbLeadController::class, 'search'])->name('gmb-leads.search');
+
+    // Bulk WhatsApp to selected / all filtered leads - needs the WhatsApp module too
+    Route::post('/gmb-leads/whatsapp',   [GmbLeadController::class, 'whatsapp'])
+        ->middleware(['module:whatsapp', 'throttle:10,1'])->name('gmb-leads.whatsapp');
     Route::delete('/gmb-leads/{id}',     [GmbLeadController::class, 'destroy'])->name('gmb-leads.destroy')->whereNumber('id');
 });
 
@@ -178,6 +194,27 @@ Route::middleware('module:leads')->group(function () {
 Route::middleware('module:email_activity')->group(function () {
     Route::get('/email-activity',                [EmailActivityController::class, 'index'])->name('email-activity.index');
     Route::post('/email-activity/check-replies', [EmailActivityController::class, 'checkReplies'])->name('email-activity.check-replies');
+});
+
+// WhatsApp — Cloud API messages, wa.me chats, delivery / read / reply tracking
+Route::middleware('module:whatsapp')->group(function () {
+    Route::get('/whatsapp',            [WhatsappController::class, 'index'])->name('whatsapp.index');
+    Route::get('/whatsapp/export',     [WhatsappController::class, 'export'])->name('whatsapp.export');
+    Route::get('/whatsapp/templates',  [WhatsappController::class, 'templates'])->name('whatsapp.templates');
+    Route::post('/whatsapp/send',      [WhatsappController::class, 'send'])->middleware('throttle:60,1')->name('whatsapp.send');
+    Route::post('/whatsapp/open-chat', [WhatsappController::class, 'openChat'])->middleware('throttle:60,1')->name('whatsapp.open-chat');
+
+    // Bulk sends - progress (polled by the WhatsApp page) and cancel
+    Route::get('/whatsapp/batches/{batch}',         [WhatsappController::class, 'batchStatus'])->name('whatsapp.batch-status')->whereUuid('batch');
+    Route::post('/whatsapp/batches/{batch}/cancel', [WhatsappController::class, 'cancelBatch'])->name('whatsapp.batch-cancel')->whereUuid('batch');
+
+    // The user's own Cloud API connection
+    Route::get('/settings/whatsapp',       [WhatsappSettingController::class, 'index'])->name('whatsapp-settings.index');
+    Route::put('/settings/whatsapp',       [WhatsappSettingController::class, 'update'])->name('whatsapp-settings.update');
+    Route::post('/settings/whatsapp/test', [WhatsappSettingController::class, 'test'])->name('whatsapp-settings.test');
+    Route::put('/settings/whatsapp/webhook',           [WhatsappSettingController::class, 'updateWebhook'])->name('whatsapp-settings.webhook');
+    Route::post('/settings/whatsapp/webhook/register', [WhatsappSettingController::class, 'registerWebhook'])->middleware('throttle:10,1')->name('whatsapp-settings.webhook-register');
+    Route::get('/settings/whatsapp/webhook/status',    [WhatsappSettingController::class, 'webhookStatus'])->middleware('throttle:30,1')->name('whatsapp-settings.webhook-status');
 });
 
 

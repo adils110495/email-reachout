@@ -17,6 +17,7 @@ Chaar simple CRUD screens jo baaki modules ko data dete hain.
 | Platforms | `/settings/platforms` | `platforms` | Leads, Finder (filter) |
 | Categories | `/settings/categories` | `categories` | Leads, Finder, **Bulks** |
 | Addresses | `/settings/addresses` | `addresses` | Leads (email footer) |
+| WhatsApp Settings | `/settings/whatsapp` | `whatsapp_settings` | WhatsApp — [modules/whatsapp.md](whatsapp.md) |
 
 **Files:**
 ```

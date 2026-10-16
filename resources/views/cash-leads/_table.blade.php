@@ -2,7 +2,9 @@
     Cash leads table + empty state. Swapped in via AJAX on every filter, search
     or page change by assets/js/ajax-filters.js, so it must stay self-contained:
     no <script> here; row actions are bound by delegation in index.blade.php.
+    The .wa-row-check boxes feed Bulk WhatsApp (whatsapp/_bulk-bar + whatsapp/_compose).
 --}}
+@php $canWhatsapp = auth()->user()?->can('module', 'whatsapp'); @endphp
 <div class="ajax-content" data-total="{{ $cashLeads->total() }}">
 @if($cashLeads->isEmpty())
     <div class="card-body">
@@ -21,6 +23,11 @@
             <table class="table">
                 <thead class="table-light">
                     <tr>
+                        @if($canWhatsapp)
+                            <th style="width:40px">
+                                <input type="checkbox" class="form-check-input wa-check-all" aria-label="Select every deal on this page">
+                            </th>
+                        @endif
                         <th style="width:60px">#</th>
                         <th class="mw-200">Company</th>
                         <th>Category</th>
@@ -34,6 +41,13 @@
                 <tbody>
                     @foreach($cashLeads as $cash)
                         <tr>
+                            @if($canWhatsapp)
+                                <td>
+                                    <input type="checkbox" class="form-check-input wa-row-check" value="{{ $cash->id }}"
+                                           data-name="{{ $cash->company_name }}" aria-label="Select {{ $cash->company_name }}"
+                                           @disabled(! $cash->phone) @if(! $cash->phone) title="No phone number" @endif>
+                                </td>
+                            @endif
                             <td>{{ $cashLeads->firstItem() + $loop->index }}</td>
                             <td>
                                 <h6 class="mb-0">{{ $cash->company_name }}</h6>
@@ -44,7 +58,16 @@
                             <td>{{ $cash->category?->name ?? '—' }}</td>
                             <td>
                                 @if($cash->email)<div>{{ $cash->email }}</div>@endif
-                                @if($cash->phone)<div><a href="tel:{{ $cash->phone }}">{{ $cash->phone }}</a></div>@endif
+                                @if($cash->phone)
+                                    <div>
+                                        <a href="tel:{{ $cash->phone }}" class="text-nowrap">{{ $cash->phone }}</a>
+                                        @if($cash->whatsapp_messages_count)
+                                            <span class="badge badge-success light ms-1" title="WhatsApp messages sent: {{ $cash->whatsapp_messages_count }}">
+                                                <i class="bi bi-whatsapp"></i> {{ $cash->whatsapp_messages_count }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
                                 @if(! $cash->email && ! $cash->phone)—@endif
                             </td>
                             <td><span class="badge badge-success light">{{ $sources[$cash->source] ?? $cash->source }}</span></td>
@@ -57,6 +80,19 @@
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        @if($cash->phone)
+                                            @can('module', 'whatsapp')
+                                            <li>
+                                                <button type="button" class="dropdown-item btn-wa-compose"
+                                                        data-source="deal"
+                                                        data-id="{{ $cash->id }}"
+                                                        data-name="{{ $cash->company_name }}"
+                                                        data-phone="{{ $cash->phone }}">
+                                                    <i class="bi bi-whatsapp me-2 text-success"></i>Send WhatsApp
+                                                </button>
+                                            </li>
+                                            @endcan
+                                        @endif
                                         <li>
                                             <button type="button" class="dropdown-item btn-edit-cash"
                                                     data-id="{{ $cash->id }}"
