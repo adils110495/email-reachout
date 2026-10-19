@@ -122,6 +122,8 @@
                                     </button>
                                 </div>
                                 <div class="form-text" id="wa_template_status">The first message to a contact must be a template Meta has approved.</div>
+                                {{-- Which number sends: the contact owner's, or yours when theirs is not connected --}}
+                                <div class="form-text text-success d-none" id="wa_template_from"></div>
                                 <div class="row g-2 mt-1" id="wa_params"></div>
                                 <div class="form-text d-none" id="wa_bulk_hint">
                                     Write <code>&#123;&#123;name&#125;&#125;</code> in a value to put in each contact's own name.
@@ -286,6 +288,7 @@
         tplPane:     document.getElementById('wa_template_pane'),
         template:    document.getElementById('wa_template'),
         tplState:    document.getElementById('wa_template_status'),
+        tplFrom:     document.getElementById('wa_template_from'),
         refresh:     document.getElementById('wa_template_refresh'),
         params:      document.getElementById('wa_params'),
         bulkHint:    document.getElementById('wa_bulk_hint'),
@@ -543,6 +546,7 @@
         templates = [];
         el.template.innerHTML = '<option value="">Loading templates…</option>';
         el.template.disabled = true;
+        toggle(el.tplFrom, false);
         renderParams();
 
         const query = new URLSearchParams({ source: el.source.value, id: el.recordId.value });
@@ -557,6 +561,11 @@
                 if (! res.ok || ! res.data.ok) throw new Error(firstError(res.data, 'Could not load templates.'));
                 templates = res.data.templates || [];
                 renderTemplateOptions();
+                // The contact owner's number, or the sender's own when theirs is not connected.
+                if (res.data.from) {
+                    el.tplFrom.innerHTML = '<i class="bi bi-whatsapp me-1"></i>Sends from ' + esc(res.data.from) + '.';
+                    toggle(el.tplFrom, true);
+                }
             })
             .catch(function (err) {
                 if (seq !== loadSeq) return;

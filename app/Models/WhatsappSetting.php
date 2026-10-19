@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToUser;
 use App\Models\Concerns\ForgetsUnreadableSecrets;
+use App\Models\Scopes\OwnedByUserScope;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -49,6 +51,28 @@ class WhatsappSetting extends Model
         return static::mine()->first();
     }
 
+    /** Whether this user's own connection can send - used to pick a sender across users. */
+    public static function connectedFor(int $userId): bool
+    {
+        return (bool) static::withoutGlobalScope(OwnedByUserScope::class)->where('user_id', $userId)->first()?->canSend();
+    }
+
+    /**
+     * Whose number a message to a record goes out from: the record owner's
+     * when it is connected - otherwise the sender's own, so a super admin can
+     * message a team member's leads from the company number. The message is
+     * logged under that same account, which is where its webhook statuses
+     * (delivered / read / replied) arrive and look for it.
+     */
+    public static function senderFor(int $ownerId, int $senderId): int
+    {
+        if ($ownerId === $senderId || self::connectedFor($ownerId) || ! self::connectedFor($senderId)) {
+            return $ownerId;
+        }
+
+        return $senderId;
+    }
+
     /**
      * The URL Meta must call for this user's webhooks. Built on the saved
      * public URL when there is one - a page opened on localhost would
@@ -65,7 +89,54 @@ class WhatsappSetting extends Model
     public function canSend(): bool
     {
         return $this->is_active
-            && filled($this->phone_number_id)
-            && filled($this->getRawOriginal('access_token'));
+            && filled($this->sendingPhoneNumberId())
+            && filled($this->sendingToken());
+    }
+
+    // ── Sending credentials ────────────────────────────────────────────────
+    // A number connected through Embedded Signup (wa_accounts) wins; the
+    // Phone Number ID / token typed into this form are the fallback.
+
+    /** Memo for account(); false = looked up, none connected. Not a column. */
+    private WaAccount|false|null $connectedAccount = null;
+
+    /** The owner's number connected through Embedded Signup, if any. */
+    public function account(): ?WaAccount
+    {
+        if ($this->connectedAccount === null) {
+            $this->connectedAccount = ($this->user_id ? WaAccount::activeFor((int) $this->user_id) : null) ?? false;
+        }
+
+        return $this->connectedAccount ?: null;
+    }
+
+    public function sendingPhoneNumberId(): ?string
+    {
+        return $this->account()?->phone_number_id ?: ($this->phone_number_id ?: null);
+    }
+
+    public function sendingBusinessAccountId(): ?string
+    {
+        return $this->account()?->waba_id ?: ($this->business_account_id ?: null);
+    }
+
+    /** Null when there is none - or when it cannot be decrypted here. */
+    public function sendingToken(): ?string
+    {
+        if ($account = $this->account()) {
+            return $account->readableToken();
+        }
+
+        try {
+            return $this->access_token ?: null;
+        } catch (DecryptException) {
+            return null;
+        }
+    }
+
+    /** Every Phone Number ID whose webhooks belong to this user. */
+    public function ownPhoneNumberIds(): array
+    {
+        return array_values(array_unique(array_filter([$this->phone_number_id, $this->account()?->phone_number_id])));
     }
 }

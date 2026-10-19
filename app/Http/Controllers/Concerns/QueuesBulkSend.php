@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\EmailTemplate;
+use App\Models\User;
+use App\Models\WhatsappSetting;
 use App\Services\EmailBulkService;
 use App\Services\WhatsappBulkService;
 use App\Support\EmailHtml;
@@ -84,33 +86,55 @@ trait QueuesBulkSend
             return $this->bulkFail("{$count} contacts match - one bulk send can have at most {$max}. Narrow the filters and send in parts.");
         }
 
-        $records = $query->get();
-        $owners  = $records->pluck('user_id')->unique();
+        $records  = $query->get();
+        $owners   = $records->pluck('user_id')->unique()->values();
+        $ownerId  = (int) $owners->first();
+        $senderId = (int) $request->user()->id;
 
-        // Each message goes out from its owner's WhatsApp number and mailbox,
-        // so one bulk send cannot span two users' workspaces.
-        if ($owners->count() > 1) {
+        // WhatsApp goes out from one number: the owner's when it is connected,
+        // else the sender's own - a super admin messaging a team member's leads
+        // from the company number (WhatsappSetting::senderFor). Contacts of
+        // several users can only share the sender's number.
+        $waSender = null;
+        if ($whatsapp) {
+            $waSender = $owners->count() === 1
+                ? WhatsappSetting::senderFor($ownerId, $senderId)
+                : (WhatsappSetting::connectedFor($senderId) ? $senderId : null);
+        }
+
+        // An email goes out from its owner's mailbox, so one email send cannot
+        // span two users' workspaces.
+        if (($email && $owners->count() > 1) || ($whatsapp && $waSender === null)) {
             return $this->bulkFail("These contacts belong to different users. Select one user's contacts at a time.");
         }
 
-        $skip = $request->boolean('skip_contacted');
+        // Neither number can send. Name the owner: a super admin would otherwise
+        // read "not connected" about their own, working, connection.
+        if ($whatsapp && ! WhatsappSetting::connectedFor($waSender)) {
+            return $this->bulkFail($waSender === $senderId
+                ? 'WhatsApp is not connected for your account. Connect it under Settings > WhatsApp.'
+                : 'WhatsApp is not connected for ' . (User::find($waSender)?->name ?? 'their owner')
+                    . ' (these contacts are theirs) or for you. Connect it under Settings > WhatsApp.');
+        }
+
+        $skip     = $request->boolean('skip_contacted');
+        $contacts = $records->map(fn (Model $record) => $toContact($record));
 
         try {
-            [$waSummary, $emailSummary] = $this->access()->runAs((int) $owners->first(), function () use ($records, $toContact, $whatsapp, $email, $skip) {
-                $contacts = $records->map(fn (Model $record) => $toContact($record));
+            // Checked before anything is queued, so a missing mailbox cannot
+            // leave a WhatsApp + email send half done. WhatsappBulkService
+            // checks its own connection before it queues anything.
+            if ($email) {
+                $this->access()->runAs($ownerId, fn () => app(EmailBulkService::class)->ensureReady());
+            }
 
-                // Checked before anything is queued, so a missing mailbox cannot
-                // leave a WhatsApp + email send half done. WhatsappBulkService
-                // checks its own connection before it queues anything.
-                if ($email) {
-                    app(EmailBulkService::class)->ensureReady();
-                }
+            $waSummary = $whatsapp
+                ? $this->access()->runAs($waSender, fn () => app(WhatsappBulkService::class)->queue($contacts, $whatsapp['template'], $whatsapp['interval'], $skip))
+                : null;
 
-                return [
-                    $whatsapp ? app(WhatsappBulkService::class)->queue($contacts, $whatsapp['template'], $whatsapp['interval'], $skip) : null,
-                    $email ? app(EmailBulkService::class)->queue($contacts, $email['email'], $email['interval'], $skip) : null,
-                ];
-            });
+            $emailSummary = $email
+                ? $this->access()->runAs($ownerId, fn () => app(EmailBulkService::class)->queue($contacts, $email['email'], $email['interval'], $skip))
+                : null;
         } catch (RuntimeException $e) {
             return $this->bulkFail($e->getMessage());
         }

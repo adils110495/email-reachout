@@ -230,7 +230,8 @@ hoti hain, duplicate nahi banti.
 
 ## WhatsApp tables
 
-3 migrations, `2026_10_15_*` (`000003` = bulk ke `batch_id` + `params`). Module detail: [modules/whatsapp.md](modules/whatsapp.md)
+3 migrations, `2026_10_15_*` (`000003` = bulk ke `batch_id` + `params`), aur Embedded Signup ke 2,
+`2026_10_19_*` (`wa_accounts`, `whatsapp_contacts` + `whatsapp_messages.direction`). Module detail: [modules/whatsapp.md](modules/whatsapp.md)
 
 ### `serpapi_settings` — har user ki SerpAPI key
 
@@ -271,7 +272,8 @@ Migration `2026_10_16_000003`. Detail: [modules/settings.md](modules/settings.md
 | `cash_lead_id` | FK → cash_leads, **nullOnDelete** | Kis deal ko |
 | `contact_name` | string, nullable | **Snapshot** — record delete ho to bhi log padhne layak |
 | `phone` | string(20) | Normalised digits, `+` nahi (`919876543210`) |
-| `channel` | string(10) | `api` (Cloud API) / `link` (wa.me) |
+| `channel` | string(10) | `api` (Cloud API) / `link` (wa.me) / `phone` (Business app — echo ya history) |
+| `direction` | string(3), default `out` | `out` = humne / phone app ne bheja, `in` = history me aaya hua (status `received`). Live replies pehle jaise `reply_body` me |
 | `type` | string(10) | `template` / `text` |
 | `batch_id` | uuid, indexed, nullable | Bulk send — ek bulk ke saare messages ka same |
 | `template_name`, `template_language` | nullable | Template message ho to |
@@ -285,6 +287,41 @@ Migration `2026_10_16_000003`. Detail: [modules/settings.md](modules/settings.md
 
 **Index:** `(user_id, phone)` — incoming reply par "is number ko last message kaunsa gaya" dhoondhna.
 `phone` naam isliye (`to` nahi) kyunki `TO` MySQL ka reserved word hai.
+
+### `wa_accounts` — Embedded Signup se juda number
+
+| Column | Type | Kaam |
+|---|---|---|
+| `user_id` | FK, cascade | Owner (multi-user) |
+| `waba_id` | string(32), indexed | WhatsApp Business Account |
+| `phone_number_id` | string(32), **unique**, nullable | Ek number = ek owner |
+| `display_phone_number`, `verified_name` | nullable | Meta se (`GET /{phone_number_id}`) |
+| `business_id` | string(32), nullable | Meta Business portfolio |
+| `access_token` | text, **encrypted** | Code exchange wala business token — kabhi log nahi |
+| `token_type`, `token_expires_at` | nullable | 60 din wala token — expiry settings me dikhti hai |
+| `two_step_pin` | text, **encrypted**, nullable | Sirf `FINISH` (naya number `register`) par |
+| `is_coexistence` | bool | Business app ke saath chal raha number |
+| `onboarding_event` | string(64) | `FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING` / `FINISH` / `FINISH_ONLY_WABA` / `UNKNOWN` |
+| `contacts_sync_requested_at`, `history_sync_requested_at` | timestamp | `smb_app_data` kab maanga |
+| `onboarded_at` | timestamp | Aakhri connect — Meta ki 24h sync window yahan se |
+| `history_status` | string(16), nullable | `requested` / `importing` / `complete` / `declined` |
+| `status` | string(16) | `connected` / `disconnected` |
+| `last_error` | text, nullable | Sync warnings |
+
+Bhejte waqt `WhatsappSetting` pehle owner ka **connected** `wa_accounts` row padhta hai
+(`sendingPhoneNumberId()`, `sendingToken()`, `sendingBusinessAccountId()`), na ho to apne fields.
+
+### `whatsapp_contacts` — Business app ke contacts
+
+| Column | Type | Kaam |
+|---|---|---|
+| `user_id` | FK, cascade | Owner |
+| `phone` | string(20) | Normalised digits. **Unique** `(user_id, phone)` — upsert |
+| `name` | nullable | Phone ka naam (`smb_app_state_sync`). History naam overwrite nahi karti |
+| `source` | string(16) | `app` (contacts sync) / `history` (sirf chat me mila) |
+| `removed_at` | timestamp, nullable | Phone se delete hua |
+
+Leads / GMB Leads me copy **nahi** hote — WhatsApp module ke andar hi rehte hain.
 
 ---
 

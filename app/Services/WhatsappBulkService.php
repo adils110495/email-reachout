@@ -67,6 +67,7 @@ class WhatsappBulkService
             // PHP turns the digit-only keys into ints; compare as strings so
             // MySQL can use the (user_id, phone) index.
             $contacted = WhatsappMessage::whereIn('phone', array_map('strval', array_keys($recipients)))
+                ->where('direction', WhatsappMessage::DIRECTION_OUT)
                 ->whereNotIn('status', WhatsappMessage::NOT_DELIVERED)
                 ->distinct()
                 ->pluck('phone');

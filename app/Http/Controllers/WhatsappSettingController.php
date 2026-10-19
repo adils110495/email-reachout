@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\WaAccount;
+use App\Models\WhatsappContact;
+use App\Models\WhatsappMessage;
 use App\Models\WhatsappSetting;
+use App\Services\WhatsappEmbeddedSignupService;
 use App\Services\WhatsappService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +20,7 @@ use Illuminate\View\View;
  */
 class WhatsappSettingController extends Controller
 {
-    public function index(): View
+    public function index(WhatsappEmbeddedSignupService $signup): View
     {
         $setting = $this->ownSetting();
 
@@ -24,6 +28,19 @@ class WhatsappSettingController extends Controller
             'setting'    => $setting,
             'webhookUrl' => $setting->callbackUrl(),
             'apiVersion' => config('services.whatsapp.api_version'),
+            // Embedded Signup: the user's connected numbers, and what the button needs.
+            // App id and config id are public; the secret stays on the server.
+            'waAccounts'    => WaAccount::mine()->latest('id')->get(),
+            'embedded'      => [
+                'ready'    => $signup->configured(),
+                'appId'    => (string) config('services.whatsapp.meta_app_id'),
+                'configId' => (string) config('services.whatsapp.es_config_id'),
+            ],
+            'appWebhookUrl' => route('webhooks.meta-whatsapp'),
+            'syncCounts'    => [
+                'contacts' => WhatsappContact::mine()->whereNull('removed_at')->count(),
+                'messages' => WhatsappMessage::mine()->where('channel', WhatsappMessage::CHANNEL_PHONE)->count(),
+            ],
         ]);
     }
 

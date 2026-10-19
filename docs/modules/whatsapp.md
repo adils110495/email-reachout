@@ -135,7 +135,26 @@ isliye jo list me dikh raha hai, bilkul wahi rows jaati hain.
 - **Skip contacts already messaged** (default on) — jis number ko pehle message gaya (failed / cancelled chhod kar) wo skip. Email channel me yahi "already emailed" hai.
 - Ek hi number (ya email address) do baar list me ho → ek hi message. Bina usable number / address wale skip.
 - Max `WHATSAPP_BULK_MAX` (default **250**) contacts per bulk — Meta naye number ko din me 250 conversation shuru karne deta hai. Email channel bhi isi limit me hai.
-- Saare contacts **ek hi user** ke hone chahiye (message owner ke number / mailbox se jata hai). Super Admin ko alag-alag users ke contacts ek saath bhejne ho to select karke bhejna hoga.
+- WhatsApp ek hi number se jaata hai: contacts ke owner ka (connected ho to), warna bhejne wale ka apna. Alag-alag users ke contacts ek saath tabhi jaate hain jab bhejne wale ka WhatsApp connected ho (sab usi number se). **Email** owner ke mailbox se jaata hai, isliye email channel me saare contacts ek hi user ke hone chahiye.
+
+### Kiske number se — owner ya aap?
+
+Super Admin sabke GMB leads / deals dekhta hai, lekin har lead kisi user ki hoti hai. Message
+kis number se jaaye (`WhatsappSetting::senderFor($ownerId, $senderId)`):
+
+| Owner ka WhatsApp | Aapka (bhejne wale ka) | Kisse jaata hai |
+|---|---|---|
+| Connected | kuch bhi | **Owner** ke number se, owner ke log me |
+| Connected nahi | Connected | **Aapke** number se, **aapke** log me |
+| Connected nahi | Connected nahi | Nahi jaata — "WhatsApp is not connected for *Nazim* (these contacts are theirs) or for you" |
+
+- Modal me template ke neeche likha aata hai: **"Sends from your WhatsApp number."** ya "Sends from Nazim's WhatsApp number." (`/whatsapp/templates` ka `from`).
+- Message usi account ke log me banta hai jiske number se gaya — kyunki delivered / read / reply ka webhook usi account par aata hai aur wahin message dhoondhta hai. Matlab Super Admin ke number se gaya message team member ki WhatsApp list me nahi, Super Admin ki list me dikhega.
+- Single "Send WhatsApp", "Open in WhatsApp" aur bulk — teeno par yahi rule.
+
+> Pehle message hamesha owner ke number se jaata tha. Super Admin ka apna WhatsApp connected
+> hone ke bawajood, team member ke leads par modal "The WhatsApp Cloud API is not connected for
+> this account" dikhata tha — templates owner ke (khaali) account se aate the.
 
 ### Kaise chalta hai
 
@@ -204,7 +223,7 @@ Meta webhook  ├──→ delivered   (delivered_at)
 
 - Status sirf **aage** badhta hai — late aaya "delivered" kabhi "read" ko wapas nahi karta (`WhatsappMessage::applyStatus()`).
 - Reply us number ko gaye **latest** message par lagta hai; sirf **pehla** reply record + notify hota hai (chat feed nahi banana).
-- Phone se ya kisi aur tool se bheje messages ka status ignore — wo humare log me hain hi nahi.
+- Kisi aur tool se bheje messages ka status ignore — wo humare log me hain hi nahi. Business app (coexistence) se bheje messages **echo** webhook se log me aate hain — [Embedded Signup](#embedded-signup--whatsapp-business-app-coexistence) dekho.
 
 ### Webhook set karna — Settings › WhatsApp › Webhook card
 
@@ -241,6 +260,160 @@ Processing `runAs(owner)` me hoti hai — webhook sirf usi user ke messages chho
 
 ---
 
+## Embedded Signup — WhatsApp Business App (Coexistence)
+
+**Kahan:** Settings › WhatsApp › **WhatsApp Business App** card › **Connect WhatsApp Business App**
+
+User ka jo number pehle se phone ke **WhatsApp Business app** me chal raha hai, wahi number
+Cloud API se jud jaata hai — **app delete nahi hota**. Dono saath chalte hain:
+
+- yahan se template / bulk / text jaata hai (Cloud API),
+- phone par normal chat chalti rehti hai,
+- phone se bheje messages (**echoes**), purani chats (**history**) aur phone ke **contacts** yahan aa jaate hain.
+
+Manual Phone Number ID / token wala form (WhatsApp Cloud API card) waise hi hai — number
+connect hai to bhejna **connected number se**, warna purane form ke credentials se.
+
+### Flow
+
+```
+Button  →  FB.login (config_id, response_type=code, featureType=whatsapp_business_app_onboarding)
+              │  popup: business choose → "connect existing WhatsApp Business app" → phone par QR / confirm
+              │
+Browser ←── window "message" WA_EMBEDDED_SIGNUP  {event, waba_id, phone_number_id, business_id}
+Browser ←── FB.login callback                    {authResponse.code}
+              │  (dono kisi bhi order me — merge karke ek hi POST)
+              ▼
+POST /api/wa/embedded-signup  (CSRF)                         WhatsappEmbeddedSignupController@store
+   a) code → business token       GET  oauth/access_token (app id + secret, sirf server par)
+      WABA check                   GET  debug_token → granular_scopes.target_ids
+   b) number                       GET  /{phone_number_id}?fields=display_phone_number,verified_name
+   c) webhooks                     POST /{waba_id}/subscribed_apps
+   d) coexistence                  POST /{phone_number_id}/smb_app_data  sync_type=smb_app_state_sync  (contacts)
+                                   POST /{phone_number_id}/smb_app_data  sync_type=history             (chats)
+                                   ❌ /register KABHI nahi — app wala number already registered hai
+      naya number (FINISH)         POST /{phone_number_id}/register  pin = random 6 digit (screen par dikhta hai)
+   e) save                         wa_accounts (token encrypted) + whatsapp_settings row active
+```
+
+| Event (popup ka message) | Matlab | Server kya karta hai |
+|---|---|---|
+| `FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING` | App wala number jud gaya (coexistence) | subscribe + contacts sync + history sync, **register nahi** |
+| `FINISH` | Naya number Cloud API par | subscribe + `register` (6-digit PIN) |
+| `FINISH_ONLY_WABA` | Sirf WABA, number nahi | number ho to save, warna error |
+| `CANCEL` | User ne beech me band kiya | Kuch nahi bhejta — "Cancelled at <step>" |
+| `ERROR` | Meta ki taraf se error | Meta ka message dikhata hai, kuch nahi bhejta |
+| `UNKNOWN` | Message 10 sec me nahi aaya | Sirf code bhejta hai — server token se WABA aur number dhoondh leta hai; register / sync nahi, warning dikhti hai. Row me **Request sync** — Meta ne accept kiya to number coexistence maana jaata hai |
+
+- Token se jo WABA **share hi nahi hua** (`debug_token` me nahi) uska `waba_id` POST kiya to **refuse** — koi aur ka WABA id daal kar uska number nahi jod sakta.
+- Ek number = ek owner. Doosre user ne already joda hai to refuse. Wahi user dobara connect kare to row update hoti hai.
+- Sync fail ho to connection fir bhi save hota hai — warning dikhti hai, row me **Request sync** button hai.
+- Har Graph error **poori error body** (message, code, subcode, fbtrace_id) ke saath log hota hai — token, code, app secret **kabhi log nahi**.
+
+### `.env` (server — Super Admin)
+
+```dotenv
+META_APP_ID=1671673877821445
+META_APP_SECRET=                  # App settings › Basic › App Secret — sirf server par
+META_ES_CONFIG_ID=                # Facebook Login for Business › Configurations › config ka ID
+META_GRAPH_VERSION=v23.0          # Har Graph call + JS SDK; purana WHATSAPP_API_VERSION fallback hai
+WA_WEBHOOK_VERIFY_TOKEN=          # apna random secret, app-level webhook ke liye
+```
+
+Teeno `META_APP_ID`, `META_APP_SECRET`, `META_ES_CONFIG_ID` nahi hain to button nahi dikhta
+(Super Admin ko card me likha aata hai kya set karna hai, baaki users ko "administrator set
+up kare"). `.env` badalne ke baad `php artisan config:clear` (production me `config:cache`).
+
+### Meta App Dashboard — manual steps (ek baar)
+
+App: `1671673877821445` (Business type, WhatsApp product added).
+
+1. **Facebook Login for Business › Settings** (Client OAuth settings):
+   - Client OAuth login: **On**
+   - Web OAuth login: **On**
+   - Enforce HTTPS: **On**
+   - Embedded browser OAuth login: **On**
+   - Use Strict Mode for redirect URIs: **On**
+   - Allowed domains for the JavaScript SDK: `https://leads.sabright.com`
+   - Valid OAuth Redirect URIs / allowed domains: `https://leads.sabright.com/`
+2. **Facebook Login for Business › Configurations › Create from template** →
+   **"WhatsApp Embedded Signup Configuration With 60 Expiration Token"** → save → jo
+   **Configuration ID** mile wo `.env` me `META_ES_CONFIG_ID`.
+3. **App settings › Basic**: App Secret copy → `META_APP_SECRET`. App Domains me `leads.sabright.com`.
+4. **WhatsApp › Configuration › Webhook**:
+   - Callback URL: `https://leads.sabright.com/webhooks/meta/whatsapp`
+     (Settings › WhatsApp card me Super Admin ko copy button ke saath dikhta hai)
+   - Verify token: `.env` ka `WA_WEBHOOK_VERIFY_TOKEN`
+   - **Verify and save**, phir in fields ko **Subscribe** karo:
+     `messages`, `smb_message_echoes`, `history`, `smb_app_state_sync`
+5. App **Live** mode me ho, aur Advanced Access: `whatsapp_business_management`,
+   `whatsapp_business_messaging` (aur `business_management` agar configuration maange).
+   Coexistence feature Meta ki taraf se app par enabled hona chahiye (Tech Provider / Solution Partner).
+
+> Localhost par Embedded Signup nahi chalega — Facebook Login ko **https** aur allowed
+> domain chahiye. Test live domain par karo.
+
+### Webhook — `/webhooks/meta/whatsapp` (app-level)
+
+`/webhooks/whatsapp` (bina key) package ka route hai, isliye app ka apna endpoint alag path par hai.
+
+| Cheez | Kaam |
+|---|---|
+| `GET` | `hub.verify_token` = `WA_WEBHOOK_VERIFY_TOKEN` → `hub.challenge` wapas, warna 403 |
+| `POST` | `X-Hub-Signature-256` = `META_APP_SECRET` se HMAC SHA-256 → mismatch **403** |
+| Kiska hai | `metadata.phone_number_id` → `wa_accounts` (phir WABA id `entry.id`, phir `whatsapp_settings.phone_number_id`) → us user ke naam par (`runAs`) |
+| Number kisi ka nahi | Ignore, phir bhi `200` |
+| Processing error | Log, phir bhi `200` (Meta retry na kare) |
+
+Purana keyed URL `/webhooks/whatsapp/{key}` bhi chalta rehta hai, aur ab `META_APP_SECRET`
+ka signature bhi maanta hai (user ka apna App Secret bhi).
+
+| Field | Kya hota hai | Kab |
+|---|---|---|
+| `messages` | Pehle jaisa — statuses (delivered / read / failed) + incoming reply | Turant |
+| `smb_message_echoes` | Phone app se bheja message → `whatsapp_messages` me `direction=out`, channel **Phone app**, status `sent` | Turant (halka) |
+| `history` | Purani chats → `whatsapp_messages` (in / out), thread ke numbers → `whatsapp_contacts`. `progress = 100` → history **complete** + 🔔. Error `2593109` (user ne history share nahi ki) → **declined** + 🔔 ek baar | **Queue** (`ApplyWhatsappSyncJob`) |
+| `smb_app_state_sync` | Phone ke contacts → `whatsapp_contacts` (add = naam update, remove = `removed_at`) | **Queue** |
+| groups, calls, catalog, reactions, system… | Ignore | — |
+
+- **Idempotent:** har message `wamid` se ek hi baar (`insertOrIgnore`) — Meta repeat kare to duplicate nahi. Contacts `(user_id, phone)` par upsert.
+- Direction: message ka `from` business ka apna number hai to `out`, warna `in`. History ka status (`READ`, `DELIVERED`…) map hota hai; incoming = `received`.
+- **Reply logic same:** live incoming reply sirf humare **outgoing** messages par lagta hai — imported "received" rows par nahi. Bulk send ka "already contacted" check bhi sirf outgoing dekhta hai.
+- History ka naam: synced contact ka naam ho to wahi, warna number.
+
+### Contacts kahan jaate hain
+
+Phone ke contacts **`whatsapp_contacts`** table me — WhatsApp module ke andar. **Leads / GMB
+Leads me automatically copy nahi hote** (wo module ke bahar hai). Unhe leads banana ho to
+alag se decide karna hai.
+
+### Limits
+
+| Cheez | Detail |
+|---|---|
+| Sync window | Contacts / history sirf connect ke **24 ghante** ke andar maang sakte ho (Meta rule, `wa_accounts.onboarded_at` se). Uske baad **Request sync** Meta ka error dikhayega — dobara Connect karo to window fir khulti hai. `FINISH` (naya registered) number par sync nahi |
+| History | Pichhle ~6 mahine tak; user phone par "share history" mana kar sakta hai → declined |
+| Token | 60 din wala (configuration template). Row me expiry dikhti hai — 7 din se kam = laal. Expire hone se pehle **dobara Connect** karo |
+| Disconnect | Sirf yahan se bhejna band — Meta me aur phone par number juda rehta hai. Bhejna wapas purane form ke credentials par chala jaata hai |
+| Phone app | Business app har ~14 din me ek baar khulna chahiye, warna Meta coexistence band kar deta hai |
+
+### Test checklist (live domain par)
+
+1. `.env` set → `php artisan config:clear` → Settings › WhatsApp par **Connect WhatsApp Business App** button enabled dikhe.
+2. Click → Facebook popup → business choose → **"Connect your existing WhatsApp Business app"** → number choose.
+3. Phone par WhatsApp Business app me QR / confirm → "share chat history" **Allow**.
+4. Popup band → card me hara "Connected …" message; table me number, **Coexistence** badge, Contacts "requested", History "Requested".
+5. DB: `wa_accounts` me row — `is_coexistence = 1`, `status = connected`, `access_token` encrypted.
+6. `storage/logs/laravel.log` me koi `BIZ…` token / code nahi.
+7. Thodi der me History "Importing" → "Complete" + 🔔; WhatsApp log me **Phone app** channel ke messages; "Synced so far" me contacts + messages ki ginti.
+8. WhatsApp page se kisi number par **template** bhejo → phone ke Business app me wahi message dikhe.
+9. Us contact ka reply → log me **Replied**.
+10. **Phone app se** kisi ko message bhejo → WhatsApp log me naya row, channel **Phone app** (echo).
+11. Webhook check: App Dashboard › Webhooks › **Test** (`messages`) → `200`.
+12. **Disconnect** → bhejna purane form ke credentials par (ya band, agar form khaali).
+
+---
+
 ## Access control
 
 | Cheez | Kaise |
@@ -248,8 +421,9 @@ Processing `runAs(owner)` me hoti hai — webhook sirf usi user ke messages chho
 | Module | `module:whatsapp` route middleware — page, send, templates, settings sab |
 | GMB lead / deal ko message | Uske module ki access bhi chahiye (`gmb_leads` / `deals`) |
 | Record | Owner scope — kisi aur ka `id` bhejo to 404 |
-| Kis account se jata hai | Record ke **owner** ka number/token (`runAs`) — Super Admin bheje tab bhi |
+| Kis account se jata hai | Record ke **owner** ka number/token (`runAs`) — Super Admin bheje tab bhi. **Owner ka connected nahi aur bhejne wale ka hai** → bhejne wale ke number se (`WhatsappSetting::senderFor()`) — neeche dekho |
 | Settings | `mine()` — Super Admin bhi sirf apna token dekhta/badalta hai |
+| Embedded Signup | Jo signed-in hai wahi owner. `wa_accounts` `mine()` — Request sync / Disconnect sirf apne number par. App-level webhook number ke owner ke naam par chalta hai |
 | Log | `whatsapp_messages` owned — Super Admin sab dekhta hai, **User** filter ke saath |
 | Rate limit | `send` / `open-chat` par `throttle:60,1` |
 
@@ -268,6 +442,9 @@ Naye users (`modules = null`) ko module apne aap milta hai. Jin users ki modules
 6. Settings › WhatsApp › Webhook card: **Public URL** daalo (live domain ya ngrok) → Save → **Set in Meta**. Ya Meta › WhatsApp › Configuration › Webhook me Callback URL + Verify token khud paste karo. Dono case me **`messages`** field subscribe karo.
 7. WhatsApp Manager › Message templates: template banao, approve hone do.
 
+> Steps 2–6 ki jagah **Connect WhatsApp Business App** button bhi use ho sakta hai (Business
+> app wala number, bina token copy kiye) — upar [Embedded Signup](#embedded-signup--whatsapp-business-app-coexistence) dekho.
+
 > Test number (development mode) se sirf un numbers par bhej sakte ho jo API Setup me
 > "recipient" list me add hain — warna error `131030`.
 
@@ -278,7 +455,14 @@ Naye users (`modules = null`) ko module apne aap milta hai. Jin users ki modules
 ```
 app/Http/Controllers/WhatsappController.php          page, export, templates, send, open-chat
 app/Http/Controllers/WhatsappSettingController.php   connection form + test
-app/Http/Controllers/WhatsappWebhookController.php   Meta webhook (public)
+app/Http/Controllers/WhatsappWebhookController.php   Meta webhook (public): keyed per user + app-level /webhooks/meta/whatsapp
+app/Http/Controllers/WhatsappEmbeddedSignupController.php  Embedded Signup finish, Request sync, Disconnect
+app/Services/WhatsappEmbeddedSignupService.php       code exchange → number → subscribe → sync / register → save
+app/Services/WhatsappSyncService.php                 echoes, history, contacts (coexistence webhooks)
+app/Jobs/ApplyWhatsappSyncJob.php                    history / smb_app_state_sync off the webhook request
+app/Models/WaAccount.php                             number connected via Embedded Signup (token encrypted)
+app/Models/WhatsappContact.php                       contacts from the phone app / history
+public/assets/js/wa-embedded-signup.js               FB SDK, popup message + FB.login, POST to the server
 app/Http/Controllers/Concerns/QueuesBulkSend.php     bulk endpoint, WhatsApp + email (GMB + Deals controllers use it)
 app/Services/WhatsappService.php                     number, Graph API, templates, webhook
 app/Services/WhatsappBulkService.php                 bulk: queue, cancel, progress
@@ -317,11 +501,18 @@ POST  /settings/whatsapp/test       whatsapp-settings.test
 PUT   /settings/whatsapp/webhook    whatsapp-settings.webhook           public URL + verify token
 POST  /settings/whatsapp/webhook/register  whatsapp-settings.webhook-register   Set in Meta
 GET   /settings/whatsapp/webhook/status    whatsapp-settings.webhook-status     Check
+POST  /api/wa/embedded-signup       whatsapp.embedded-signup     {code, waba_id, phone_number_id, business_id, event}  (throttle)
+POST  /api/wa/accounts/{id}/sync    whatsapp.account-sync        Request sync
+DELETE /api/wa/accounts/{id}        whatsapp.account-disconnect  Disconnect
 
 // public — Meta
 GET   /webhooks/whatsapp/{key}      webhooks.whatsapp.verify
 POST  /webhooks/whatsapp/{key}      webhooks.whatsapp
+GET   /webhooks/meta/whatsapp       webhooks.meta-whatsapp.verify   WA_WEBHOOK_VERIFY_TOKEN
+POST  /webhooks/meta/whatsapp       webhooks.meta-whatsapp          META_APP_SECRET signature
 ```
+
+`/api/wa/*` web routes hain (session + CSRF + `module:whatsapp`), API token wale nahi.
 
 ## Common errors
 
@@ -333,3 +524,8 @@ POST  /webhooks/whatsapp/{key}      webhooks.whatsapp
 | `132001` | Template us language me nahi / approved nahi | WhatsApp Manager check karo |
 | `132000` | Variables ki ginti galat | Template ke saare `{{n}}` bharo |
 | `131026` | Deliver nahi hua | Number shayad WhatsApp par nahi |
+| "was not shared in the signup" | POST kiya WABA token ko grant nahi hua | Popup dobara chalao, wahi business / WABA choose karo |
+| "already connected by another user" | Number kisi aur user ke paas | Pehle wo user Disconnect kare (ya Super Admin DB se) |
+| `2593109` (history webhook) | User ne phone par history share karne se mana kiya | Kuch nahi — History "Declined"; contacts aur naye messages phir bhi aate hain |
+| smb_app_data error after 24h | Sync window band | Dobara **Connect** karo |
+| Button disabled hi rehta hai | FB SDK load nahi hua (ad blocker / firewall) | `connect.facebook.net` allow karo |

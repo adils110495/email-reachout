@@ -10,6 +10,148 @@
 
 @section('content')
 
+{{-- ===================== EMBEDDED SIGNUP (COEXISTENCE) =====================
+     Meta's popup connects the number of the WhatsApp Business app on your
+     phone to the Cloud API, and the app keeps working. The script below runs
+     the popup; WhatsappEmbeddedSignupController finishes it on the server. --}}
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card h-auto" id="waEmbedded"
+             data-ready="{{ $embedded['ready'] ? '1' : '0' }}"
+             data-app-id="{{ $embedded['appId'] }}"
+             data-config-id="{{ $embedded['configId'] }}"
+             data-version="{{ $apiVersion }}"
+             data-url="{{ route('whatsapp.embedded-signup') }}">
+            <div class="card-header py-3 d-sm-flex d-block align-items-center justify-content-between">
+                <div class="clearfix">
+                    <h4 class="card-title"><i class="bi bi-phone me-2 text-success"></i>WhatsApp Business App</h4>
+                    <p class="mb-0 fs-13">
+                        Connect the number you already use in the <strong>WhatsApp Business app</strong> - without deleting the app.
+                        Both keep working on the same number: send from here, chat on the phone, and see both in the WhatsApp log.
+                    </p>
+                </div>
+                @if($embedded['ready'])
+                    <button type="button" class="btn btn-success btn-sm m-1" id="waEmbeddedBtn" disabled>
+                        <i class="bi bi-link-45deg me-1"></i>Connect WhatsApp Business App
+                    </button>
+                @endif
+            </div>
+            <div class="card-body">
+                @unless($embedded['ready'])
+                    <div class="alert alert-info fs-13 mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        @if(auth()->user()->isSuperAdmin())
+                            Not set up on this server yet: add <code>META_APP_ID</code>, <code>META_APP_SECRET</code> and <code>META_ES_CONFIG_ID</code>
+                            to <code>.env</code> (see <em>docs/modules/whatsapp.md › Embedded Signup</em>).
+                        @else
+                            Not available yet - your administrator has to set it up first.
+                        @endif
+                    </div>
+                @endunless
+
+                <div class="fs-13 mb-3 d-none" id="waEmbeddedResult" role="status"></div>
+
+                @if($waAccounts->isNotEmpty())
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-2">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Number</th>
+                                    <th>Type</th>
+                                    <th>Contacts &amp; history</th>
+                                    <th>Token</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($waAccounts as $acc)
+                                    <tr>
+                                        <td>
+                                            <h6 class="mb-0">{{ $acc->display_phone_number ?: $acc->phone_number_id }}</h6>
+                                            <small class="text-muted">{{ $acc->verified_name }}</small>
+                                        </td>
+                                        <td>
+                                            @if($acc->is_coexistence)
+                                                <span class="badge badge-success light" title="Also stays on the WhatsApp Business app">Coexistence</span>
+                                            @else
+                                                <span class="badge badge-light light">Cloud API only</span>
+                                            @endif
+                                        </td>
+                                        <td class="fs-13">
+                                            @if($acc->is_coexistence)
+                                                <div>Contacts: {{ $acc->contacts_sync_requested_at ? 'requested ' . $acc->contacts_sync_requested_at->diffForHumans() : 'not requested' }}</div>
+                                                <div>History: {{ $acc->history_status ? ucfirst($acc->history_status) : 'not requested' }}</div>
+                                            @else
+                                                —
+                                            @endif
+                                        </td>
+                                        <td class="fs-13 {{ $acc->tokenExpiresSoon() ? 'text-danger' : '' }}">
+                                            {{ $acc->token_expires_at ? 'Expires ' . $acc->token_expires_at->format('d M Y') : 'No expiry' }}
+                                        </td>
+                                        <td>
+                                            @if($acc->status === \App\Models\WaAccount::STATUS_CONNECTED)
+                                                <span class="badge badge-success light">Connected</span>
+                                            @else
+                                                <span class="badge badge-secondary light">Disconnected</span>
+                                            @endif
+                                            @if($acc->last_error)
+                                                <div class="fs-12 text-danger mt-1 cell-wrap">{{ $acc->last_error }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            @if($acc->status === \App\Models\WaAccount::STATUS_CONNECTED)
+                                                @if($acc->canRequestSync())
+                                                    <button type="button" class="btn btn-light btn-xs wa-account-action" data-method="POST"
+                                                            data-url="{{ route('whatsapp.account-sync', $acc->id) }}"
+                                                            title="{{ $acc->inSyncWindow() ? 'Ask the phone app for its contacts and chat history again' : 'Meta only allows this in the first 24 hours after connecting' }}">
+                                                        <i class="bi bi-arrow-repeat me-1"></i>Request sync
+                                                    </button>
+                                                @endif
+                                                <button type="button" class="btn btn-light btn-xs text-danger wa-account-action" data-method="DELETE"
+                                                        data-url="{{ route('whatsapp.account-disconnect', $acc->id) }}"
+                                                        data-confirm="Stop sending from {{ $acc->display_phone_number ?: $acc->phone_number_id }} here? It stays connected in Meta and on your phone.">
+                                                    <i class="bi bi-x-lg me-1"></i>Disconnect
+                                                </button>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="fs-13 text-muted mb-0">
+                        Synced so far: <strong>{{ number_format($syncCounts['contacts']) }}</strong> contacts and
+                        <strong>{{ number_format($syncCounts['messages']) }}</strong> messages from the phone app
+                        (<a href="{{ route('whatsapp.index') }}">WhatsApp log</a>).
+                        Messages go out from the connected number; the Phone Number ID below is only used when none is connected.
+                    </p>
+                @elseif($embedded['ready'])
+                    <p class="fs-13 text-muted mb-0">
+                        Before you start: the number must be on the <strong>WhatsApp Business app</strong> (not personal WhatsApp) and the app up to date.
+                        Keep the phone at hand - Meta asks you to confirm on it.
+                    </p>
+                @endif
+
+                {{-- Platform setting, only for whoever configures the Meta app --}}
+                @if(auth()->user()->isSuperAdmin())
+                    <div class="border-top mt-3 pt-3 fs-13">
+                        <label class="form-label mb-1" for="waAppWebhookUrl">App webhook (Meta App Dashboard › WhatsApp › Configuration)</label>
+                        <div class="input-group mb-1">
+                            <input type="text" class="form-control" id="waAppWebhookUrl" value="{{ $appWebhookUrl }}" readonly>
+                            <button type="button" class="btn btn-light btn-copy" data-copy="#waAppWebhookUrl" title="Copy" aria-label="Copy app webhook URL"><i class="bi bi-clipboard"></i></button>
+                        </div>
+                        <span class="text-muted">
+                            Verify token: <code>WA_WEBHOOK_VERIFY_TOKEN</code> from <code>.env</code>. Subscribe the fields
+                            <code>messages</code>, <code>smb_message_echoes</code>, <code>history</code> and <code>smb_app_state_sync</code>.
+                        </span>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     {{-- Connection --}}
     <div class="col-xl-7">
@@ -180,7 +322,7 @@
                     Graph API version: <code>{{ $apiVersion }}</code>
                     {{-- Only someone with server access can change it, so only they need to know where. --}}
                     @if(auth()->user()->isSuperAdmin())
-                        <span class="d-block fs-12 mt-1">Set by <code>WHATSAPP_API_VERSION</code> in <code>.env</code>.</span>
+                        <span class="d-block fs-12 mt-1">Set by <code>META_GRAPH_VERSION</code> in <code>.env</code>.</span>
                     @endif
                 </p>
             </div>
@@ -191,6 +333,10 @@
 @endsection
 
 @push('scripts')
+@if($embedded['ready'])
+    {{-- Meta Embedded Signup (Facebook JS SDK + the popup's message) --}}
+    <script src="{{ asset('assets/js/wa-embedded-signup.js') }}?v={{ filemtime(public_path('assets/js/wa-embedded-signup.js')) }}"></script>
+@endif
 <script>
     (function () {
         const form   = document.getElementById('waSettingsForm');
@@ -252,6 +398,36 @@
                     hookResult.textContent = 'Request failed.';
                 } finally {
                     hookBtn.disabled = false;
+                }
+            });
+        });
+
+        // Connected numbers: Request sync / Disconnect - both answer { ok, message }.
+        document.querySelectorAll('.wa-account-action').forEach(function (actionBtn) {
+            actionBtn.addEventListener('click', async function () {
+                if (actionBtn.dataset.confirm && ! window.confirm(actionBtn.dataset.confirm)) return;
+
+                const out = document.getElementById('waEmbeddedResult');
+                actionBtn.disabled = true;
+
+                try {
+                    const res  = await fetch(actionBtn.dataset.url, {
+                        method: actionBtn.dataset.method,
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        },
+                    });
+                    const json = await res.json().catch(function () { return {}; });
+                    out.className = 'fs-13 mb-3 ' + (json.ok ? 'text-success' : 'text-danger');
+                    out.textContent = json.message || (res.ok ? 'Done.' : 'Request failed.');
+                    if (json.ok) window.setTimeout(function () { window.location.reload(); }, 1500);
+                } catch (e) {
+                    out.className = 'fs-13 mb-3 text-danger';
+                    out.textContent = 'Request failed.';
+                } finally {
+                    actionBtn.disabled = false;
                 }
             });
         });

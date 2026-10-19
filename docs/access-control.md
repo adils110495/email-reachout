@@ -57,7 +57,7 @@ Kuch cheezein personal hain, Super Admin ke liye bhi:
 | Kahan | Kyun |
 |---|---|
 | Mail Settings (SMTP/IMAP) | Admin apne mailbox se bheje, kisi user ke credentials se nahi |
-| WhatsApp Settings | Same — admin apne number/token se, kisi user ke token se nahi |
+| WhatsApp Settings | Same — admin apne number/token se, kisi user ke token se nahi. Embedded Signup ke numbers (`wa_accounts`) bhi `mine()` — admin kisi aur ka number Request sync / Disconnect nahi kar sakta (404) |
 | SerpAPI Settings | Search apne SerpAPI credits se — kisi user ki key admin ko nahi dikhti, na use hoti hai |
 | Notification bell | Har kisi ke job notifications admin ki bell me nahi aane chahiye |
 | Verifier "Clear history" | Ek click se sab users ki history na ude |
@@ -81,7 +81,7 @@ Record jis user ka hai, kaam **usi ke naam par** hota hai (`runAs(owner)`):
 | Action | Kis ke naam par |
 |---|---|
 | Lead ko email bhejna | Lead ka owner — uska SMTP, uski address, uski Email Activity |
-| GMB lead / deal ko WhatsApp | Record ka owner — uska WhatsApp number/token, uska WhatsApp log |
+| GMB lead / deal ko WhatsApp | Record ka owner — uska WhatsApp number/token, uska WhatsApp log. Owner ka connected nahi aur Super Admin ka hai → Super Admin ke number se, uske log me (`WhatsappSetting::senderFor()`) |
 | Deals ka Bulk Send (email) | Deals ka owner — uska SMTP, Sent folder, Email Activity. Template attachments signed-in user ke template se hi lete hain |
 | Finder result "Save" | Row ka owner — lead usi ke workspace me |
 | "Mark as Deal" | Lead / GMB lead ka owner |
@@ -100,6 +100,7 @@ user ka hai, aur `ActAsOwner` job middleware use usi user ke roop me chalata hai
 | `ProcessBulkJob` | `userId` = bulk ka owner (har chunk aage pass karta hai) |
 | `ScrapeLeadEmailJob`, `SendEmailJob` | `lead->user_id` |
 | `SendWhatsappMessageJob`, `SendBulkEmailJob` | `userId` = bulk ke contacts ka owner (sab ek hi user ke hone chahiye) |
+| `ApplyWhatsappSyncJob` | `userId` = webhook ke `phone_number_id` ka owner (`wa_accounts` → `whatsapp_settings`) |
 
 - Bina owner wala job (deploy se pehle queue me pada) → **fail** hota hai, chupchap kuch galat nahi karta.
 - Owner delete ho chuka → job drop.

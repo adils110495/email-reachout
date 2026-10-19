@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\ApplyWhatsappSyncJob;
 use App\Models\AppNotification;
 use App\Models\WhatsappMessage;
 use App\Models\WhatsappSetting;
@@ -142,8 +143,8 @@ class WhatsappService
 
     private function send(WhatsappSetting $setting, array $message): string
     {
-        $response = $this->graph((string) $setting->access_token)->post(
-            $this->url($setting->phone_number_id . '/messages'),
+        $response = $this->graph((string) $setting->sendingToken())->post(
+            $this->url($setting->sendingPhoneNumberId() . '/messages'),
             ['messaging_product' => 'whatsapp', 'recipient_type' => 'individual'] + $message,
         );
 
@@ -172,8 +173,8 @@ class WhatsappService
         }
 
         return Cache::remember($key, self::TEMPLATE_CACHE_TTL, function () use ($setting) {
-            $response = $this->graph((string) $setting->access_token)->get(
-                $this->url($setting->business_account_id . '/message_templates'),
+            $response = $this->graph((string) $setting->sendingToken())->get(
+                $this->url($setting->sendingBusinessAccountId() . '/message_templates'),
                 ['fields' => 'name,language,status,category,components', 'limit' => 200],
             );
 
@@ -188,9 +189,10 @@ class WhatsappService
         });
     }
 
+    /** Per setting and Business Account - connecting another number must not show the old one's templates. */
     public static function templateCacheKey(WhatsappSetting $setting): string
     {
-        return 'whatsapp-templates:' . $setting->id;
+        return 'whatsapp-templates:' . $setting->id . ':' . $setting->sendingBusinessAccountId();
     }
 
     /**
@@ -224,7 +226,7 @@ class WhatsappService
     {
         $waba = $this->businessAccountId($setting, 'to set the webhook');
 
-        $response = $this->graph((string) $setting->access_token)->post(
+        $response = $this->graph((string) $setting->sendingToken())->post(
             $this->url($waba . '/subscribed_apps'),
             ['override_callback_uri' => $callbackUrl, 'verify_token' => $verifyToken],
         );
@@ -247,7 +249,7 @@ class WhatsappService
     {
         $waba = $this->businessAccountId($setting, 'to check the webhook');
 
-        $response = $this->graph((string) $setting->access_token)->get($this->url($waba . '/subscribed_apps'));
+        $response = $this->graph((string) $setting->sendingToken())->get($this->url($waba . '/subscribed_apps'));
 
         $this->throwIfFailed($response);
 
@@ -269,9 +271,9 @@ class WhatsappService
     }
 
     /**
-     * Apply one webhook delivery: delivery / read / failed statuses for messages
-     * sent from here, and incoming messages as replies. Runs as the setting's
-     * owner, so only that user's messages can be touched.
+     * Apply one webhook delivery to one user (the keyed /webhooks/whatsapp/{key}
+     * endpoint). Runs as the setting's owner, so only that user's messages can
+     * be touched.
      */
     public function applyWebhook(array $payload, WhatsappSetting $setting): void
     {
@@ -280,22 +282,48 @@ class WhatsappService
                 $value = $change['value'] ?? [];
 
                 // One Meta app can serve several numbers - skip the ones that are not this user's.
-                $phoneNumberId = $value['metadata']['phone_number_id'] ?? null;
-                if ($phoneNumberId && $setting->phone_number_id && (string) $phoneNumberId !== $setting->phone_number_id) {
+                $phoneNumberId = (string) ($value['metadata']['phone_number_id'] ?? '');
+                $own           = $setting->ownPhoneNumberIds();
+                if ($phoneNumberId !== '' && $own !== [] && ! in_array($phoneNumberId, $own, true)) {
                     continue;
                 }
 
-                foreach ($value['statuses'] ?? [] as $status) {
-                    $this->applyStatus($status);
-                }
-
-                $names = collect($value['contacts'] ?? [])
-                    ->mapWithKeys(fn (array $c) => [(string) ($c['wa_id'] ?? '') => $c['profile']['name'] ?? null]);
-
-                foreach ($value['messages'] ?? [] as $incoming) {
-                    $this->applyIncoming($incoming, $names[(string) ($incoming['from'] ?? '')] ?? null);
-                }
+                $this->applyChange((string) ($change['field'] ?? 'messages'), $value, $setting);
             }
+        }
+    }
+
+    /**
+     * One change of a webhook, by its field. Runs as the number's owner.
+     *
+     *   messages            statuses of messages sent from here; incoming messages as replies
+     *   smb_message_echoes  coexistence: messages sent from the WhatsApp Business app on the phone
+     *   history             coexistence: past chats, in chunks - heavy, so queued
+     *   smb_app_state_sync  coexistence: the phone's contacts added / changed / removed - queued
+     *
+     * Every handler is idempotent: Meta delivers a webhook more than once.
+     */
+    public function applyChange(string $field, array $value, WhatsappSetting $setting): void
+    {
+        match ($field) {
+            'smb_message_echoes'            => app(WhatsappSyncService::class)->applyEchoes($value, $setting),
+            'history', 'smb_app_state_sync' => ApplyWhatsappSyncJob::dispatch((int) $setting->user_id, $field, $value)->onQueue('default'),
+            default                         => $this->applyMessages($value),
+        };
+    }
+
+    /** The "messages" field: statuses, and incoming messages as replies. */
+    private function applyMessages(array $value): void
+    {
+        foreach ($value['statuses'] ?? [] as $status) {
+            $this->applyStatus($status);
+        }
+
+        $names = collect($value['contacts'] ?? [])
+            ->mapWithKeys(fn (array $c) => [(string) ($c['wa_id'] ?? '') => $c['profile']['name'] ?? null]);
+
+        foreach ($value['messages'] ?? [] as $incoming) {
+            $this->applyIncoming($incoming, $names[(string) ($incoming['from'] ?? '')] ?? null);
         }
     }
 
@@ -332,8 +360,10 @@ class WhatsappService
         }
 
         // Only a message that actually went out can have been answered - not one
-        // still waiting in a bulk send, nor one that was cancelled.
+        // still waiting in a bulk send, nor one that was cancelled, nor an
+        // imported message the contact sent.
         $message = WhatsappMessage::where('phone', $from)
+            ->where('direction', WhatsappMessage::DIRECTION_OUT)
             ->whereNotIn('status', [...WhatsappMessage::PENDING, WhatsappMessage::STATUS_CANCELLED])
             ->latest('id')
             ->first();
@@ -357,7 +387,8 @@ class WhatsappService
         );
     }
 
-    private function incomingText(array $incoming): string
+    /** A message's text as the log shows it - "[image] caption" for anything but text. */
+    public function incomingText(array $incoming): string
     {
         $type = (string) ($incoming['type'] ?? 'text');
 
@@ -376,11 +407,11 @@ class WhatsappService
     /** The WABA id; templates and webhooks live on it, not on the phone number. */
     private function businessAccountId(WhatsappSetting $setting, string $purpose): string
     {
-        if (blank($setting->business_account_id)) {
+        if (blank($setting->sendingBusinessAccountId())) {
             throw new RuntimeException("Add your WhatsApp Business Account ID under Settings > WhatsApp {$purpose}.");
         }
 
-        return (string) $setting->business_account_id;
+        return (string) $setting->sendingBusinessAccountId();
     }
 
     private function graph(string $token): PendingRequest

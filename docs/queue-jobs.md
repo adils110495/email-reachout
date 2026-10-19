@@ -40,6 +40,7 @@ docker compose ps # service chal raha hai?
 | `ProcessBulkJob` | **Naya** — bulk upload | `default` | 2 | 85s |
 | `SendWhatsappMessageJob` | Bulk WhatsApp ka ek message (delay = gap × position) | `default` | **1** (retry = double message) | 60s |
 | `SendBulkEmailJob` | Bulk Send (Deals) ka ek email (delay = gap × position) | `emails` | **1** (retry = double email) | 85s |
+| `ApplyWhatsappSyncJob` | Coexistence webhook `history` / `smb_app_state_sync` — webhook turant `200`, import yahan | `default` | 3 (backoff 30s — idempotent, retry safe) | 85s |
 
 `SendBulkEmailJob` ko chhod kar sab `default` par jaate hain. Worker `--queue=emails,default`
 dono consume karta hai — **extra setup nahi chahiye**.

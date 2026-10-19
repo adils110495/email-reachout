@@ -26,7 +26,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * (templates, send through the Cloud API, open the chat with wa.me).
  *
  * A message to a GMB lead or deal is sent as that record's owner - their
- * WhatsApp number, their log - also when a super admin sends it.
+ * WhatsApp number, their log - also when a super admin sends it. When the
+ * owner has no connected number, it goes out from the sender's own instead
+ * (WhatsappSetting::senderFor).
  */
 class WhatsappController extends Controller
 {
@@ -141,21 +143,45 @@ class WhatsappController extends Controller
      */
     public function templates(Request $request): JsonResponse
     {
-        [, $ownerId] = $this->recipient($request);
+        [$record, $senderId] = $this->recipient($request);
+        $isMe = $senderId === $request->user()->id;
 
-        return $this->access()->runAs($ownerId, function () use ($request) {
+        return $this->access()->runAs($senderId, function () use ($request, $record, $isMe) {
             $setting = WhatsappSetting::forActingUser();
 
             if (! $setting?->canSend()) {
-                return $this->fail('The WhatsApp Cloud API is not connected for this account.');
+                return $this->fail($this->notConnectedMessage($record, $request));
             }
 
             try {
-                return response()->json(['ok' => true, 'templates' => $this->whatsapp->templates($setting, $request->boolean('refresh'))]);
+                return response()->json([
+                    'ok'        => true,
+                    'templates' => $this->whatsapp->templates($setting, $request->boolean('refresh')),
+                    // Shown in the modal, so nobody wonders which number it goes out from.
+                    'from'      => $isMe ? 'your WhatsApp number' : (User::find($setting->user_id)?->name ?? 'the owner') . "'s WhatsApp number",
+                ]);
             } catch (\Throwable $e) {
                 return $this->fail('Could not load templates: ' . $e->getMessage());
             }
         });
+    }
+
+    /**
+     * Neither the record's owner nor the sender has the Cloud API connected.
+     * Name the owner: a super admin looking at a team member's leads would
+     * otherwise read "not connected" about their own, working, connection.
+     */
+    private function notConnectedMessage(GmbLead|CashLead|null $record, Request $request): string
+    {
+        $ownerId = $record?->user_id;
+
+        if ($ownerId && $ownerId !== $request->user()->id) {
+            $owner = User::find($ownerId)?->name ?? 'their owner';
+
+            return "WhatsApp is not connected for {$owner} (these contacts are theirs) or for you. Connect it under Settings > WhatsApp.";
+        }
+
+        return 'The WhatsApp Cloud API is not connected for your account. Connect it under Settings > WhatsApp.';
     }
 
     /**
@@ -274,7 +300,8 @@ class WhatsappController extends Controller
 
     /**
      * The record a message is for - a GMB lead, a deal, or none for a typed-in
-     * number - and the user it is sent as. Records come through the owner scope,
+     * number - and the user it is sent as: the owner, or the sender when only
+     * the sender has WhatsApp connected. Records come through the owner scope,
      * so an id from someone else's workspace is a 404.
      *
      * @return array{0: GmbLead|CashLead|null, 1: int}
@@ -296,7 +323,10 @@ class WhatsappController extends Controller
             'direct' => null,
         };
 
-        return [$record, $record?->user_id ?? $request->user()->id];
+        // The owner's number when it is connected, else the sender's own (WhatsappSetting::senderFor).
+        $ownerId = $record?->user_id ?? $request->user()->id;
+
+        return [$record, WhatsappSetting::senderFor((int) $ownerId, (int) $request->user()->id)];
     }
 
     /** The record columns of a new message: its link and the contact name snapshot. */

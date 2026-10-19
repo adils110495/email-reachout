@@ -131,7 +131,10 @@
                             </td>
                             <td class="text-nowrap">
                                 {{ $message->sent_at?->format('d M Y, h:i A') ?? '—' }}
-                                <div class="fs-12 text-muted">{{ $message->channel === \App\Models\WhatsappMessage::CHANNEL_API ? 'Cloud API' : 'wa.me link' }}</div>
+                                <div class="fs-12 text-muted">
+                                    {{ \App\Models\WhatsappMessage::CHANNEL_LABELS[$message->channel] ?? $message->channel }}
+                                    @if($message->direction === \App\Models\WhatsappMessage::DIRECTION_IN) · received @endif
+                                </div>
                             </td>
                             <td>
                                 <span class="badge {{ $badge['class'] }} light text-nowrap">

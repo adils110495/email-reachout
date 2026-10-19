@@ -57,16 +57,24 @@ Details: [modules/verifier.md](modules/verifier.md)
 ```env
 # ── WhatsApp ───────────────────────────────────────────────────
 
-# Meta Graph API version. Meta har version ~2 saal baad retire karta hai.
-WHATSAPP_API_VERSION=v25.0
+# Meta Graph API version — har Graph call + Facebook JS SDK. Meta har version ~2 saal baad
+# retire karta hai. (Purana naam WHATSAPP_API_VERSION bhi chalta hai jab ye set na ho.)
+META_GRAPH_VERSION=v23.0
 WHATSAPP_TIMEOUT=20
+
+# Embedded Signup — "Connect WhatsApp Business App" (coexistence). Teeno chahiye, warna button nahi.
+META_APP_ID=1671673877821445
+META_APP_SECRET=                 # sirf server — browser me kabhi nahi jaata
+META_ES_CONFIG_ID=               # Facebook Login for Business › Configurations
+WA_WEBHOOK_VERIFY_TOKEN=         # app-level webhook /webhooks/meta/whatsapp ka verify token
 
 # Bina country code wale numbers ke liye — jab user ne apna set na kiya ho (e.g. 91).
 WHATSAPP_DEFAULT_COUNTRY_CODE=
 ```
 
 Token / Phone Number ID `.env` me **nahi** — har user apna Settings › WhatsApp me save
-karta hai (encrypted). Details: [modules/whatsapp.md](modules/whatsapp.md)
+karta hai (encrypted), ya **Connect WhatsApp Business App** se (`wa_accounts`).
+Details: [modules/whatsapp.md](modules/whatsapp.md)
 
 ---
 

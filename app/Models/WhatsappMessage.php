@@ -11,8 +11,18 @@ class WhatsappMessage extends Model
 {
     use BelongsToUser;
 
-    public const CHANNEL_API  = 'api';   // sent by the server through the Cloud API
-    public const CHANNEL_LINK = 'link';  // opened in the user's own WhatsApp (wa.me)
+    public const CHANNEL_API   = 'api';   // sent by the server through the Cloud API
+    public const CHANNEL_LINK  = 'link';  // opened in the user's own WhatsApp (wa.me)
+    public const CHANNEL_PHONE = 'phone'; // coexistence: the WhatsApp Business app on the phone (echoes, imported history)
+
+    public const CHANNEL_LABELS = [
+        self::CHANNEL_API   => 'Cloud API',
+        self::CHANNEL_LINK  => 'wa.me link',
+        self::CHANNEL_PHONE => 'WhatsApp app',
+    ];
+
+    public const DIRECTION_OUT = 'out';
+    public const DIRECTION_IN  = 'in';   // only imported history - live incoming messages stay replies
 
     public const TYPE_TEXT     = 'text';
     public const TYPE_TEMPLATE = 'template';
@@ -25,6 +35,7 @@ class WhatsappMessage extends Model
     public const STATUS_FAILED    = 'failed';
     public const STATUS_CANCELLED = 'cancelled'; // bulk send: stopped before its turn
     public const STATUS_MANUAL    = 'manual';    // wa.me chat opened; we cannot see what happened next
+    public const STATUS_RECEIVED  = 'received';  // imported history: a message the contact sent
 
     public const ACTIVITY_REPLIED = 'replied';
 
@@ -45,6 +56,7 @@ class WhatsappMessage extends Model
         self::STATUS_FAILED     => 'Failed',
         self::STATUS_CANCELLED  => 'Cancelled',
         self::STATUS_MANUAL     => 'Opened in WhatsApp',
+        self::STATUS_RECEIVED   => 'Received',
     ];
 
     private const BADGES = [
@@ -57,6 +69,7 @@ class WhatsappMessage extends Model
         self::STATUS_FAILED     => ['badge-danger',    'bi-x-circle'],
         self::STATUS_CANCELLED  => ['badge-dark',      'bi-slash-circle'],
         self::STATUS_MANUAL     => ['badge-warning',   'bi-box-arrow-up-right'],
+        self::STATUS_RECEIVED   => ['badge-success',   'bi-box-arrow-in-down-left'],
     ];
 
     /** Webhook statuses only move forward: a late "delivered" must not undo "read". */
@@ -67,7 +80,7 @@ class WhatsappMessage extends Model
     ];
 
     protected $fillable = [
-        'batch_id', 'gmb_lead_id', 'cash_lead_id', 'contact_name', 'phone', 'channel', 'type',
+        'batch_id', 'gmb_lead_id', 'cash_lead_id', 'contact_name', 'phone', 'channel', 'direction', 'type',
         'template_name', 'template_language', 'params', 'body', 'wamid', 'status', 'error',
         'sent_at', 'delivered_at', 'read_at', 'replied_at', 'reply_body',
     ];

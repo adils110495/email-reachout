@@ -46,7 +46,18 @@ return [
     // code live here. Meta retires a Graph version about two years after release.
     'whatsapp' => [
         'graph_url'            => 'https://graph.facebook.com',
-        'api_version'          => env('WHATSAPP_API_VERSION', 'v25.0'),
+        // The one Graph API version: every Graph call and the Facebook JS SDK
+        // (Embedded Signup) use it. WHATSAPP_API_VERSION is the older name.
+        'api_version'          => env('META_GRAPH_VERSION', env('WHATSAPP_API_VERSION', 'v23.0')),
+
+        // Embedded Signup (Settings > WhatsApp > Connect WhatsApp Business App):
+        // the platform's own Meta app. The secret never reaches the browser.
+        'meta_app_id'          => env('META_APP_ID'),
+        'meta_app_secret'      => env('META_APP_SECRET'),
+        'es_config_id'         => env('META_ES_CONFIG_ID'),
+        // Verify token of the app-level webhook, /webhooks/meta/whatsapp
+        'webhook_verify_token' => env('WA_WEBHOOK_VERIFY_TOKEN'),
+
         'timeout'              => (int) env('WHATSAPP_TIMEOUT', 20),
         // Put in front of numbers saved without one (098765 43210) when the
         // user has not set their own default country code.

@@ -21,6 +21,7 @@ use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VerifierController;
 use App\Http\Controllers\WhatsappController;
+use App\Http\Controllers\WhatsappEmbeddedSignupController;
 use App\Http\Controllers\WhatsappSettingController;
 use App\Http\Controllers\WhatsappWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +51,10 @@ Route::get('/t/o/{token}.gif', [TrackingController::class, 'open'])->name('track
 // user; POSTs are signature-checked and exempt from CSRF in bootstrap/app.php.
 Route::get('/webhooks/whatsapp/{key}',  [WhatsappWebhookController::class, 'verify'])->name('webhooks.whatsapp.verify');
 Route::post('/webhooks/whatsapp/{key}', [WhatsappWebhookController::class, 'receive'])->name('webhooks.whatsapp');
+// The platform Meta app's callback URL (App Dashboard) - numbers connected by
+// Embedded Signup. Not /webhooks/whatsapp: the laravel-whatsapp package owns it.
+Route::get('/webhooks/meta/whatsapp',  [WhatsappWebhookController::class, 'verifyApp'])->name('webhooks.meta-whatsapp.verify');
+Route::post('/webhooks/meta/whatsapp', [WhatsappWebhookController::class, 'receiveApp'])->name('webhooks.meta-whatsapp');
 
 // Sign in / sign up. Guests only; a signed-in user is sent to the dashboard.
 Route::middleware('guest')->group(function () {
@@ -221,6 +226,11 @@ Route::middleware('module:whatsapp')->group(function () {
 
     // The user's own Cloud API connection
     Route::get('/settings/whatsapp',       [WhatsappSettingController::class, 'index'])->name('whatsapp-settings.index');
+
+    // Embedded Signup - "Connect WhatsApp Business App" (coexistence) and the connected numbers
+    Route::post('/api/wa/embedded-signup',    [WhatsappEmbeddedSignupController::class, 'store'])->middleware('throttle:10,1')->name('whatsapp.embedded-signup');
+    Route::post('/api/wa/accounts/{id}/sync', [WhatsappEmbeddedSignupController::class, 'resync'])->middleware('throttle:10,1')->name('whatsapp.account-sync')->whereNumber('id');
+    Route::delete('/api/wa/accounts/{id}',    [WhatsappEmbeddedSignupController::class, 'disconnect'])->name('whatsapp.account-disconnect')->whereNumber('id');
     Route::put('/settings/whatsapp',       [WhatsappSettingController::class, 'update'])->name('whatsapp-settings.update');
     Route::post('/settings/whatsapp/test', [WhatsappSettingController::class, 'test'])->name('whatsapp-settings.test');
     Route::put('/settings/whatsapp/webhook',           [WhatsappSettingController::class, 'updateWebhook'])->name('whatsapp-settings.webhook');
