@@ -12,15 +12,37 @@
     without it, "Open in WhatsApp" (wa.me) is the way to send.
 
     Bulk - opened by a .btn-wa-bulk inside whatsapp/_bulk-bar (data-mode
-    selected | all). One approved template to the checked rows (.wa-row-check)
-    or to every row matching the list's filters, queued and paced on the server.
+    selected | all). The checked rows (.wa-row-check), or every row matching
+    the list's filters, get an approved WhatsApp template, an email, or both -
+    the channels the bar offers (data-channels). Queued and paced on the
+    server (Controllers\Concerns\QueuesBulkSend).
+
+    @param bool $bulkEmail  the page's bulk bar offers email (Deals): renders the
+                            email section. Email needs no WhatsApp module, so the
+                            modal is then rendered without it too.
 --}}
-@can('module', 'whatsapp')
 @php
-    $waApiReady = (bool) \App\Models\WhatsappSetting::forActingUser()?->canSend();
-    $waBulkMax  = (int) config('services.whatsapp.bulk_max', 250);
+    $waAllowed = (bool) auth()->user()?->can('module', 'whatsapp');
+    $bulkEmail = ! empty($bulkEmail);
 @endphp
-<div class="modal fade" id="whatsappModal" tabindex="-1" aria-hidden="true"
+@if($waAllowed || $bulkEmail)
+@php
+    $waApiReady = $waAllowed && (bool) \App\Models\WhatsappSetting::forActingUser()?->canSend();
+    $waBulkMax  = (int) config('services.whatsapp.bulk_max', 250);
+
+    // The email section's templates; the body is made safe before it reaches the editor.
+    $emailTemplates = $bulkEmail
+        ? \App\Models\EmailTemplate::where('status', 'active')->latest()->get()->map(fn (\App\Models\EmailTemplate $t) => [
+            'id'          => $t->id,
+            'name'        => $t->name,
+            'subject'     => (string) $t->subject,
+            'body'        => \App\Support\EmailHtml::render($t->body),
+            'attachments' => collect($t->attachments ?? [])->map(fn (array $a) => ['name' => $a['name'] ?? basename($a['path']), 'path' => $a['path']])->values(),
+        ])->values()
+        : collect();
+@endphp
+{{-- data-bs-focus="false": the email editor's link box lives outside the modal, and the modal's focus trap would not let it be typed in. --}}
+<div class="modal fade" id="whatsappModal" tabindex="-1" aria-hidden="true" data-bs-focus="false"
      data-api-ready="{{ $waApiReady ? '1' : '0' }}"
      data-bulk-max="{{ $waBulkMax }}"
      data-send-url="{{ route('whatsapp.send') }}"
@@ -33,7 +55,7 @@
                 <input type="hidden" name="id" id="wa_record_id" value="">
 
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-whatsapp me-2 text-success"></i><span id="wa_title">Send WhatsApp</span></h5>
+                    <h5 class="modal-title"><i class="bi bi-whatsapp me-2 text-success" id="wa_title_icon"></i><span id="wa_title">Send WhatsApp</span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -58,79 +80,153 @@
                         <div id="wa_bulk_summary"></div>
                     </div>
 
-                    @if($waApiReady)
-                        <div class="btn-group mb-3" role="group" aria-label="Message type" id="wa_modes">
-                            <input type="radio" class="btn-check" name="mode" id="wa_mode_template" value="template" checked>
-                            <label class="btn btn-outline-success btn-sm" for="wa_mode_template">
-                                <i class="bi bi-file-earmark-text me-1"></i>Template
+                    {{-- Bulk: which channels - only when the list offers more than one --}}
+                    <div class="mb-3 d-none" id="wa_channels">
+                        <span class="form-label d-block">Send by</span>
+                        <div class="btn-group" role="group" aria-label="Channels">
+                            <input type="checkbox" class="btn-check wa-channel" id="wa_channel_whatsapp" value="whatsapp" autocomplete="off">
+                            <label class="btn btn-outline-success btn-sm" for="wa_channel_whatsapp">
+                                <i class="bi bi-whatsapp me-1"></i>WhatsApp
                             </label>
-                            <input type="radio" class="btn-check" name="mode" id="wa_mode_text" value="text">
-                            <label class="btn btn-outline-success btn-sm" for="wa_mode_text">
-                                <i class="bi bi-chat-left-text me-1"></i>Text message
+                            <input type="checkbox" class="btn-check wa-channel" id="wa_channel_email" value="email" autocomplete="off">
+                            <label class="btn btn-outline-primary btn-sm" for="wa_channel_email">
+                                <i class="bi bi-envelope me-1"></i>Email
                             </label>
                         </div>
+                        <div class="form-text">Tick both to reach every contact on WhatsApp and by email. Each channel goes to the contacts that have its number or address.</div>
+                    </div>
 
-                        {{-- Template: approved templates of the sending account, body variables as inputs --}}
-                        <div id="wa_template_pane">
-                            <label class="form-label" for="wa_template">Approved template</label>
-                            <div class="input-group">
-                                <select id="wa_template" class="form-select"></select>
-                                <button type="button" class="btn btn-light" id="wa_template_refresh" title="Reload templates from Meta" aria-label="Reload templates">
-                                    <i class="bi bi-arrow-clockwise"></i>
-                                </button>
-                            </div>
-                            <div class="form-text" id="wa_template_status">The first message to a contact must be a template Meta has approved.</div>
-                            <div class="row g-2 mt-1" id="wa_params"></div>
-                            <div class="form-text d-none" id="wa_bulk_hint">
-                                Write <code>{name}</code> in a value to put in each contact's own name.
-                            </div>
-                            <div class="wa-preview mt-3 d-none" id="wa_preview"></div>
-                        </div>
+                    {{-- WhatsApp: all of single mode, and bulk's WhatsApp channel --}}
+                    <div id="wa_whatsapp_section">
+                        <h6 class="bulk-section-title d-none" data-bulk-heading><i class="bi bi-whatsapp me-1 text-success"></i>WhatsApp</h6>
 
-                        {{-- Bulk: pacing --}}
-                        <div class="row g-3 mt-1 d-none" id="wa_bulk_options">
-                            <div class="col-md-6">
-                                <label class="form-label" for="wa_interval">Gap between messages</label>
-                                <select id="wa_interval" class="form-select">
-                                    @foreach(\App\Services\WhatsappBulkService::INTERVALS as $seconds)
-                                        <option value="{{ $seconds }}" @selected($seconds === \App\Services\WhatsappBulkService::DEFAULT_INTERVAL)>{{ $seconds }} seconds</option>
-                                    @endforeach
-                                </select>
-                                <div class="form-text">A burst of identical messages gets a number reported - spacing them protects its quality rating.</div>
+                        @if($waApiReady)
+                            <div class="btn-group mb-3" role="group" aria-label="Message type" id="wa_modes">
+                                <input type="radio" class="btn-check" name="mode" id="wa_mode_template" value="template" checked>
+                                <label class="btn btn-outline-success btn-sm" for="wa_mode_template">
+                                    <i class="bi bi-file-earmark-text me-1"></i>Template
+                                </label>
+                                <input type="radio" class="btn-check" name="mode" id="wa_mode_text" value="text">
+                                <label class="btn btn-outline-success btn-sm" for="wa_mode_text">
+                                    <i class="bi bi-chat-left-text me-1"></i>Text message
+                                </label>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-check mt-md-4 pt-md-2">
-                                    <input class="form-check-input" type="checkbox" id="wa_skip_contacted" checked>
-                                    <label class="form-check-label" for="wa_skip_contacted">Skip contacts already messaged on WhatsApp</label>
+
+                            {{-- Template: approved templates of the sending account, body variables as inputs --}}
+                            <div id="wa_template_pane">
+                                <label class="form-label" for="wa_template">Approved template</label>
+                                <div class="input-group">
+                                    <select id="wa_template" class="form-select"></select>
+                                    <button type="button" class="btn btn-light" id="wa_template_refresh" title="Reload templates from Meta" aria-label="Reload templates">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text" id="wa_template_status">The first message to a contact must be a template Meta has approved.</div>
+                                <div class="row g-2 mt-1" id="wa_params"></div>
+                                <div class="form-text d-none" id="wa_bulk_hint">
+                                    Write <code>&#123;&#123;name&#125;&#125;</code> in a value to put in each contact's own name.
+                                </div>
+                                <div class="wa-preview mt-3 d-none" id="wa_preview"></div>
+                            </div>
+
+                            {{-- Bulk: pacing --}}
+                            <div class="row g-3 mt-1 d-none" id="wa_bulk_options">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="wa_interval">Gap between messages</label>
+                                    <select id="wa_interval" class="form-select">
+                                        @foreach(\App\Services\WhatsappBulkService::INTERVALS as $seconds)
+                                            <option value="{{ $seconds }}" @selected($seconds === \App\Services\WhatsappBulkService::DEFAULT_INTERVAL)>{{ $seconds }} seconds</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="form-text">A burst of identical messages gets a number reported - spacing them protects its quality rating.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-text mt-md-4 pt-md-2">
+                                        Meta lets a new number start 250 conversations a day, and raises the limit while its quality stays high.
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-12">
-                                <div class="form-text">
-                                    At most {{ $waBulkMax }} contacts per bulk send. Meta lets a new number start 250 conversations a day,
-                                    and raises the limit while its quality stays high.
+                        @else
+                            <div class="alert alert-info fs-13 mb-3" id="wa_no_api">
+                                <i class="bi bi-info-circle me-1"></i>
+                                The WhatsApp Cloud API is not connected, so the chat opens in your own WhatsApp (app or web) with the message typed in.
+                                <a href="{{ route('whatsapp-settings.index') }}">Connect the API</a> to send from here and see delivered, read and replied.
+                            </div>
+                            <div class="alert alert-warning fs-13 mb-3 d-none" id="wa_no_api_bulk">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Bulk sending goes through the WhatsApp Cloud API, which is not connected.
+                                <a href="{{ route('whatsapp-settings.index') }}">Connect it in WhatsApp Settings</a> to send to many contacts at once.
+                            </div>
+                        @endif
+
+                        {{-- Free text (single only) --}}
+                        <div id="wa_text_pane" class="{{ $waApiReady ? 'd-none' : '' }}">
+                            <label class="form-label" for="wa_body">Message</label>
+                            <textarea name="body" id="wa_body" class="form-control" rows="6" maxlength="4096"></textarea>
+                            @if($waApiReady)
+                                <div class="form-text">Free text is only delivered if this contact wrote to you in the last 24 hours. For a first message use a template.</div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Bulk: email (Deals) - one subject and body, the placeholders filled in per email --}}
+                    @if($bulkEmail)
+                        @include('partials._email-editor')
+                        <div class="d-none" id="wa_email_section" data-placeholder-scope>
+                            <h6 class="bulk-section-title d-none" data-bulk-heading><i class="bi bi-envelope me-1 text-primary"></i>Email</h6>
+                            <div class="row g-3">
+                                <div class="col-md-7">
+                                    <label class="form-label" for="wa_email_template">Email template</label>
+                                    <select id="wa_email_template" class="form-select">
+                                        <option value="">— None, write it below —</option>
+                                        @foreach($emailTemplates as $t)
+                                            <option value="{{ $t['id'] }}">{{ $t['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label" for="wa_email_interval">Gap between emails</label>
+                                    <select id="wa_email_interval" class="form-select">
+                                        @foreach(\App\Services\EmailBulkService::INTERVALS as $seconds)
+                                            <option value="{{ $seconds }}" @selected($seconds === \App\Services\EmailBulkService::DEFAULT_INTERVAL)>{{ $seconds }} seconds</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="wa_email_subject">Subject <span class="text-danger">*</span></label>
+                                    <input type="text" id="wa_email_subject" class="form-control" maxlength="255" autocomplete="off" data-placeholder-field>
+                                </div>
+                                <div class="col-12">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                        <label class="form-label mb-0" for="wa_email_body">Message <span class="text-danger">*</span></label>
+                                        @include('partials._placeholder-chips')
+                                    </div>
+                                    <div class="email-editor email-editor-sm">
+                                        <textarea id="wa_email_body" class="form-control" rows="7" data-email-editor data-placeholder-field
+                                                  placeholder="Write the email…"></textarea>
+                                    </div>
+                                    <div class="form-text">
+                                        <code>&#123;&#123;client_name&#125;&#125;</code> becomes each contact's name;
+                                        <code>&#123;&#123;sender_name&#125;&#125;</code> and <code>&#123;&#123;sender_company&#125;&#125;</code> become yours.
+                                        Sent from the mailbox in Mail Settings, with open and reply tracking.
+                                    </div>
+                                </div>
+                                <div class="col-12 d-none" id="wa_email_attachments_row">
+                                    <span class="form-label d-block">Attachments from the template</span>
+                                    <div class="d-flex flex-wrap gap-2" id="wa_email_attachments"></div>
                                 </div>
                             </div>
                         </div>
-                    @else
-                        <div class="alert alert-info fs-13 mb-3" id="wa_no_api">
-                            <i class="bi bi-info-circle me-1"></i>
-                            The WhatsApp Cloud API is not connected, so the chat opens in your own WhatsApp (app or web) with the message typed in.
-                            <a href="{{ route('whatsapp-settings.index') }}">Connect the API</a> to send from here and see delivered, read and replied.
-                        </div>
-                        <div class="alert alert-warning fs-13 mb-3 d-none" id="wa_no_api_bulk">
-                            <i class="bi bi-exclamation-triangle me-1"></i>
-                            Bulk sending goes through the WhatsApp Cloud API, which is not connected.
-                            <a href="{{ route('whatsapp-settings.index') }}">Connect it in WhatsApp Settings</a> to send to many contacts at once.
-                        </div>
+                        <script type="application/json" id="wa_email_templates">@json($emailTemplates)</script>
                     @endif
 
-                    {{-- Free text (single only) --}}
-                    <div id="wa_text_pane" class="{{ $waApiReady ? 'd-none' : '' }}">
-                        <label class="form-label" for="wa_body">Message</label>
-                        <textarea name="body" id="wa_body" class="form-control" rows="6" maxlength="4096"></textarea>
-                        @if($waApiReady)
-                            <div class="form-text">Free text is only delivered if this contact wrote to you in the last 24 hours. For a first message use a template.</div>
-                        @endif
+                    {{-- Bulk: for every channel --}}
+                    <div class="mt-3 d-none" id="wa_bulk_shared">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="wa_skip_contacted" checked>
+                            <label class="form-check-label" for="wa_skip_contacted">Skip contacts already <span id="wa_skip_label">messaged on WhatsApp</span></label>
+                        </div>
+                        <div class="form-text">At most {{ $waBulkMax }} contacts per bulk send.</div>
                     </div>
 
                     <div class="text-danger fs-13 mt-3 d-none" id="wa_error" role="alert"></div>
@@ -144,7 +240,7 @@
                     </div>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        @if($waApiReady)
+                        @if($waApiReady || $bulkEmail)
                             <button type="submit" class="btn btn-success" id="wa_send">
                                 <span class="spinner-border spinner-border-sm d-none me-1" id="wa_send_spinner"></span>
                                 <i class="bi bi-send-fill me-1" id="wa_send_icon"></i><span id="wa_send_label">Send</span>
@@ -171,13 +267,14 @@
     const BULK_MAX    = Number(modalEl.dataset.bulkMax || 250);
     const CSRF        = document.querySelector('meta[name="csrf-token"]').content;
     const PLACEHOLDER = /\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g;
-    const NAME_TOKEN  = /\{name\}/gi;
+    const NAME_TOKEN  = /\{\{\s*name\s*\}\}|\{name\}/gi; // {name} is the older spelling
 
     const form = document.getElementById('whatsappForm');
     const el = {
         source:      document.getElementById('wa_source'),
         recordId:    document.getElementById('wa_record_id'),
         title:       document.getElementById('wa_title'),
+        titleIcon:   document.getElementById('wa_title_icon'),
         single:      document.getElementById('wa_single'),
         name:        document.getElementById('wa_name'),
         phone:       document.getElementById('wa_phone'),
@@ -195,7 +292,20 @@
         preview:     document.getElementById('wa_preview'),
         bulkOptions: document.getElementById('wa_bulk_options'),
         interval:    document.getElementById('wa_interval'),
+        channels:    document.getElementById('wa_channels'),
+        channelWa:   document.getElementById('wa_channel_whatsapp'),
+        channelMail: document.getElementById('wa_channel_email'),
+        waSection:   document.getElementById('wa_whatsapp_section'),
+        mailSection: document.getElementById('wa_email_section'),
+        mailTpl:     document.getElementById('wa_email_template'),
+        mailGap:     document.getElementById('wa_email_interval'),
+        mailSubject: document.getElementById('wa_email_subject'),
+        mailBody:    document.getElementById('wa_email_body'),
+        mailAttRow:  document.getElementById('wa_email_attachments_row'),
+        mailAtts:    document.getElementById('wa_email_attachments'),
+        bulkShared:  document.getElementById('wa_bulk_shared'),
         skip:        document.getElementById('wa_skip_contacted'),
+        skipLabel:   document.getElementById('wa_skip_label'),
         noApi:       document.getElementById('wa_no_api'),
         noApiBulk:   document.getElementById('wa_no_api_bulk'),
         error:       document.getElementById('wa_error'),
@@ -208,7 +318,15 @@
 
     let templates = [];
     let loadSeq   = 0;    // a slow response for an earlier contact must not overwrite the current list
-    let bulk      = null; // set while the modal is in bulk mode: { url, all, ids, label, sample, total }
+    let bulk      = null; // set while the modal is in bulk mode: { url, channels, all, ids, label, sample, total }
+
+    // Email section (Deals): the account's email templates, and the attachments
+    // of the chosen one still kept for this send.
+    const mailTemplates = (function () {
+        const node = document.getElementById('wa_email_templates');
+        try { return node ? JSON.parse(node.textContent) : []; } catch (e) { return []; }
+    })();
+    let mailAttachments = [];
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -253,19 +371,25 @@
         return (data && data.message) || fallback;
     }
 
-    function toast(message, url, linkText) {
+    /** @param links  optional [{ url, label }] - e.g. a bulk send's progress pages */
+    function toast(message, links) {
         const box = document.getElementById('notifToasts');
         if (! box) return;
+        links = links || [];
         const t = document.createElement('div');
         t.className = 'toast align-items-center';
         t.setAttribute('role', 'status');
         t.innerHTML = '<div class="d-flex"><div class="toast-body"><i class="bi bi-check-circle-fill text-success me-2"></i>'
             + esc(message)
-            + (url ? '<div class="mt-1"><a class="fs-13" href="' + esc(url) + '">' + esc(linkText || 'View') + '</a></div>' : '')
+            + (links.length
+                ? '<div class="mt-1 d-flex flex-wrap gap-3">' + links.map(function (l) {
+                    return '<a class="fs-13" href="' + esc(l.url) + '">' + esc(l.label) + '</a>';
+                }).join('') + '</div>'
+                : '')
             + '</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>';
         box.appendChild(t);
         t.addEventListener('hidden.bs.toast', function () { t.remove(); });
-        new bootstrap.Toast(t, { delay: url ? 12000 : 6000 }).show();
+        new bootstrap.Toast(t, { delay: links.length ? 12000 : 6000 }).show();
     }
 
     function reloadList() {
@@ -321,9 +445,18 @@
         }
     });
 
-    // A filter / page change swaps the rows - and their checkboxes - out.
-    const listRegion = document.querySelector('[data-ajax-root] .ajax-region');
-    if (listRegion) new MutationObserver(updateSelection).observe(listRegion, { childList: true });
+    // A filter / page change swaps the rows - and their checkboxes - out. The
+    // list is ajax-filters.js's region, or the one a bar names (Leads).
+    const listRegions = [document.querySelector('[data-ajax-root] .ajax-region')];
+    document.querySelectorAll('[data-wa-bulk][data-rows-region]').forEach(function (bar) {
+        listRegions.push(document.querySelector(bar.dataset.rowsRegion));
+    });
+    listRegions.forEach(function (region) {
+        if (region) new MutationObserver(updateSelection).observe(region, { childList: true });
+    });
+
+    // For a page that ticks rows from its own script (the Leads "select all").
+    window.BulkSend = { refresh: updateSelection };
 
     // ── Templates ─────────────────────────────────────────────────────────
 
@@ -373,7 +506,7 @@
             t.params.forEach(function (param, i) {
                 // The first variable is almost always the contact's name.
                 const isName  = i === 0 || /name/i.test(param);
-                const prefill = isName ? (bulk ? '{name}' : el.name.value.trim()) : '';
+                const prefill = isName ? (bulk ? '{{name}}' : el.name.value.trim()) : '';
                 const col = document.createElement('div');
                 col.className = 'col-md-6';
                 col.innerHTML = '<label class="form-label fs-13 mb-1">' + esc(wrap(param)) + '</label>'
@@ -434,23 +567,121 @@
             });
     }
 
+    // ── Channels (bulk) ───────────────────────────────────────────────────
+
+    function has(list, channel) {
+        return list.indexOf(channel) !== -1;
+    }
+
+    /** The channels this bulk send goes out on: the ticked ones, or the list's only one. */
+    function selectedChannels() {
+        if (! bulk) return ['whatsapp'];
+        if (bulk.channels.length < 2) return bulk.channels.slice();
+
+        return bulk.channels.filter(function (channel) {
+            const box = channel === 'email' ? el.channelMail : el.channelWa;
+            return box && box.checked;
+        });
+    }
+
+    /** Show the section of every ticked channel, and word the shared options for them. */
+    function applyChannels() {
+        const channels = selectedChannels();
+        const wa       = has(channels, 'whatsapp');
+        const email    = !! bulk && has(channels, 'email');
+
+        toggle(el.waSection, wa);
+        toggle(el.mailSection, email);
+        if (el.skipLabel) {
+            el.skipLabel.textContent = wa && email ? 'reached on that channel' : (email ? 'emailed' : 'messaged on WhatsApp');
+        }
+    }
+
+    // ── Email (bulk, Deals) ───────────────────────────────────────────────
+
+    function renderMailAttachments() {
+        if (! el.mailAtts) return;
+
+        el.mailAtts.innerHTML = '';
+        mailAttachments.forEach(function (att, i) {
+            const chip = document.createElement('span');
+            chip.className = 'bulk-attachment';
+            chip.innerHTML = '<i class="bi bi-paperclip"></i><span></span>'
+                + '<button type="button" class="btn-close" aria-label="Leave this attachment out"></button>';
+            chip.querySelector('span').textContent = att.name;
+            chip.querySelector('button').addEventListener('click', function () {
+                mailAttachments.splice(i, 1);
+                renderMailAttachments();
+            });
+            el.mailAtts.appendChild(chip);
+        });
+        toggle(el.mailAttRow, mailAttachments.length > 0);
+    }
+
+    /** Fill subject, body and attachments from the chosen email template. */
+    function applyMailTemplate() {
+        const t = mailTemplates.find(function (tpl) { return String(tpl.id) === el.mailTpl.value; });
+
+        // "None" keeps what was typed; only the template's attachments go.
+        if (t) {
+            el.mailSubject.value = t.subject || '';
+            EmailEditor.setData(el.mailBody, t.body || '');
+        }
+        mailAttachments = t ? (t.attachments || []).slice() : [];
+        renderMailAttachments();
+    }
+
+    /** The email half of a bulk send, or null after reporting what is missing. */
+    function mailPayload() {
+        const subject = el.mailSubject.value.trim();
+
+        if (! subject) {
+            showError('Write the email subject.');
+            return null;
+        }
+        if (EmailEditor.isEmpty(el.mailBody)) {
+            showError('Write the email.');
+            return null;
+        }
+
+        return { subject: subject, body: EmailEditor.getData(el.mailBody) };
+    }
+
     // ── Open ──────────────────────────────────────────────────────────────
 
     /** Show the parts of the modal that belong to the current mode. */
     function layout() {
-        const isBulk = !! bulk;
+        const isBulk    = !! bulk;
+        const channels  = isBulk ? bulk.channels : ['whatsapp'];
+        const multi     = channels.length > 1;
+        const withEmail = has(channels, 'email');
 
-        el.title.textContent = isBulk ? 'Bulk WhatsApp' : 'Send WhatsApp';
+        const mailOnly  = withEmail && ! multi;
+
+        el.title.textContent = isBulk ? (mailOnly ? 'Bulk Email' : (withEmail ? 'Bulk Send' : 'Bulk WhatsApp')) : 'Send WhatsApp';
+        el.titleIcon.className = 'bi me-2 ' + (mailOnly ? 'bi-envelope text-primary' : (withEmail ? 'bi-send text-primary' : 'bi-whatsapp text-success'));
         toggle(el.single, ! isBulk);
         toggle(el.bulk, isBulk);
+        toggle(el.channels, isBulk && multi);
         toggle(el.modes, ! isBulk);
         toggle(el.bulkOptions, isBulk);
+        toggle(el.bulkShared, isBulk);
         toggle(el.openChat, ! isBulk);
         toggle(el.noApi, ! isBulk);
         toggle(el.noApiBulk, isBulk);
+        // Without the Cloud API a single message goes out through "Open in WhatsApp".
+        toggle(el.send, isBulk || API_READY);
+        modalEl.querySelectorAll('[data-bulk-heading]').forEach(function (h) { toggle(h, isBulk && multi); });
         if (el.sendLabel) el.sendLabel.textContent = isBulk ? 'Queue messages' : 'Send';
 
-        if (API_READY) {
+        if (isBulk && multi) {
+            // WhatsApp starts ticked only when it can actually send.
+            el.channelWa.checked   = API_READY;
+            el.channelMail.checked = true;
+        }
+        applyChannels();
+
+        if (API_READY && has(channels, 'whatsapp')) {
             setMode('template');
             loadTemplates(false);
         } else {
@@ -461,7 +692,11 @@
     function reset() {
         form.reset();
         hideError();
-        templates = [];
+        templates       = [];
+        mailAttachments = [];
+        renderMailAttachments();
+        // form.reset() clears the textarea, not the editor on top of it.
+        if (el.mailBody) EmailEditor.setData(el.mailBody, '');
     }
 
     // Single - delegated: rows are replaced wholesale by ajax-filters.js on every filter change.
@@ -496,31 +731,36 @@
         const rows = checkedRows();
         if (! bar || (! all && ! rows.length)) return;
 
-        const totalNode = document.querySelector('[data-ajax-root] .ajax-content[data-total]');
+        const totalNode = document.querySelector(bar.dataset.totalFrom || '[data-ajax-root] .ajax-content[data-total]');
         // Templates are loaded for the account the messages go out from - the
         // owner of these rows - so pass one of them along.
         const sampleRow = rows[0] || document.querySelector('.wa-row-check:not(:disabled)');
 
         bulk = {
-            url:    bar.dataset.url,
-            label:  bar.dataset.label || 'contacts',
-            all:    all,
-            ids:    all ? [] : rows.map(function (r) { return r.value; }),
-            sample: sampleRow ? sampleRow.dataset.name : '',
-            total:  all ? Number(totalNode ? totalNode.dataset.total : 0) : rows.length,
+            url:      bar.dataset.url,
+            // What the list's rows can be sent, as far as this user may: whatsapp, email.
+            channels: (bar.dataset.channels || 'whatsapp').split(',').filter(Boolean),
+            label:    bar.dataset.label || 'contacts',
+            all:      all,
+            ids:      all ? [] : rows.map(function (r) { return r.value; }),
+            sample:   sampleRow ? sampleRow.dataset.name : '',
+            total:    all ? Number(totalNode ? totalNode.dataset.total : 0) : rows.length,
         };
         reset();
 
+        const reachableBy = bulk.channels.length > 1 ? 'a phone number or email'
+            : (bulk.channels[0] === 'email' ? 'an email address' : 'a phone number');
+
         el.source.value   = sampleRow ? bar.dataset.source : 'direct';
         el.recordId.value = sampleRow ? sampleRow.value : '';
-        // The total counts rows without a phone too; the server only counts the
-        // ones it can message, so a large total is a heads-up, not an error.
+        // The total counts rows that cannot be reached too; the server only
+        // counts the ones it can, so a large total is a heads-up, not an error.
         el.bulkSummary.innerHTML = (all
             ? 'To <strong>all ' + esc(bulk.total.toLocaleString()) + ' ' + esc(bulk.label) + '</strong> matching the current filters. '
-                + 'Those without a phone number are left out.'
+                + 'Those without ' + reachableBy + ' are left out.'
             : 'To the <strong>' + esc(bulk.ids.length) + ' selected ' + esc(bulk.label) + '</strong>.')
             + (bulk.total > BULK_MAX
-                ? '<div class="text-danger fs-13 mt-1">One bulk send can have at most ' + esc(BULK_MAX) + ' contacts - narrow the filters if more than that have a phone number.</div>'
+                ? '<div class="text-danger fs-13 mt-1">One bulk send can have at most ' + esc(BULK_MAX) + ' contacts - narrow the filters if more than that have ' + reachableBy + '.</div>'
                 : '');
 
         layout();
@@ -533,6 +773,11 @@
             setMode(e.target.value);
         } else if (e.target === el.template) {
             renderParams();
+        } else if (e.target.classList.contains('wa-channel')) {
+            hideError();
+            applyChannels();
+        } else if (e.target === el.mailTpl) {
+            applyMailTemplate();
         }
     });
 
@@ -546,7 +791,7 @@
     function templatePayload() {
         const t = currentTemplate();
         if (! t) {
-            showError('Choose an approved template.');
+            showError('Choose an approved WhatsApp template.');
             return null;
         }
 
@@ -598,8 +843,8 @@
     }
 
     function sendBulk() {
-        const payload = templatePayload();
-        if (! payload) return;
+        const channels = selectedChannels();
+        if (! channels.length) return showError('Choose how to send: WhatsApp, email or both.');
 
         // The list endpoint reads its filters from the query string - the same
         // ones the list on screen was built from. The body carries only the
@@ -610,21 +855,42 @@
         } else {
             bulk.ids.forEach(function (id) { body.append('ids[]', id); });
         }
-        appendTemplate(body, payload);
-        body.append('template_header', payload.template.header || '');
-        body.append('template_body', payload.template.body || '');
-        body.append('interval', el.interval.value);
+        channels.forEach(function (channel) { body.append('channels[]', channel); });
+
+        if (has(channels, 'whatsapp')) {
+            if (! API_READY) return showError('WhatsApp goes out through the Cloud API, which is not connected. Untick WhatsApp, or connect it in WhatsApp Settings.');
+
+            const payload = templatePayload();
+            if (! payload) return;
+            appendTemplate(body, payload);
+            body.append('template_header', payload.template.header || '');
+            body.append('template_body', payload.template.body || '');
+            body.append('interval', el.interval.value);
+        }
+
+        if (has(channels, 'email')) {
+            const mail = mailPayload();
+            if (! mail) return;
+            body.append('email_template_id', el.mailTpl.value);
+            mailAttachments.forEach(function (att) { body.append('email_attachments[]', att.path); });
+            body.append('email_subject', mail.subject);
+            body.append('email_body', mail.body);
+            body.append('email_interval', el.mailGap.value);
+        }
+
         body.append('skip_contacted', el.skip.checked ? '1' : '0');
 
         setBusy(true);
         post(bulk.url + (bulk.all ? window.location.search : ''), body)
             .then(function (res) {
-                if (! res.ok) return showError(firstError(res.data, 'The messages were not queued.'));
+                if (! res.ok) return showError(firstError(res.data, 'Nothing was queued.'));
                 bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-                toast(res.data.message || 'WhatsApp messages queued.', res.data.url, 'View progress');
+                toast(res.data.message || 'Queued.', res.data.links);
                 document.querySelectorAll('.wa-row-check:checked').forEach(function (cb) { cb.checked = false; });
                 updateSelection();
                 reloadList();
+                // A list with its own loader (Leads) refreshes on this.
+                document.dispatchEvent(new CustomEvent('bulk-send:queued'));
             })
             .catch(function () { showError('Could not reach the server. Please try again.'); })
             .finally(function () { setBusy(false); });
@@ -632,12 +898,12 @@
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();
-        if (! API_READY) return;
         hideError();
 
+        // Bulk can be email only; a single message needs the Cloud API.
         if (bulk) {
             sendBulk();
-        } else {
+        } else if (API_READY) {
             sendSingle();
         }
     });
@@ -685,4 +951,4 @@
 </script>
 @endverbatim
 @endpush
-@endcan
+@endif

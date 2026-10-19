@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Address;
 use App\Models\AppSetting;
 use App\Models\Lead;
+use App\Support\EmailHtml;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
@@ -18,11 +19,12 @@ class OutreachMail extends Mailable
     use Queueable, SerializesModels;
 
     /**
+     * @param Lead|null    $lead              null for a bulk email to a deal - the view does not read it
      * @param array        $emailAttachments  [['path' => '/absolute/path', 'name' => 'original.pdf'], ...]
      * @param Address|null $address           Optional sender address for dynamic footer
      */
     public function __construct(
-        public readonly Lead     $lead,
+        public readonly ?Lead    $lead,
         public readonly string   $emailBody,
         public readonly string   $subjectLine,
         public readonly string   $senderName,
@@ -53,6 +55,8 @@ class OutreachMail extends Mailable
         AppSetting::flush();
 
         return new Content(view: 'emails.outreach', with: [
+            // Editor HTML cleaned, or plain text as one paragraph per line.
+            'bodyHtml'      => EmailHtml::render($this->emailBody),
             'logoPath'      => AppSetting::emailLogoPath(),
             'logoUrl'       => AppSetting::emailLogoUrl(),
             'socialLinks'   => AppSetting::socialLinks(),

@@ -103,6 +103,12 @@ class Lead extends Model
         return $this->belongsTo(\App\Models\Category::class);
     }
 
+    /** The newest email to this lead, whatever its state - the list's "mail activity" line. */
+    public function latestEmail()
+    {
+        return $this->hasOne(LeadEmail::class)->latestOfMany();
+    }
+
     protected $casts = [
         'emails'     => 'array',
         'created_at' => 'datetime',

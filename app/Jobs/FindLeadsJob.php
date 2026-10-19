@@ -7,6 +7,7 @@ use App\Models\AppNotification;
 use App\Models\Lead;
 use App\Models\Platform;
 use App\Services\LeadFinderService;
+use App\Services\SerpApiConfigService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -50,8 +51,17 @@ class FindLeadsJob implements ShouldQueue
         return $this->userId ?? null;
     }
 
-    public function handle(LeadFinderService $leadFinder): void
+    public function handle(LeadFinderService $leadFinder, SerpApiConfigService $serp): void
     {
+        // Without a key the search finds nothing - say why, not "0 new leads".
+        if (! $serp->key()) {
+            AppNotification::raise('error', 'Lead search failed',
+                "\"{$this->keyword}\": no SerpAPI key. Add yours under Settings > SerpAPI.",
+                route('serpapi-settings.index', [], false));
+
+            return;
+        }
+
         $results = $leadFinder->find(
             keyword:  $this->keyword,
             country:  $this->country,

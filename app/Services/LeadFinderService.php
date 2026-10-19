@@ -31,10 +31,11 @@ class LeadFinderService
             'language' => $language ?? 'any',
         ]);
 
-        $apiKey = config('services.serpapi.key');
+        // The acting user's key from Settings > SerpAPI, else the server's SERPAPI_KEY.
+        $apiKey = app(SerpApiConfigService::class)->key();
 
         if (empty($apiKey)) {
-            Log::error('LeadFinderService: SERPAPI_KEY is not set in .env');
+            Log::error('LeadFinderService: no SerpAPI key - none saved under Settings > SerpAPI and SERPAPI_KEY is not set');
             return [];
         }
 

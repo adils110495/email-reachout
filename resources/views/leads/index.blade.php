@@ -74,6 +74,15 @@
                     </h4>
                 </div>
                 <div class="clearfix">
+                    {{-- Bulk Email: the checked rows, or every lead matching the filters --}}
+                    @include('whatsapp._bulk-bar', [
+                        'bulkUrl'     => route('leads.bulk-email'),
+                        'source'      => 'lead',
+                        'label'       => 'leads',
+                        'channels'    => ['email'],
+                        'totalFrom'   => '#leadsContent',
+                        'rowsRegion'  => '#leadsRegion',
+                    ])
                     <a href="{{ route('leads.export') }}" class="btn btn-light btn-sm m-1">
                         <i class="bi bi-download me-1"></i>Export CSV
                     </a>
@@ -85,16 +94,6 @@
 
             {{-- Filter bar --}}
             <div class="card-header d-block pb-2">
-                @php
-                    $activeStatus  = request('status');
-                    $statusOptions = [
-                        'new'     => 'New',
-                        'sent'    => 'Sent',
-                        'failed'  => 'Failed',
-                        'replied' => 'Replied',
-                    ];
-                @endphp
-
                 <div class="row filter-bar align-items-start">
 
                     {{-- Live filter --}}
@@ -106,11 +105,10 @@
                         >
                     </div>
 
-                    {{-- Status filter --}}
+                    {{-- Status filter: New unless another is picked (LeadController::filters) --}}
                     <div class="col-6 col-md-3 col-xl-2 mb-3">
                         <label class="form-label" for="statusFilter">Status</label>
                         <select id="statusFilter" class="form-select select2" data-param="status" data-placeholder="All Statuses">
-                            <option value="">All Statuses</option>
                             @foreach($statusOptions as $value => $label)
                                 <option value="{{ $value }}" {{ $activeStatus === $value ? 'selected' : '' }}>
                                     {{ $label }}
@@ -211,7 +209,9 @@
 </div>
 
 {{-- ===================== COMPOSE MODAL (Gmail-style) ===================== --}}
-<div class="modal fade" id="composeModal" tabindex="-1" data-bs-backdrop="static">
+{{-- data-bs-focus="false": the editor's link box lives outside the modal, and the modal's focus trap would not let it be typed in. --}}
+@include('partials._email-editor')
+<div class="modal fade" id="composeModal" tabindex="-1" data-bs-backdrop="static" data-bs-focus="false">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
 
@@ -221,7 +221,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <form id="composeForm" method="POST" enctype="multipart/form-data">
+            <form id="composeForm" method="POST" enctype="multipart/form-data" data-placeholder-scope>
                 @csrf
                 <input type="hidden" name="_redirect_back" id="compose_redirect_back">
 
@@ -259,17 +259,16 @@
                     <span class="fs-13 compose-label">Subject</span>
                     <input type="text" name="subject" id="compose_subject"
                         class="form-control form-control-sm border-0 shadow-none bg-transparent"
-                        placeholder="Subject" required>
+                        placeholder="Subject" required data-placeholder-field>
                 </div>
 
-                {{-- Body --}}
-                <div class="px-1">
-                    <div id="compose_body"
-                        contenteditable="true"
-                        class="form-control border-0 shadow-none"
-                        style="min-height:240px;max-height:400px;overflow-y:auto;font-size:.92rem;line-height:1.6;outline:none;"
-                        data-placeholder="Write your message here…"></div>
-                    <textarea name="body" id="compose_body_hidden" class="d-none"></textarea>
+                {{-- Body: CKEditor (partials/_email-editor). Placeholders still in it are filled in on send. --}}
+                <div class="px-3 py-2">
+                    <div class="mb-2">@include('partials._placeholder-chips')</div>
+                    <div class="email-editor email-editor-sm">
+                        <textarea name="body" id="compose_body" class="form-control" rows="8"
+                                  data-email-editor data-placeholder-field placeholder="Write your message here…"></textarea>
+                    </div>
                 </div>
 
                 {{-- Attachment previews --}}
@@ -485,6 +484,9 @@
     </div>
 </div>
 
+{{-- Bulk Email modal - the same one Deals' Bulk Send uses, email channel only --}}
+@include('whatsapp._compose', ['bulkEmail' => true])
+
 @endsection
 
 @push('scripts')
@@ -555,6 +557,8 @@ function loadLeads(url, { push = true, quiet = false } = {}) {
             if (badge && fresh) badge.textContent = fresh.dataset.total || '0';
 
             resetBulkSelection();
+            // The sidebar's status links and the status filter follow the URL.
+            document.dispatchEvent(new CustomEvent('leads:loaded'));
         })
         .catch(err => {
             // An aborted request was superseded - leave the loader up for the new one.
@@ -913,7 +917,49 @@ function updateBulkToolbar() {
         const selectAll = document.getElementById('selectAll');
         if (selectAll) selectAll.checked = false;
     }
+
+    // "Email N selected" (whatsapp/_compose) counts the same boxes; "select
+    // all" ticks them without a change event, so tell it.
+    if (window.BulkSend) window.BulkSend.refresh();
 }
+
+// A queued Bulk Email: reload, so the rows show "Queued" and the ticks clear.
+document.addEventListener('bulk-send:queued', function () {
+    loadLeads(window.location.href, { push: false, quiet: true });
+});
+
+// ── Status: sidebar links + filter in step ────────────────────
+// The sidebar's Leads > New / Sent / Failed / Replied / All links switch the
+// status here without a page load, so the category stays (config/navigation.php).
+function currentStatus() {
+    return new URL(window.location.href).searchParams.get('status') || 'new';
+}
+
+function syncStatusUi() {
+    const status = currentStatus();
+
+    document.querySelectorAll('a[data-leads-status]').forEach(function (link) {
+        const on = link.dataset.leadsStatus === status;
+        link.classList.toggle('mm-active', on);
+        link.parentElement.classList.toggle('mm-active', on);
+    });
+
+    // Only Select2's own handler ("change.select2"), not the filter's loader.
+    if (window.jQuery) window.jQuery('#statusFilter').val(status).trigger('change.select2');
+}
+
+document.addEventListener('click', function (e) {
+    const link = e.target.closest('a[data-leads-status]');
+    if (! link || e.ctrlKey || e.metaKey || e.shiftKey) return; // a new tab gets the plain link
+
+    e.preventDefault();
+    const url = new URL(window.location.href);
+    url.searchParams.set('status', link.dataset.leadsStatus);
+    url.searchParams.delete('page');
+    loadLeads(url.toString());
+});
+
+document.addEventListener('leads:loaded', syncStatusUi);
 
 // ── Load templates into compose dropdown ──────────────────────
 let cachedTemplates = [];
@@ -939,13 +985,37 @@ let currentLeadWebsite = '';
 const senderName    = @json($senderName);
 const senderCompany = @json($senderCompany);
 
-function applyPlaceholders(text) {
-    return text
-        .replace(/\[Client Name\]/gi,       currentClientName)
-        .replace(/\[Company Name\]/gi,       currentClientName)
-        .replace(/\[Your Company Name\]/gi,  senderCompany)
-        .replace(/\[Your Name\]/gi,          senderName)
-        .replace(/\[Sender Name\]/gi,        senderName);
+/** Safe in text and in a quoted attribute. */
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value == null ? '' : String(value);
+    return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/**
+ * Fill the double-brace placeholders - client_name, sender_name,
+ * sender_company - and the older [Client Name] style: the same keys
+ * App\Support\EmailPlaceholders fills on the server, which also catches any
+ * still left on send. html: escape the values, the text is the editor's HTML.
+ * (No braces in this comment: this script is not @verbatim.)
+ */
+function applyPlaceholders(text, html) {
+    const values = { client_name: currentClientName, sender_name: senderName, sender_company: senderCompany };
+    const alias  = { name: 'client_name', company_name: 'client_name', your_name: 'sender_name', your_company: 'sender_company' };
+    const value  = function (key) {
+        const v = values[alias[key] || key];
+        return html ? escapeHtml(v) : v;
+    };
+
+    // Callbacks, so a "$&" in a company name is not read as a replacement pattern.
+    return String(text || '')
+        .replace(/\{\{\s*([A-Za-z_]+)\s*\}\}/g, function (match, key) {
+            key = key.toLowerCase();
+            return (alias[key] || key) in values ? value(key) : match;
+        })
+        .replace(/\[Client Name\]|\[Company Name\]|\{name\}/gi, function () { return value('client_name'); })
+        .replace(/\[Your Company Name\]/gi,        function () { return value('sender_company'); })
+        .replace(/\[Your Name\]|\[Sender Name\]/gi, function () { return value('sender_name'); });
 }
 
 // When a template is selected — populate subject + body with placeholders replaced
@@ -953,10 +1023,10 @@ document.getElementById('compose_template').addEventListener('change', function 
     const tpl = cachedTemplates.find(t => t.id == this.value);
     if (! tpl) return;
 
-    document.getElementById('compose_subject').value = applyPlaceholders(tpl.subject);
+    document.getElementById('compose_subject').value = applyPlaceholders(tpl.subject, false);
 
-    // Render HTML directly into the contenteditable div (preserves bold, lists, etc.)
-    document.getElementById('compose_body').innerHTML = applyPlaceholders(tpl.body);
+    // The template's HTML goes into the editor as is (bold, lists, links…)
+    EmailEditor.setData(document.getElementById('compose_body'), applyPlaceholders(tpl.body, true));
 
     // Load template attachments into compose modal
     window.setTemplateAttachments(tpl.attachments || []);
@@ -975,9 +1045,11 @@ function scrapeContactInBackground(leadId, fallbackName) {
             if (oldName && oldName !== currentClientName) {
                 const subjectEl = document.getElementById('compose_subject');
                 const bodyEl    = document.getElementById('compose_body');
-                const re = new RegExp(oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-                subjectEl.value  = subjectEl.value.replace(re, currentClientName);
-                bodyEl.innerHTML = bodyEl.innerHTML.replace(re, currentClientName);
+                const pattern   = function (text) { return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'); };
+                const newName   = currentClientName;
+                subjectEl.value = subjectEl.value.replace(pattern(oldName), function () { return newName; });
+                // The body is HTML, so the name in it is escaped.
+                EmailEditor.setData(bodyEl, EmailEditor.getData(bodyEl).replace(pattern(escapeHtml(oldName)), function () { return escapeHtml(newName); }));
             }
         })
         .catch(function () { /* silent fail */ });
@@ -1008,8 +1080,7 @@ document.addEventListener('click', function (event) {
             toSelect.appendChild(new Option(address + (i === 0 && addresses.length > 1 ? '  (main)' : ''), address, i === 0, i === 0));
         });
         document.getElementById('compose_subject').value         = '';
-        document.getElementById('compose_body').innerHTML        = '';
-        document.getElementById('compose_body_hidden').value     = '';
+        EmailEditor.setData(document.getElementById('compose_body'), '');
         document.getElementById('compose_template').value        = '';
         document.getElementById('composeForm').action            = leadRoute(leadRoutes.sendEmail, id);
         document.getElementById('compose_redirect_back').value   = window.location.search;
@@ -1080,10 +1151,10 @@ document.addEventListener('click', function (event) {
                             + '?path=' + encodeURIComponent(att.path)
                             + '&name=' + encodeURIComponent(att.name);
                         attachHtml += `
-                            <a href="${dlUrl}" download="${att.name}" class="attach-chip text-decoration-none"
-                               title="Download ${att.name}" style="cursor:pointer;">
+                            <a href="${dlUrl}" download="${escapeHtml(att.name)}" class="attach-chip text-decoration-none"
+                               title="Download ${escapeHtml(att.name)}" style="cursor:pointer;">
                                 <i class="bi bi-file-earmark-fill attach-icon" style="color:${color}"></i>
-                                <span class="attach-name">${att.name}</span>
+                                <span class="attach-name">${escapeHtml(att.name)}</span>
                                 <span class="attach-size">${fmtSize(att.size)}</span>
                                 <i class="bi bi-download ms-1" style="font-size:.7rem;"></i>
                             </a>`;
@@ -1091,20 +1162,21 @@ document.addEventListener('click', function (event) {
                     attachHtml += '</div>';
                 }
 
+                // body_html is made safe on the server (EmailHtml::render); the rest is escaped here.
                 document.getElementById('showEmailBody').innerHTML = `
                     <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center compose-row">
                         <span class="fs-13 compose-label">To</span>
-                        <span class="fw-semibold">${lead.email}</span>
+                        <span class="fw-semibold">${escapeHtml(lead.email)}</span>
                     </div>
                     <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center">
                         <span class="fs-13 compose-label">Subject</span>
-                        <span class="fw-semibold">${email.subject}</span>
+                        <span class="fw-semibold">${escapeHtml(email.subject)}</span>
                     </div>
                     <div class="border-bottom px-3 py-2 d-flex gap-2 align-items-center">
                         <span class="fs-13 compose-label">Sent</span>
                         <span class="fs-13">${new Date(email.sent_at).toLocaleString()}</span>
                     </div>
-                    <div class="px-3 py-3" style="min-height:120px;white-space:pre-wrap;font-size:.92rem;line-height:1.7;">${email.body}</div>
+                    <div class="px-3 py-3 sent-email-body">${data.body_html || ''}</div>
                     ${attachments.length > 0 ? '<div class="border-top px-3 pt-2 pb-1 fs-13"><i class="bi bi-paperclip me-1"></i>' + attachments.length + ' attachment' + (attachments.length > 1 ? 's' : '') + '</div>' + attachHtml : ''}
                 `;
             });
@@ -1324,11 +1396,9 @@ document.addEventListener('click', function (event) {
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        // Sync contenteditable body text → hidden textarea before FormData is built
-        const bodyText = document.getElementById('compose_body').innerText.trim();
-        document.getElementById('compose_body_hidden').value = bodyText;
+        const bodyEl = document.getElementById('compose_body');
 
-        if (! bodyText) {
+        if (EmailEditor.isEmpty(bodyEl)) {
             alert('Please write a message before sending.');
             return;
         }
@@ -1340,6 +1410,8 @@ document.addEventListener('click', function (event) {
         }
 
         const fd = new FormData(form);
+        // The editor's HTML - the textarea under it is only synced on a native submit.
+        fd.set('body', EmailEditor.getData(bodyEl));
         // Remove any stale attachment entries from FormData
         fd.delete('attachments[]');
         // Append user-uploaded files

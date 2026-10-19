@@ -98,14 +98,14 @@ IMAP_PASSWORD=<your-password>
 IMAP_FOLDER=INBOX.Sent
 
 # APIs
-SERPAPI_KEY=<your-serpapi-key>          # 100 free searches/month
+SERPAPI_KEY=<your-serpapi-key>          # 100 free searches/month. Fallback - har user Settings › SerpAPI me apni key daal sakta hai
 OPENAI_API_KEY=<your-openai-key>
 OPENAI_MODEL=gpt-3.5-turbo
 
 # Outreach identity
 SENDER_NAME="Your Name"
 
-# Lead search
+# Lead search (Settings › SerpAPI ka country / language pehle aata hai)
 LEAD_COUNTRY=                    # khaali = global
 LEAD_LANGUAGE=
 LEAD_FETCH_LIMIT=25
@@ -176,6 +176,10 @@ return [
 | `active` | `request()->routeIs()` ke patterns — kab highlight ho |
 | `icon` | Bootstrap Icons class (sirf top level) |
 | `children` | Sub-menu, kisi bhi depth tak |
+| `query` | Link ka query string (`['status' => 'sent']`). Item tabhi active jab page par bhi wahi value ho |
+| `default` | `query` ke saath: key missing ho to bhi active (page us value par default karta hai — Leads `status=new`) |
+| `data` | Link par `data-*` attributes, page script ke liye (Leads ke status links: `data-leads-status`) |
+| `module` / `can` | Jo user ye module / ability nahi rakhta, use item dikhta hi nahi (route middleware asli guard hai) |
 
 ### Rules
 

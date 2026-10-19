@@ -16,6 +16,7 @@ use App\Http\Controllers\MailSettingController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlatformController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SerpapiSettingController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VerifierController;
@@ -122,9 +123,10 @@ Route::middleware('module:deals')->group(function () {
     Route::post('/cash-leads/from-lead/{id}',  [CashLeadController::class, 'fromLead'])->name('cash-leads.from-lead')->whereNumber('id');
     Route::post('/cash-leads/from-gmb/{id}',   [CashLeadController::class, 'fromGmb'])->name('cash-leads.from-gmb')->whereNumber('id');
 
-    // Bulk WhatsApp to selected / all filtered deals - needs the WhatsApp module too
-    Route::post('/cash-leads/whatsapp',        [CashLeadController::class, 'whatsapp'])
-        ->middleware(['module:whatsapp', 'throttle:10,1'])->name('cash-leads.whatsapp');
+    // Bulk WhatsApp and/or email to selected / all filtered deals. The WhatsApp
+    // channel checks the WhatsApp module itself, so email works without it.
+    Route::post('/cash-leads/bulk-send',       [CashLeadController::class, 'bulkSend'])
+        ->middleware('throttle:10,1')->name('cash-leads.bulk-send');
 });
 
 // GMB Leads — businesses with a Google Business Profile but no website
@@ -180,13 +182,16 @@ Route::middleware('module:leads')->group(function () {
     // Bulk actions
     Route::post('/leads/bulk-delete', [LeadController::class, 'bulkDelete'])->name('leads.bulk-delete');
     Route::post('/leads/bulk-status', [LeadController::class, 'bulkStatus'])->name('leads.bulk-status');
+    Route::post('/leads/bulk-email', [LeadController::class, 'bulkEmail'])->middleware('throttle:10,1')->name('leads.bulk-email');
 
     // Export CSV
     Route::get('/export', [LeadController::class, 'export'])->name('leads.export');
 
     // Templates JSON for compose modal dropdown (the user's own templates)
+    // The body is made safe before it goes into the compose editor.
     Route::get('/api/templates', fn() => response()->json(
         \App\Models\EmailTemplate::select('id','name','subject','body','attachments')->where('status', 'active')->latest()->get()
+            ->each(fn (\App\Models\EmailTemplate $t) => $t->body = \App\Support\EmailHtml::render($t->body))
     ))->name('api.templates');
 });
 
@@ -194,6 +199,10 @@ Route::middleware('module:leads')->group(function () {
 Route::middleware('module:email_activity')->group(function () {
     Route::get('/email-activity',                [EmailActivityController::class, 'index'])->name('email-activity.index');
     Route::post('/email-activity/check-replies', [EmailActivityController::class, 'checkReplies'])->name('email-activity.check-replies');
+
+    // Bulk email sends - progress (polled by the page) and cancel
+    Route::get('/email-activity/batches/{batch}',         [EmailActivityController::class, 'batchStatus'])->name('email-activity.batch-status')->whereUuid('batch');
+    Route::post('/email-activity/batches/{batch}/cancel', [EmailActivityController::class, 'cancelBatch'])->name('email-activity.batch-cancel')->whereUuid('batch');
 });
 
 // WhatsApp — Cloud API messages, wa.me chats, delivery / read / reply tracking
@@ -225,6 +234,8 @@ Route::middleware('module:templates')->group(function () {
     Route::get('/settings/templates/create',    [EmailTemplateController::class, 'create'])->name('templates.create');
     Route::post('/settings/templates',          [EmailTemplateController::class, 'store'])->name('templates.store');
     Route::get('/settings/templates/{id}/edit', [EmailTemplateController::class, 'edit'])->name('templates.edit');
+    Route::get('/settings/templates/{id}/attachments/{file}', [EmailTemplateController::class, 'attachment'])
+        ->name('templates.attachment')->whereNumber('id')->where('file', '[A-Za-z0-9._-]+');
     Route::put('/settings/templates/{id}',      [EmailTemplateController::class, 'update'])->name('templates.update');
     Route::delete('/settings/templates/{id}',   [EmailTemplateController::class, 'destroy'])->name('templates.destroy');
     Route::post('/settings/templates/{id}/toggle', [EmailTemplateController::class, 'toggleStatus'])->name('templates.toggle');
@@ -254,6 +265,7 @@ Route::middleware('module:addresses')->group(function () {
     Route::get('/settings/addresses',          [AddressController::class, 'index'])->name('addresses.index');
     Route::post('/settings/addresses',         [AddressController::class, 'store'])->name('addresses.store');
     Route::put('/settings/addresses/{id}',     [AddressController::class, 'update'])->name('addresses.update');
+    Route::post('/settings/addresses/{id}/toggle', [AddressController::class, 'toggleStatus'])->name('addresses.toggle')->whereNumber('id');
     Route::delete('/settings/addresses/{id}',  [AddressController::class, 'destroy'])->name('addresses.destroy');
 });
 
@@ -263,6 +275,13 @@ Route::middleware('module:mail_settings')->group(function () {
     Route::put('/settings/mail/smtp',        [MailSettingController::class, 'updateSmtp'])->name('mail-settings.smtp');
     Route::put('/settings/mail/imap',        [MailSettingController::class, 'updateImap'])->name('mail-settings.imap');
     Route::post('/settings/mail/test/{type}', [MailSettingController::class, 'test'])->name('mail-settings.test');
+});
+
+// SerpAPI — the user's own key for Find Leads, the GMB search and AI company research
+Route::middleware('module:serpapi')->group(function () {
+    Route::get('/settings/serpapi',       [SerpapiSettingController::class, 'index'])->name('serpapi-settings.index');
+    Route::put('/settings/serpapi',       [SerpapiSettingController::class, 'update'])->name('serpapi-settings.update');
+    Route::post('/settings/serpapi/test', [SerpapiSettingController::class, 'test'])->middleware('throttle:10,1')->name('serpapi-settings.test');
 });
 
 // Branding — admin panel logo / icon and the logo in outgoing emails. Global, super admin only.

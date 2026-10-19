@@ -24,8 +24,8 @@ class WhatsappBulkService
 
     public const DEFAULT_INTERVAL = 5;
 
-    /** Written in a template value, replaced by each contact's own name. */
-    public const NAME_TOKEN = '{name}';
+    /** Written in a template value, replaced by each contact's own name: {{name}}, or the older {name}. */
+    public const NAME_TOKEN = '/\{\{\s*name\s*\}\}|\{name\}/i';
 
     public function __construct(private readonly WhatsappService $whatsapp) {}
 
@@ -152,14 +152,15 @@ class WhatsappBulkService
     }
 
     /**
-     * The template values for one contact: {name} becomes their name.
+     * The template values for one contact: {{name}} becomes their name.
      *
      * @param  array<int|string, string>  $params
      * @return array<int|string, string>
      */
     private function personalise(array $params, string $name): array
     {
-        return array_map(fn (string $value) => trim(str_ireplace(self::NAME_TOKEN, $name, $value)), $params);
+        // A callback, so a "$1" in a business's name is not read as a back-reference.
+        return array_map(fn (string $value) => trim(preg_replace_callback(self::NAME_TOKEN, fn () => $name, $value)), $params);
     }
 
     /** The message as the contact reads it - kept in the log. */

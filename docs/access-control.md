@@ -58,6 +58,7 @@ Kuch cheezein personal hain, Super Admin ke liye bhi:
 |---|---|
 | Mail Settings (SMTP/IMAP) | Admin apne mailbox se bheje, kisi user ke credentials se nahi |
 | WhatsApp Settings | Same — admin apne number/token se, kisi user ke token se nahi |
+| SerpAPI Settings | Search apne SerpAPI credits se — kisi user ki key admin ko nahi dikhti, na use hoti hai |
 | Notification bell | Har kisi ke job notifications admin ki bell me nahi aane chahiye |
 | Verifier "Clear history" | Ek click se sab users ki history na ude |
 
@@ -81,6 +82,7 @@ Record jis user ka hai, kaam **usi ke naam par** hota hai (`runAs(owner)`):
 |---|---|
 | Lead ko email bhejna | Lead ka owner — uska SMTP, uski address, uski Email Activity |
 | GMB lead / deal ko WhatsApp | Record ka owner — uska WhatsApp number/token, uska WhatsApp log |
+| Deals ka Bulk Send (email) | Deals ka owner — uska SMTP, Sent folder, Email Activity. Template attachments signed-in user ke template se hi lete hain |
 | Finder result "Save" | Row ka owner — lead usi ke workspace me |
 | "Mark as Deal" | Lead / GMB lead ka owner |
 | Bulk retry | Bulk ka owner |
@@ -97,7 +99,7 @@ user ka hai, aur `ActAsOwner` job middleware use usi user ke roop me chalata hai
 | `FindLeadsJob`, `FinderSearchJob`, `GmbSearchJob` | `userId` (dispatch karte waqt) |
 | `ProcessBulkJob` | `userId` = bulk ka owner (har chunk aage pass karta hai) |
 | `ScrapeLeadEmailJob`, `SendEmailJob` | `lead->user_id` |
-| `SendWhatsappMessageJob` | `userId` = bulk ke contacts ka owner (sab ek hi user ke hone chahiye) |
+| `SendWhatsappMessageJob`, `SendBulkEmailJob` | `userId` = bulk ke contacts ka owner (sab ek hi user ke hone chahiye) |
 
 - Bina owner wala job (deploy se pehle queue me pada) → **fail** hota hai, chupchap kuch galat nahi karta.
 - Owner delete ho chuka → job drop.

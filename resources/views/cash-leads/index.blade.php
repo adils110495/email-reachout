@@ -29,7 +29,7 @@
                     <p class="mb-0 fs-13">Leads you have talked to and expect to turn into paying customers.</p>
                 </div>
                 <div class="clearfix">
-                    @include('whatsapp._bulk-bar', ['bulkUrl' => route('cash-leads.whatsapp'), 'source' => 'deal', 'label' => 'deals'])
+                    @include('whatsapp._bulk-bar', ['bulkUrl' => route('cash-leads.bulk-send'), 'source' => 'deal', 'label' => 'deals', 'channels' => ['whatsapp', 'email']])
                     <a href="{{ route('cash-leads.export') }}" class="btn btn-light btn-sm m-1">
                         <i class="bi bi-download me-1"></i>Export CSV
                     </a>
@@ -153,7 +153,7 @@
 </div>
 @endforeach
 
-@include('whatsapp._compose')
+@include('whatsapp._compose', ['bulkEmail' => true])
 
 @endsection
 

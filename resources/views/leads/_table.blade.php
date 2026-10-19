@@ -57,9 +57,10 @@
                     <tr data-id="{{ $lead->id }}"
                         data-search="{{ strtolower($lead->company_name . ' ' . implode(' ', $lead->email_list) . ' ' . $lead->website . ' ' . $lead->status) }}">
 
-                        {{-- Checkbox --}}
+                        {{-- Checkbox: .row-check drives the bulk toolbar, .wa-row-check Bulk Email (whatsapp/_compose) --}}
                         <td>
-                            <input type="checkbox" class="form-check-input row-check" value="{{ $lead->id }}">
+                            <input type="checkbox" class="form-check-input row-check wa-row-check" value="{{ $lead->id }}"
+                                   data-name="{{ $lead->company_name }}" aria-label="Select {{ $lead->company_name }}">
                         </td>
 
                         <td data-val="{{ $lead->id }}" class="d-none d-md-table-cell"><span>{{ ($leads->currentPage() - 1) * $leads->perPage() + $loop->iteration }}</span></td>
@@ -101,6 +102,26 @@
                                 };
                             @endphp
                             <span class="badge {{ $badgeClass }} light">{{ ucfirst($lead->status) }}</span>
+
+                            {{-- Mail activity of the newest email: waiting in a bulk send, opened, replied, failed --}}
+                            @if($mail = $lead->latestEmail)
+                                @php
+                                    $activity = match (true) {
+                                        in_array($mail->status, \App\Models\LeadEmail::PENDING, true) => ['bi-hourglass-split', 'text-muted', 'Queued'],
+                                        $mail->status === \App\Models\LeadEmail::STATUS_FAILED          => ['bi-exclamation-circle', 'text-danger', 'Last email failed'],
+                                        $mail->status !== \App\Models\LeadEmail::STATUS_SENT            => null,   // cancelled
+                                        (bool) $mail->replied_at                                         => ['bi-reply', 'text-success', 'Replied'],
+                                        $mail->open_count > 0                                            => ['bi-envelope-open', 'text-info', 'Opened ' . $mail->open_count . '×'],
+                                        default                                                          => ['bi-envelope', 'text-muted', 'Not opened'],
+                                    };
+                                @endphp
+                                @if($activity)
+                                    <div class="fs-12 mt-1 text-nowrap {{ $activity[1] }}"
+                                         title="{{ $mail->status === \App\Models\LeadEmail::STATUS_FAILED ? $mail->error : ($mail->last_opened_at ? 'Last opened ' . $mail->last_opened_at->diffForHumans() : '') }}">
+                                        <i class="bi {{ $activity[0] }} me-1"></i>{{ $activity[2] }}
+                                    </div>
+                                @endif
+                            @endif
                         </td>
 
                         <td data-val="{{ strtolower($lead->platform?->name ?? '') }}" class="d-none d-lg-table-cell">
@@ -170,8 +191,10 @@
                                         </li>
                                     @endif
 
-                                    {{-- Send Email / Retry → opens Gmail-style compose modal --}}
-                                    @if($lead->email && in_array($lead->status, ['new', 'failed']))
+                                    {{-- Send Email / Retry → opens Gmail-style compose modal.
+                                         Not while a bulk email to this lead is still queued: it would get two. --}}
+                                    @if($lead->email && in_array($lead->status, ['new', 'failed'])
+                                        && ! in_array($lead->latestEmail?->status, \App\Models\LeadEmail::PENDING, true))
                                         <li>
                                             <button type="button"
                                                 class="dropdown-item btn-compose"

@@ -94,6 +94,20 @@ class AddressController extends Controller
         return redirect()->route('addresses.index', $this->redirectQuery($request))->with('success', 'Address updated successfully.');
     }
 
+    /**
+     * Set Active / Set Inactive from the row menu. An inactive address is
+     * left out of the compose modal's address list and of the email footer.
+     */
+    public function toggleStatus(Request $request, int $id): RedirectResponse
+    {
+        $request->validate(['status' => ['required', 'in:active,inactive']]);
+
+        Address::findOrFail($id)->update(['status' => $request->status]);
+
+        return redirect()->route('addresses.index', $this->redirectQuery($request))
+            ->with('success', $request->status === 'active' ? 'Address activated.' : 'Address deactivated.');
+    }
+
     public function destroy(Request $request, int $id): RedirectResponse
     {
         Address::findOrFail($id)->delete();

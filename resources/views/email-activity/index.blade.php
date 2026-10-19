@@ -91,3 +91,8 @@
 </div>
 
 @endsection
+
+@push('scripts')
+{{-- Polls a running bulk send's progress panel (email-activity/_table) and swaps the list in. --}}
+<script src="{{ asset('assets/js/bulk-progress.js') }}?v={{ filemtime(public_path('assets/js/bulk-progress.js')) }}"></script>
+@endpush

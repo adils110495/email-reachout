@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\EmailExtractorService;
 use App\Services\LeadFinderService;
 use App\Services\ScraperService;
+use App\Services\SerpApiConfigService;
 use App\Services\UserAccessService;
 use Illuminate\Console\Command;
 
@@ -57,7 +58,9 @@ class FindLeadsCommand extends Command
 
         // 1. Find candidate websites
         $this->line('  <fg=yellow>→</> Searching for websites...');
-        $results = $this->leadFinder->find($keyword, $limit);
+        // Country / language: the owner's Settings > SerpAPI, else LEAD_COUNTRY / LEAD_LANGUAGE.
+        $serp    = app(SerpApiConfigService::class);
+        $results = $this->leadFinder->find($keyword, $serp->country(), $serp->language());
 
         if (empty($results)) {
             $this->warn('No results found. Try a different keyword.');

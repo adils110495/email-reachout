@@ -104,14 +104,20 @@ AIService (OpenAI)
    └── generateOutreachEmail()    → body
    │      (researchCompany() pehle website se context nikalta hai)
    ▼
-Modal me subject + body prefill (user edit kar sakta hai)
+Modal me subject + body prefill (user edit kar sakta hai) — body CKEditor me
    │  Template dropdown se ready-made template bhi choose kar sakta hai
+   │    (placeholders {{client_name}} etc. usi waqt bhar jaate hain)
+   │  "Insert" chips se placeholder cursor par daal sakta hai
    │  Attachments add kar sakta hai
    ▼
-POST /send-email/{id}
+POST /send-email/{id}       body = editor ka HTML
    │
    ▼
-Validate: subject, body, attachments (max 10 MB each)
+Validate: subject, body (khaali editor nahi), attachments (max 10 MB each)
+   │
+   ▼
+Bache placeholders bharo + body saaf karo
+   (EmailPlaceholders::fill + EmailHtml::render — docs/modules/settings.md)
    │
    ├── Lead ka email hai?      ✗ → error
    ├── Pehle se sent hai?      ✗ → error
@@ -139,17 +145,45 @@ hai (bulk/automated sending ke liye), par compose modal direct bhejta hai.
 
 | Feature | Detail |
 |---|---|
-| Filters | Status, Category, Platform (Select2, URL-driven) |
+| Filters | Status, Category, Platform (Select2, URL-driven) — `LeadController::filters()` / `filtered()` |
+| **Default status** | **New** — bina `status` ke list sirf New leads (jinhe abhi email nahi gaya). `status=all` = sab. Galat value = New |
 | Live search | Client-side (`data-live-filter`) |
 | Sorting | Client-side column sort |
-| Bulk actions | Select all → bulk delete / bulk status change |
+| Bulk actions | Select all → bulk delete / bulk status change · **Bulk Email** (neeche) |
+| Mail activity | Status badge ke neeche latest email ka haal: ⏳ Queued · ✉ Not opened · 📬 Opened 3× · ↩ Replied · ⚠ Last email failed (hover = reason). `Lead::latestEmail()`, eager-loaded — ek query |
 | Pagination | 10/25/50/100 |
 | Export | CSV |
-| Row actions | View · Edit · Compose · Mark sent · Delete |
+| Row actions | View · Edit · Compose · Mark sent · Delete. Bulk email queue me ho to **Send Email** nahi dikhta (do email chale jaate) |
 
 > **Category filter zaroori hai** — bina category choose kiye table khaali dikhti hai
 > ("Select a category to view leads"). Ye deliberate hai — bina filter ke hazaaron leads
 > load karna slow hota.
+
+### Sidebar — status ke links
+
+Sidebar me **Leads** ab group hai: **New Leads** (default) · Sent · Failed · Replied · All Leads
+(`config/navigation.php`, `query` + `default` keys — [configuration.md](../configuration.md)).
+
+- Leads page par hote hue ye links **page reload nahi karte** — sirf status badalte hain, category / platform wahi rehte hain (`data-leads-status`, `leads/index.blade.php`). Ctrl/Cmd-click = naya tab, normal link.
+- Status filter dropdown, URL aur sidebar ka highlight teeno saath chalte hain (`leads:loaded` event, back button bhi).
+- Kisi aur page se link kholo to category nahi hoti → "Select a category" — category chuno, status wahi rahega.
+
+### Bulk Email
+
+Card header me **Email N selected** (checkbox wali rows) aur **Bulk Email** (current filters ki
+saari leads). Wahi modal aur engine jo Deals ka Bulk Send hai — sirf Email channel
+([whatsapp.md](whatsapp.md) › Bulk send, `Concerns\QueuesBulkSend`, `EmailBulkService`).
+
+| Cheez | Kaise |
+|---|---|
+| Endpoint | `POST /leads/bulk-email` (`leads.bulk-email`, `throttle:10,1`) → `LeadController::bulkEmail()` |
+| Kisko | Lead ka **main** email (`email` column). Bina email wali leads skip |
+| "All matching" | `filtered()` — jo list me dikh raha hai: default **New**, us category / platform ki. **Category zaroori** — bina category list khaali hai, to bulk bhi mana karta hai |
+| Skip already emailed | Default on — `sent` / `replied` leads aur jinhe pehle email gaya, skip |
+| Editor / placeholders | CKEditor + `{{client_name}}` = lead ka company name |
+| Lead status | Job email bhejte hi lead **Sent** (`SendBulkEmailJob::updateLead()`); fail ho aur lead New / Failed thi to **Failed**. `replied` kabhi nahi badalta |
+| Progress / Stop | Toast ka **Email progress** → Email Activity `?batch=`. List reload hoti hai, rows par "Queued" dikhta hai |
+| Log | `lead_emails` me `lead_id` + `to_email` ke saath — Email Activity, open tracking, reply check sab normal email jaisa |
 
 ---
 
@@ -184,8 +218,8 @@ ho to bhara jata hai.
 | Status | Kab set hota hai |
 |---|---|
 | `new` | Lead banate waqt (default) |
-| `sent` | Email successfully gaya, ya user ne manually "Mark sent" kiya |
-| `failed` | Email bhejte waqt exception aaya |
+| `sent` | Email successfully gaya (compose ya Bulk Email), ya user ne manually "Mark sent" kiya |
+| `failed` | Email bhejte waqt exception aaya (Bulk Email: sirf New / Failed lead par) |
 | `replied` | **Manually set hota hai** — koi automatic reply detection nahi hai |
 
 > Dashboard ka "reply rate" `replied` leads ÷ sent emails hai. Kyunki `replied` manual hai,

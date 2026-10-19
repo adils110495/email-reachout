@@ -126,10 +126,11 @@ class AIService
      */
     private function researchCompany(Lead $lead): string
     {
-        $apiKey = config('services.serpapi.key');
+        // The acting user's key from Settings > SerpAPI, else the server's SERPAPI_KEY.
+        $apiKey = app(SerpApiConfigService::class)->key();
 
         if (empty($apiKey)) {
-            Log::debug('AIService: SERPAPI_KEY not set — skipping company research');
+            Log::debug('AIService: no SerpAPI key — skipping company research');
             return '';
         }
 

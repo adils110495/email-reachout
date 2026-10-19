@@ -82,15 +82,23 @@ $lead->hasEmail()   // bool
 ```
 
 ### `lead_emails`
-Kaunsa email kis lead ko gaya.
+Kaunsa email kisko gaya — Leads compose modal se ek lead ko, ya **Bulk Send** (Deals) se
+kai contacts ko.
 
 | Column | Note |
 |---|---|
-| `lead_id` | FK, cascade delete |
-| `subject`, `body` | Jo actually bheja gaya |
+| `lead_id` | FK, cascade delete, **nullable** — deal ko gaye bulk email me khaali |
+| `cash_lead_id` | FK → cash_leads, **nullOnDelete** — Bulk Send ka deal |
+| `batch_id` | uuid, indexed, nullable — ek bulk send ke saare emails ka same |
+| `contact_name`, `to_email` | **Snapshot** (bulk) — deal delete ho to bhi log padhne layak; `to_email` reply match bhi karta hai |
+| `subject`, `body` | Jo actually bheja gaya, placeholders bhar kar. `body` ab editor ka saaf HTML hai; purani rows plain text — dono `EmailHtml::render()` se dikhte / jaate hain |
 | `attachments` | JSON array — `{name, path, size, mime}` |
-| `status` | `sent` / `failed` |
+| `status` | string(15): `queued` / `sending` / `sent` / `failed` / `cancelled` (pehle enum `sent`/`failed` tha) |
+| `error` | text, nullable — SMTP ka reason (bulk, failed par) |
 | `sent_at` | Dashboard ka "Emails Sent" isi se |
+
+**Index:** `(user_id, to_email)` — Bulk Send ka "Skip contacts already emailed".
+Migration: `2026_10_16_000002_add_bulk_columns_to_lead_emails_table`.
 
 ### `email_templates`
 Ready-made templates. `attachments` JSON cast hota hai.
@@ -224,6 +232,18 @@ hoti hain, duplicate nahi banti.
 
 3 migrations, `2026_10_15_*` (`000003` = bulk ke `batch_id` + `params`). Module detail: [modules/whatsapp.md](modules/whatsapp.md)
 
+### `serpapi_settings` — har user ki SerpAPI key
+
+Migration `2026_10_16_000003`. Detail: [modules/settings.md](modules/settings.md) › SerpAPI
+
+| Column | Type | Kaam |
+|---|---|---|
+| `user_id` | FK, **unique**, cascade | Ek user = ek row |
+| `api_key` | text, **encrypted**, nullable | Khaali = server ka `SERPAPI_KEY` |
+| `country` | string(2), nullable | Find Leads ka Google `gl` (`in`) |
+| `language` | string(10), nullable | Find Leads ka Google `hl` (`en`) |
+| `is_active` | bool | Off = key aur defaults ignore, `.env` wale chalein |
+
 ### `whatsapp_settings` — har user ka Cloud API connection
 
 | Column | Type | Kaam |
@@ -255,7 +275,7 @@ hoti hain, duplicate nahi banti.
 | `type` | string(10) | `template` / `text` |
 | `batch_id` | uuid, indexed, nullable | Bulk send — ek bulk ke saare messages ka same |
 | `template_name`, `template_language` | nullable | Template message ho to |
-| `params` | json, nullable | Bulk: is contact ke template values (`{name}` bhar kar) — job inhi se bhejta hai |
+| `params` | json, nullable | Bulk: is contact ke template values (`{{name}}` bhar kar) — job inhi se bhejta hai |
 | `body` | text, nullable | Jo bheja (template ho to variables bhar kar) |
 | `wamid` | string, **unique**, nullable | Meta ki message id — webhook status isi se match |
 | `status` | string(15) | `queued` / `sending` / `sent` / `delivered` / `read` / `failed` / `cancelled` / `manual` |
@@ -315,7 +335,8 @@ Exact breakdown chahiye to detail page par per-status chips hain (`BulkControlle
 | `email_verifications.bulk_id` | **cascade** | Same |
 | `email_verifications.lead_id` | **null** | Lead delete ho jaye to bhi verification history rehni chahiye |
 | `bulks.category_id` | **null** | Category delete ho to run ka record bacha rahe |
-| `lead_emails.lead_id` | cascade | Pehle se tha |
+| `lead_emails.lead_id` | cascade | Pehle se tha (ab nullable) |
+| `lead_emails.cash_lead_id` | **null** | Deal hate to bhi bulk email ka log rahe (`contact_name` / `to_email` snapshot) |
 
 Matlab `Bulk` delete karne par uske items aur verifications **apne aap** hat jaate hain —
 `BulkController::destroy()` me manually delete karne ki zaroorat nahi.

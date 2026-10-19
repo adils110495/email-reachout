@@ -15,6 +15,11 @@
 |   active   - route-name pattern(s) passed to request()->routeIs(). On a
 |              parent, list every pattern its descendants match so the module
 |              stays open/highlighted while you are inside it.
+|   query    - query string for the link (['status' => 'sent']). The item is
+|              then active only while the page has those values too.
+|   default  - with query: also active when those keys are missing, because
+|              the page falls back to them (Leads opens on status=new)
+|   data     - data-* attributes for the link, for page scripts
 |   icon     - Bootstrap Icons class (top-level sidebar items, dropdown)
 |   module   - hide unless the user has this module (User::MODULES)
 |   can      - hide unless the user passes this Gate ability
@@ -63,12 +68,53 @@ return [
                     'icon'   => 'bi-stack',
                     'module' => 'bulks',
                 ],
+                // Leads opens on New - the leads still to email. The other
+                // statuses are one click away; on the Leads page itself these
+                // links switch the status filter in place and keep the
+                // category (data-leads-status, leads/index.blade.php).
                 [
-                    'label'  => 'Leads',
-                    'route'  => 'leads.index',
-                    'active' => ['leads.index'],
-                    'icon'   => 'bi-people',
-                    'module' => 'leads',
+                    'label'    => 'Leads',
+                    'active'   => ['leads.index'],
+                    'icon'     => 'bi-people',
+                    'module'   => 'leads',
+                    'children' => [
+                        [
+                            'label'   => 'New Leads',
+                            'route'   => 'leads.index',
+                            'active'  => ['leads.index'],
+                            'query'   => ['status' => 'new'],
+                            'default' => true,
+                            'data'    => ['leads-status' => 'new'],
+                        ],
+                        [
+                            'label'  => 'Sent',
+                            'route'  => 'leads.index',
+                            'active' => ['leads.index'],
+                            'query'  => ['status' => 'sent'],
+                            'data'   => ['leads-status' => 'sent'],
+                        ],
+                        [
+                            'label'  => 'Failed',
+                            'route'  => 'leads.index',
+                            'active' => ['leads.index'],
+                            'query'  => ['status' => 'failed'],
+                            'data'   => ['leads-status' => 'failed'],
+                        ],
+                        [
+                            'label'  => 'Replied',
+                            'route'  => 'leads.index',
+                            'active' => ['leads.index'],
+                            'query'  => ['status' => 'replied'],
+                            'data'   => ['leads-status' => 'replied'],
+                        ],
+                        [
+                            'label'  => 'All Leads',
+                            'route'  => 'leads.index',
+                            'active' => ['leads.index'],
+                            'query'  => ['status' => 'all'],
+                            'data'   => ['leads-status' => 'all'],
+                        ],
+                    ],
                 ],
 
                 [
@@ -103,7 +149,7 @@ return [
                 // Settings module - collapsible, holds every settings page.
                 [
                     'label'    => 'Settings',
-                    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*', 'mail-settings.*', 'whatsapp-settings.*', 'branding.*', 'users.*'],
+                    'active'   => ['templates.*', 'platforms.*', 'categories.*', 'addresses.*', 'mail-settings.*', 'serpapi-settings.*', 'whatsapp-settings.*', 'branding.*', 'users.*'],
                     'icon'     => 'bi-gear',
                     'children' => [
                         [
@@ -147,6 +193,12 @@ return [
                             'route'  => 'mail-settings.index',
                             'active' => ['mail-settings.*'],
                             'module' => 'mail_settings',
+                        ],
+                        [
+                            'label'  => 'SerpAPI',
+                            'route'  => 'serpapi-settings.index',
+                            'active' => ['serpapi-settings.*'],
+                            'module' => 'serpapi',
                         ],
                         [
                             'label'  => 'WhatsApp Settings',

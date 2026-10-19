@@ -51,6 +51,45 @@
         .email-body p:last-child {
             margin-bottom: 0;
         }
+        /* What the editor can produce: headings, lists, quotes, links, tables. */
+        .email-body h2, .email-body h3 {
+            margin: 0 0 12px;
+            color: #222222;
+            line-height: 1.4;
+        }
+        .email-body h2 { font-size: 20px; }
+        .email-body h3 { font-size: 17px; }
+        .email-body ul, .email-body ol {
+            margin: 0 0 14px 22px;
+            padding: 0;
+        }
+        .email-body li {
+            margin-bottom: 6px;
+            line-height: 1.7;
+        }
+        .email-body a {
+            color: #4361ee;
+        }
+        .email-body blockquote {
+            margin: 0 0 14px;
+            padding: 4px 0 4px 14px;
+            border-left: 3px solid #d0d5e8;
+            color: #555555;
+        }
+        .email-body table {
+            width: 100%;
+            margin: 0 0 14px;
+            border-collapse: collapse;
+        }
+        .email-body th, .email-body td {
+            padding: 6px 10px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+            vertical-align: top;
+        }
+        .email-body figure {
+            margin: 0;
+        }
 
         /* ── FOOTER ── */
         .email-footer {
@@ -140,12 +179,9 @@
     <div class="header-divider"></div>
 
     {{-- ── BODY ── --}}
+    {{-- Safe HTML from OutreachMail (App\Support\EmailHtml::render): only formatting tags survive. --}}
     <div class="email-body">
-        @foreach(explode("\n", $emailBody) as $line)
-            @if(trim($line))
-                <p>{{ $line }}</p>
-            @endif
-        @endforeach
+        {!! $bodyHtml !!}
     </div>
 
     {{-- ── FOOTER ── --}}

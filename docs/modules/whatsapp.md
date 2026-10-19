@@ -5,8 +5,9 @@
 **URL:** `/whatsapp` (messages) · `/settings/whatsapp` (connection)
 **Module key:** `whatsapp` (`User::MODULES`)
 
-GMB Leads aur Deals ke paas phone number hota hai, email nahi — WhatsApp unke liye sabse
-seedha channel hai. Ye module wahi deta hai: message bhejo, aur dekho delivered / read /
+GMB Leads ke paas sirf phone number hota hai, email nahi — WhatsApp unke liye sabse seedha
+channel hai (Deals ke paas aksar dono hote hain, isliye wahan Bulk Send WhatsApp + email
+dono bhejta hai). Ye module wahi deta hai: message bhejo, aur dekho delivered / read /
 replied hua ya nahi.
 
 ---
@@ -70,28 +71,71 @@ GMB / Deals table me phone ke aage `🟢 2` jaisa badge = is contact ko kitne Wh
 
 ---
 
-## Bulk send — ek template, bahut saare contacts
+## Bulk send — WhatsApp, email, ya dono, bahut saare contacts ko
 
 GMB Leads aur Deals ke card header me do button:
 
-| Button | Kisko jata hai |
-|---|---|
-| **WhatsApp N selected** | Checkbox wali rows (button tabhi dikhta hai jab kuch select ho) |
-| **Bulk WhatsApp** | Current filters se match hone wale **saare** contacts — sirf current page nahi |
+| Page | Button | Kisko jata hai |
+|---|---|---|
+| GMB Leads | **WhatsApp N selected** / **Bulk WhatsApp** | Sirf WhatsApp — GMB lead ke paas email nahi hota |
+| Deals | **Send to N selected** / **Bulk Send** | WhatsApp **aur/ya Email** — modal me "Send by" se chuno |
+| Leads | **Email N selected** / **Bulk Email** | Sirf Email — lead ke paas phone nahi hota. Details: [leads.md](leads.md) › Bulk Email |
+
+"N selected" = checkbox wali rows (button tabhi dikhta hai jab kuch select ho). "Bulk …" =
+current filters se match hone wale **saare** contacts — sirf current page nahi.
 
 "All matching" ke liye controller **wahi** `filtered()` query use karta hai jo list banati hai
 (`GmbLeadController` / `CashLeadController`), aur JS current URL ka query string bhejta hai —
 isliye jo list me dikh raha hai, bilkul wahi rows jaati hain.
 
+### Deals par channels — "Send by"
+
+```
+┌──────────────────────────────────────────────────┐
+│ Bulk Send                                        │
+│ To the 12 selected deals.                        │
+│ Send by  [✓ WhatsApp] [✓ Email]                  │
+│ ── WhatsApp ──────────────────────────────────── │
+│ Approved template [▼]  {{1}} [{{name}}] Gap [5s] │
+│ ── Email ─────────────────────────────────────── │
+│ Email template [▼]                Gap [30s]      │
+│ Subject [Idea for {{client_name}}]               │
+│ Message  Insert: {{client_name}} {{sender_name}} │
+│ [B I U | link • 1. | ...  CKEditor ..........]   │
+│ 📎 brochure.pdf ×                                │
+│ [✓] Skip contacts already reached on that channel│
+│                         [Cancel] [Queue messages]│
+└──────────────────────────────────────────────────┘
+```
+
+- Dono tick = har deal ko WhatsApp **bhi** aur email **bhi**. Har channel sirf un deals ko jaata hai jinke paas uska number / address hai — phone wali deal ko WhatsApp, email wali ko email.
+- WhatsApp sirf tab default tick hota hai jab Cloud API connected ho. Jis user ke paas WhatsApp module nahi, use sirf Email dikhta hai (button "Bulk Send" hi rehta hai).
+- Deals table me checkbox tab enable hai jab deal ke paas email ho (ya phone + WhatsApp module). Email ke aage `✉ 2` badge = is deal ko Bulk Send se kitne email gaye.
+- Ek hi request me dono queue hote hain. Mailbox na ho ya WhatsApp connected na ho to **kuch bhi** queue nahi hota (pehle dono check, phir queue) — aadha bulk nahi chhootta.
+- Toast me dono ke progress link: **WhatsApp progress** (`/whatsapp?batch=`) aur **Email progress** (`/email-activity?batch=`, Email Activity module ho to).
+
+### Email channel
+
+| Cheez | Kaise |
+|---|---|
+| Template | Email Templates module ke active templates. Chunne par subject + body bhar jaate hain — body **CKEditor** me, formatting ke saath (`EmailHtml::render()` se saaf karke). Edit kar sakte ho |
+| Naam | `{{client_name}}` → har deal ka company name, `{{sender_name}}` / `{{sender_company}}` → aapka. "Insert" chips se daalo. Purane `[Client Name]` style bhi chalte hain (`EmailPlaceholders::fill()`, server par; HTML body me naam escape hota hai) |
+| Attachments | Sirf chune hue template ki — `×` se hata sakte ho. Server posted path par bharosa nahi karta: path us template ki list me hona chahiye (warna server ki koi bhi file attach ho jaati) |
+| Gap | 10 / 30 / 60 / 120 sec, default **30** — ek mailbox se ek saath same cold emails = spam |
+| Skip | Jis address ko pehle email gaya (bulk ka `to_email`, ya `sent`/`replied` lead ka email) wo skip. Failed / cancelled count nahi hote |
+| Kaun bhejta hai | Deal ka **owner** — uska SMTP (Mail Settings), uska Sent folder, uski Email Activity |
+| Tracking | Open pixel + Message-ID — normal email jaisa. Reply checker bulk email ka `to_email` bhi match karta hai (deal ka koi lead nahi hota) |
+| Progress / Stop | Email Activity `?batch=<uuid>` — progress bar, chips (Waiting / Sent / Opened / Replied / Failed / Cancelled), **Stop**. Wahi poller jo WhatsApp page par hai (`assets/js/bulk-progress.js`) |
+
 ### Rules
 
 - **Sirf Cloud API + approved template.** Free text bulk me nahi — 24 ghante ke bahar Meta waise bhi reject karta.
-- Template value me `{name}` likho → har contact ka apna naam (`WhatsappBulkService::personalise()`). Pehla variable apne aap `{name}` se bhar jata hai.
+- Template value me `{{name}}` likho → har contact ka apna naam (`WhatsappBulkService::personalise()`). Pehla variable apne aap `{{name}}` se bhar jata hai. Purana `{name}` bhi chalta hai.
 - **Gap between messages** (2 / 5 / 10 / 30 / 60 sec, default 5) — ek saath 200 same messages = number report hota hai, quality rating girti hai.
-- **Skip contacts already messaged** (default on) — jis number ko pehle message gaya (failed / cancelled chhod kar) wo skip.
-- Ek hi number do baar list me ho → ek hi message. Bina usable number wale skip.
-- Max `WHATSAPP_BULK_MAX` (default **250**) contacts per bulk — Meta naye number ko din me 250 conversation shuru karne deta hai.
-- Saare contacts **ek hi user** ke hone chahiye (message owner ke number se jata hai). Super Admin ko alag-alag users ke contacts ek saath bhejne ho to select karke bhejna hoga.
+- **Skip contacts already messaged** (default on) — jis number ko pehle message gaya (failed / cancelled chhod kar) wo skip. Email channel me yahi "already emailed" hai.
+- Ek hi number (ya email address) do baar list me ho → ek hi message. Bina usable number / address wale skip.
+- Max `WHATSAPP_BULK_MAX` (default **250**) contacts per bulk — Meta naye number ko din me 250 conversation shuru karne deta hai. Email channel bhi isi limit me hai.
+- Saare contacts **ek hi user** ke hone chahiye (message owner ke number / mailbox se jata hai). Super Admin ko alag-alag users ke contacts ek saath bhejne ho to select karke bhejna hoga.
 
 ### Kaise chalta hai
 
@@ -117,7 +161,7 @@ WhatsappBulkService::queue()          (runAs owner)
 
 ### Progress aur Stop
 
-Send ke baad toast me **View progress** → `/whatsapp?batch=<uuid>`:
+Send ke baad toast me **WhatsApp progress** → `/whatsapp?batch=<uuid>` (email ka progress Email Activity par — upar dekho):
 
 - Progress bar + chips: Waiting / Sent / Delivered / Read / Replied / Failed / Cancelled
 - Chalte hue bulk ko page har 5 sec poll karta hai (`whatsapp.batch-status`) aur list swap karta hai — khatam hone par, 3 fail par, ya tab hidden ho to ruk jata hai.
@@ -235,17 +279,21 @@ Naye users (`modules = null`) ko module apne aap milta hai. Jin users ki modules
 app/Http/Controllers/WhatsappController.php          page, export, templates, send, open-chat
 app/Http/Controllers/WhatsappSettingController.php   connection form + test
 app/Http/Controllers/WhatsappWebhookController.php   Meta webhook (public)
-app/Http/Controllers/Concerns/QueuesWhatsappBulk.php bulk endpoint (GMB + Deals controllers use it)
+app/Http/Controllers/Concerns/QueuesBulkSend.php     bulk endpoint, WhatsApp + email (GMB + Deals controllers use it)
 app/Services/WhatsappService.php                     number, Graph API, templates, webhook
 app/Services/WhatsappBulkService.php                 bulk: queue, cancel, progress
+app/Services/EmailBulkService.php                    bulk email (Deals): queue, cancel, progress
 app/Jobs/SendWhatsappMessageJob.php                  one queued bulk message
+app/Jobs/SendBulkEmailJob.php                        one queued bulk email
 app/Models/WhatsappSetting.php                       per-user connection
 app/Models/WhatsappMessage.php                       log + statuses + badges
 
 resources/views/whatsapp/index.blade.php             messages page (+ bulk progress poller)
 resources/views/whatsapp/_table.blade.php            AJAX partial (+ bulk progress panel)
-resources/views/whatsapp/_compose.blade.php          shared modal, single + bulk (GMB, Deals, WhatsApp)
-resources/views/whatsapp/_bulk-bar.blade.php         bulk buttons on GMB / Deals
+resources/views/whatsapp/_compose.blade.php          shared modal, single + bulk (GMB, Deals, WhatsApp); bulk email section with ['bulkEmail' => true]
+resources/views/whatsapp/_bulk-bar.blade.php         bulk buttons on GMB / Deals ('channels' => ['whatsapp', 'email'])
+resources/views/email-activity/_table.blade.php      bulk email progress panel (?batch=)
+public/assets/js/bulk-progress.js                    progress poller, WhatsApp page + Email Activity
 resources/views/whatsapp-settings/index.blade.php    settings page
 ```
 
@@ -260,7 +308,9 @@ POST  /whatsapp/open-chat           whatsapp.open-chat
 GET   /whatsapp/batches/{uuid}      whatsapp.batch-status   (JSON, poller)
 POST  /whatsapp/batches/{uuid}/cancel  whatsapp.batch-cancel
 POST  /gmb-leads/whatsapp           gmb-leads.whatsapp      bulk  (module:gmb_leads + whatsapp)
-POST  /cash-leads/whatsapp          cash-leads.whatsapp     bulk  (module:deals + whatsapp)
+POST  /cash-leads/bulk-send         cash-leads.bulk-send    bulk WhatsApp + email  (module:deals; WhatsApp channel checks module:whatsapp itself)
+GET   /email-activity/batches/{uuid}         email-activity.batch-status   (JSON, poller)
+POST  /email-activity/batches/{uuid}/cancel  email-activity.batch-cancel
 GET   /settings/whatsapp            whatsapp-settings.index
 PUT   /settings/whatsapp            whatsapp-settings.update
 POST  /settings/whatsapp/test       whatsapp-settings.test

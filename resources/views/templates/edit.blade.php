@@ -49,6 +49,3 @@
 
 @endsection
 
-@push('scripts')
-@include('templates._quill-init', ['existingBody' => $template->body])
-@endpush

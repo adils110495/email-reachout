@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ExportsCsv;
+use App\Http\Controllers\Concerns\QueuesBulkSend;
 use App\Jobs\FindLeadsJob;
 use App\Mail\OutreachMail;
 use App\Models\Address;
@@ -18,6 +19,11 @@ use App\Services\EmailSenderService;
 use App\Services\ImapService;
 use App\Services\MailConfigService;
 use App\Services\ScraperService;
+use App\Services\SerpApiConfigService;
+use App\Support\EmailHtml;
+use App\Support\EmailPlaceholders;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +35,16 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class LeadController extends Controller
 {
     use ExportsCsv;
+    use QueuesBulkSend;
+
+    /** The status filter. Without one the list shows New - the leads still to email. */
+    private const STATUS_OPTIONS = [
+        'all'     => 'All Statuses',
+        'new'     => 'New',
+        'sent'    => 'Sent',
+        'failed'  => 'Failed',
+        'replied' => 'Replied',
+    ];
 
     public function __construct(
         private readonly ScraperService $scraper,
@@ -46,22 +62,18 @@ class LeadController extends Controller
             ? (int) $request->query('per_page')
             : 25;
 
-        $query = Lead::with(['platform', 'category'])->orderBy('id', 'desc');
+        $filters = $this->filters($request);
 
-        $validStatuses = ['new', 'sent', 'failed', 'replied'];
-        if ($request->filled('status') && in_array($request->status, $validStatuses)) {
-            $query->where('status', $request->status);
-        }
+        $leads = $this->filtered($filters)
+            ->with(['platform', 'category', 'latestEmail'])
+            ->orderBy('id', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
 
-        if ($request->filled('category') && is_numeric($request->category)) {
-            $query->where('category_id', (int) $request->category);
-        }
+        // What the status filter shows: New unless another status, or "all", was picked.
+        $activeStatus  = $filters['status'] ?? 'all';
+        $statusOptions = self::STATUS_OPTIONS;
 
-        if ($request->filled('platform') && is_numeric($request->platform)) {
-            $query->where('platform_id', (int) $request->platform);
-        }
-
-        $leads      = $query->paginate($perPage)->withQueryString();
         $platforms  = Platform::active()->orderBy('name')->get();
         $categories = Category::active()->orderBy('name')->get();
         $addresses  = Address::active()->orderBy('id')->get();
@@ -76,7 +88,7 @@ class LeadController extends Controller
         $senderName    = env('SENDER_NAME', 'Sales Team');
         $senderCompany = AppSetting::companyName();
 
-        $data = compact('leads', 'platforms', 'categories', 'addresses', 'activeCategory', 'activeCatObj', 'activePlatform', 'senderName', 'senderCompany');
+        $data = compact('leads', 'platforms', 'categories', 'addresses', 'activeCategory', 'activeCatObj', 'activePlatform', 'activeStatus', 'statusOptions', 'senderName', 'senderCompany');
 
         // Filter / paginate / per-page changes fetch just the table partial so
         // the page swaps it in without a full reload.
@@ -85,6 +97,60 @@ class LeadController extends Controller
         }
 
         return view('leads.index', $data);
+    }
+
+    /**
+     * Bulk Email: one subject and body to the selected leads, or to every lead
+     * matching the list's current filters - queued and paced like Deals'
+     * Bulk Send (Concerns\QueuesBulkSend). Each email goes to the lead's main
+     * address; the lead turns Sent once its email is out.
+     */
+    public function bulkEmail(Request $request): JsonResponse
+    {
+        $filters = $this->filters($request);
+
+        // The list shows nothing until a category is picked, so "all matching" cannot either.
+        if ($request->boolean('all') && ! $filters['category']) {
+            return response()->json(['ok' => false, 'message' => 'Pick a category first - Bulk Email goes to the leads listed for it.'], 422);
+        }
+
+        $query = $request->boolean('all') ? $this->filtered($filters) : Lead::query();
+
+        return $this->queueBulkSend($request, $query, fn (Lead $lead) => [
+            'lead_id' => $lead->id,
+            'name'    => $lead->company_name,
+            'email'   => $lead->email,
+        ], ['email']);
+    }
+
+    /**
+     * The list's filters from the query string. Status defaults to New - the
+     * leads still to email; "all" lifts it. Shared by the list and Bulk Email,
+     * so "all matching" is exactly the rows on screen.
+     *
+     * @return array{status: ?string, category: ?int, platform: ?int}
+     */
+    private function filters(Request $request): array
+    {
+        $status = (string) $request->input('status');
+
+        return [
+            'status'   => match (true) {
+                $status === 'all'                               => null,
+                array_key_exists($status, self::STATUS_OPTIONS) => $status,
+                default                                         => Lead::STATUS_NEW,
+            },
+            'category' => is_numeric($request->input('category')) ? (int) $request->input('category') : null,
+            'platform' => is_numeric($request->input('platform')) ? (int) $request->input('platform') : null,
+        ];
+    }
+
+    private function filtered(array $f): Builder
+    {
+        return Lead::query()
+            ->when($f['status'], fn (Builder $q) => $q->where('status', $f['status']))
+            ->when($f['category'], fn (Builder $q) => $q->where('category_id', $f['category']))
+            ->when($f['platform'], fn (Builder $q) => $q->where('platform_id', $f['platform']));
     }
 
     public function store(Request $request): RedirectResponse
@@ -130,13 +196,16 @@ class LeadController extends Controller
         $categoryId = (int) $request->input('search_category');
 
         // The SerpAPI call and the lead inserts run on the queue so the request
-        // returns straight away. env() is read here, not in the job, because it is
-        // unreliable in a worker once config is cached.
+        // returns straight away. Country / language come from Settings > SerpAPI
+        // (else LEAD_COUNTRY / LEAD_LANGUAGE) and are read here, not in the job:
+        // env() is unreliable in a worker once config is cached.
+        $serp = app(SerpApiConfigService::class);
+
         FindLeadsJob::dispatch(
             keyword:    $keyword,
             categoryId: $categoryId,
-            country:    env('LEAD_COUNTRY',  null) ?: null,
-            language:   env('LEAD_LANGUAGE', null) ?: null,
+            country:    $serp->country(),
+            language:   $serp->language(),
             userId:     $request->user()->id,
         )->onQueue('default');
 
@@ -216,8 +285,10 @@ class LeadController extends Controller
                               ->first();
 
         return response()->json([
-            'lead'  => $lead->only(['id', 'company_name', 'email']),
-            'email' => $leadEmail,
+            'lead'      => $lead->only(['id', 'company_name', 'email']),
+            'email'     => $leadEmail,
+            // What the modal shows: safe HTML, also for emails sent as plain text.
+            'body_html' => $leadEmail ? EmailHtml::render($leadEmail->body) : null,
         ]);
     }
 
@@ -388,7 +459,7 @@ class LeadController extends Controller
     {
         $request->validate([
             'subject'                    => ['required', 'string', 'max:255'],
-            'body'                       => ['required', 'string'],
+            'body'                       => ['required', 'string', 'max:100000', EmailHtml::notBlankRule('Please write a message before sending.')],
             'address_id'                 => ['nullable', $this->access()->existsRule('addresses')],
             'to_email'                   => ['nullable', 'email', 'max:255'],
             'attachments'                => ['nullable', 'array'],
@@ -453,8 +524,14 @@ class LeadController extends Controller
     {
         $senderName    = env('SENDER_NAME', 'Sales Team');
         $senderCompany = AppSetting::companyName();
-        $subject       = $request->input('subject');
-        $body          = $request->input('body');
+
+        // The compose modal fills the placeholders as a template is picked;
+        // any still left (typed by hand) are filled here. The body is the
+        // editor's HTML, made safe - or plain text, made into paragraphs.
+        $rawBody      = (string) $request->input('body');
+        $placeholders = EmailPlaceholders::values($lead->company_name);
+        $subject      = EmailPlaceholders::fill((string) $request->input('subject'), $placeholders);
+        $body         = EmailHtml::render(EmailPlaceholders::fill($rawBody, $placeholders, html: EmailHtml::isHtml($rawBody)));
 
         // Store attachments permanently under lead-attachments/{lead_id}/
         $attachmentMeta = [];

@@ -79,6 +79,24 @@
                                             <i class="bi bi-pencil me-2 text-warning"></i>Edit
                                         </button>
                                     </li>
+                                    {{-- Set Active / Set Inactive - the same as on Email Templates --}}
+                                    <li>
+                                        <form method="POST" action="{{ route('addresses.toggle', $addr->id) }}">
+                                            @csrf
+                                            <input type="hidden" name="_redirect_back" value="{{ request()->getQueryString() ? '?'.request()->getQueryString() : '' }}">
+                                            @if($addr->status === 'active')
+                                                <input type="hidden" name="status" value="inactive">
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="bi bi-toggle-off me-2 text-secondary"></i>Set Inactive
+                                                </button>
+                                            @else
+                                                <input type="hidden" name="status" value="active">
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="bi bi-toggle-on me-2 text-success"></i>Set Active
+                                                </button>
+                                            @endif
+                                        </form>
+                                    </li>
                                     <li>
                                         <form method="POST" action="{{ route('addresses.destroy', $addr->id) }}"
                                               onsubmit="return confirm('Delete this address?')">

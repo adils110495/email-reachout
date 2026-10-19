@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ExportsCsv;
-use App\Http\Controllers\Concerns\QueuesWhatsappBulk;
+use App\Http\Controllers\Concerns\QueuesBulkSend;
 use App\Http\Controllers\Concerns\RedirectsBack;
 use App\Models\CashLead;
 use App\Models\Category;
@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class CashLeadController extends Controller
 {
     use ExportsCsv;
-    use QueuesWhatsappBulk;
+    use QueuesBulkSend;
     use RedirectsBack;
 
     public function index(Request $request): View
@@ -28,7 +28,7 @@ class CashLeadController extends Controller
 
         $cashLeads = $this->filtered($filters)
             ->with('category')
-            ->withCount('whatsappMessages')
+            ->withCount(['whatsappMessages', 'leadEmails'])
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -119,18 +119,19 @@ class CashLeadController extends Controller
     }
 
     /**
-     * Bulk WhatsApp: an approved template to the selected deals, or to every
-     * deal matching the list's current filters.
+     * Bulk send: an approved WhatsApp template, an email, or both, to the
+     * selected deals or to every deal matching the list's current filters.
      */
-    public function whatsapp(Request $request): JsonResponse
+    public function bulkSend(Request $request): JsonResponse
     {
         $query = $request->boolean('all') ? $this->filtered($this->filters($request)) : CashLead::query();
 
-        return $this->queueWhatsappBulk($request, $query, fn (CashLead $deal) => [
+        return $this->queueBulkSend($request, $query, fn (CashLead $deal) => [
             'cash_lead_id' => $deal->id,
             'name'         => $deal->company_name,
             'phone'        => $deal->phone,
-        ]);
+            'email'        => $deal->email,
+        ], ['whatsapp', 'email']);
     }
 
     public function export(): StreamedResponse
@@ -164,7 +165,7 @@ class CashLeadController extends Controller
 
     /**
      * The list's filters from the query string, normalised. The keys are the
-     * view's variable names. Shared by the list and Bulk WhatsApp, so "all
+     * view's variable names. Shared by the list and Bulk send, so "all
      * matching" is exactly the rows on screen.
      *
      * @return array{activeCategory: ?int, activeSource: ?string, search: string}

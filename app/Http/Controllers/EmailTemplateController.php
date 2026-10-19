@@ -5,16 +5,25 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\ExportsCsv;
 use App\Http\Controllers\Concerns\RedirectsBack;
 use App\Models\EmailTemplate;
+use App\Support\EmailHtml;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmailTemplateController extends Controller
 {
     use ExportsCsv;
     use RedirectsBack;
+
+    /**
+     * Attachment types a browser may show in its own tab. Anything else - an
+     * HTML or SVG file above all, which would run as a page of this app - is
+     * only ever downloaded.
+     */
+    private const INLINE_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/gif', 'image/webp', 'text/plain'];
 
     public function export(): StreamedResponse
     {
@@ -74,12 +83,12 @@ class EmailTemplateController extends Controller
         $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'subject'       => ['required', 'string', 'max:255'],
-            'body'          => ['required', 'string'],
+            'body'          => $this->bodyRules(),
             'attachments'   => ['nullable', 'array'],
             'attachments.*' => ['file', 'max:10240'],
         ]);
 
-        $template = EmailTemplate::create($request->only('name', 'subject', 'body'));
+        $template = EmailTemplate::create($request->only('name', 'subject') + ['body' => EmailHtml::render($request->input('body'))]);
 
         if ($request->hasFile('attachments')) {
             $template->update(['attachments' => $this->storeFiles($request->file('attachments'), $template->id)]);
@@ -100,7 +109,7 @@ class EmailTemplateController extends Controller
         $request->validate([
             'name'             => ['required', 'string', 'max:255'],
             'subject'          => ['required', 'string', 'max:255'],
-            'body'             => ['required', 'string'],
+            'body'             => $this->bodyRules(),
             'attachments'      => ['nullable', 'array'],
             'attachments.*'    => ['file', 'max:10240'],
             'remove_attachments'   => ['nullable', 'array'],
@@ -126,12 +135,41 @@ class EmailTemplateController extends Controller
         }
 
         $template->update(array_merge(
-            $request->only('name', 'subject', 'body'),
-            ['attachments' => $existing ?: null]
+            $request->only('name', 'subject'),
+            ['body' => EmailHtml::render($request->input('body')), 'attachments' => $existing ?: null]
         ));
 
         return redirect()->route('templates.index')
             ->with('success', 'Template updated successfully.');
+    }
+
+    /**
+     * Open one of the template's attachments from its edit page: in the
+     * browser for images, PDFs and text, as a download for anything else or
+     * with ?download=1. Only files the template lists - and the owner scope
+     * only finds the user's own templates.
+     */
+    public function attachment(Request $request, int $id, string $file): BinaryFileResponse
+    {
+        $template   = EmailTemplate::findOrFail($id);
+        $attachment = collect($template->attachments ?? [])->first(fn (array $a) => basename($a['path'] ?? '') === $file);
+        $disk       = Storage::disk('local');
+
+        abort_unless($attachment && $disk->exists($attachment['path']), 404, 'Attachment not found.');
+
+        $path    = $disk->path($attachment['path']);
+        $name    = $attachment['name'] ?? $file;
+        $mime    = $disk->mimeType($attachment['path']) ?: 'application/octet-stream';
+        $inline  = ! $request->boolean('download') && in_array($mime, self::INLINE_TYPES, true);
+        $headers = ['Content-Type' => $mime, 'X-Content-Type-Options' => 'nosniff'];
+
+        // A sandboxed response can never run script on this origin. Not for
+        // PDFs: the browser's PDF viewer will not open in a sandbox.
+        if ($mime !== 'application/pdf') {
+            $headers['Content-Security-Policy'] = 'sandbox';
+        }
+
+        return response()->download($path, $name, $headers, $inline ? 'inline' : 'attachment');
     }
 
     public function toggleStatus(Request $request, int $id): RedirectResponse
@@ -155,6 +193,12 @@ class EmailTemplateController extends Controller
 
         return redirect()->route('templates.index', $this->redirectQuery($request))
             ->with('success', 'Template deleted.');
+    }
+
+    /** @return array<int, mixed> */
+    private function bodyRules(): array
+    {
+        return ['required', 'string', 'max:100000', EmailHtml::notBlankRule('Write the email body.')];
     }
 
     private function storeFiles(array $files, int $templateId): array

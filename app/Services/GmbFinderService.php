@@ -19,10 +19,11 @@ class GmbFinderService
      */
     public function find(string $keyword, int $maxPages = 3): array
     {
-        $apiKey = config('services.serpapi.key');
+        // The acting user's key from Settings > SerpAPI, else the server's SERPAPI_KEY.
+        $apiKey = app(SerpApiConfigService::class)->key();
 
         if (empty($apiKey)) {
-            throw new \RuntimeException('SERPAPI_KEY is not set in .env.');
+            throw new \RuntimeException('No SerpAPI key. Add yours under Settings > SerpAPI.');
         }
 
         $leads       = [];

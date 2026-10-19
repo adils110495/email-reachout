@@ -39,8 +39,15 @@ docker compose ps # service chal raha hai?
 | `SendEmailJob` | Automated email send | `default` | 3 | 120s |
 | `ProcessBulkJob` | **Naya** — bulk upload | `default` | 2 | 85s |
 | `SendWhatsappMessageJob` | Bulk WhatsApp ka ek message (delay = gap × position) | `default` | **1** (retry = double message) | 60s |
+| `SendBulkEmailJob` | Bulk Send (Deals) ka ek email (delay = gap × position) | `emails` | **1** (retry = double email) | 85s |
 
-Sab `default` par jaate hain, jo worker pehle se consume karta hai — **extra setup nahi chahiye**.
+`SendBulkEmailJob` ko chhod kar sab `default` par jaate hain. Worker `--queue=emails,default`
+dono consume karta hai — **extra setup nahi chahiye**.
+
+`SendBulkEmailJob` bhi `SendWhatsappMessageJob` jaisa hai: pehle row ko `queued → sending`
+claim karta hai (conditional UPDATE — cancelled email skip), owner ke SMTP se bhejta hai,
+`sent` / `failed` likhta hai, aur bulk ka aakhri email 🔔 notification deta hai. Sent-folder
+(IMAP) copy fail ho to email `failed` **nahi** hota — wo pehle hi ja chuka hai.
 
 ---
 

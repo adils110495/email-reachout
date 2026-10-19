@@ -5,16 +5,31 @@
      */
     $depth       = $depth ?? 0;
     $hasChildren = ! empty($item['children']);
-    $isActive    = request()->routeIs($item['active'] ?? []);
-    $href        = $hasChildren || empty($item['route'])
+    $query       = $item['query'] ?? [];
+
+    // An item with a query string is active only while the page carries it
+    // too; 'default' also counts a missing key as a match.
+    $queryMatches = collect($query)->every(function ($value, $key) use ($item) {
+        $current = request()->query($key);
+
+        if (($current === null || $current === '') && ! empty($item['default'])) {
+            return true;
+        }
+
+        return (string) $current === (string) $value;
+    });
+
+    $isActive = request()->routeIs($item['active'] ?? []) && $queryMatches;
+    $href     = $hasChildren || empty($item['route'])
         ? 'javascript:void(0);'
-        : route($item['route']);
+        : route($item['route'], $query);
 @endphp
 
 <li class="{{ $isActive ? 'mm-active' : '' }}">
     <a class="{{ $hasChildren ? 'has-arrow' : '' }} {{ $isActive && ! $hasChildren ? 'mm-active' : '' }}"
        href="{{ $href }}"
-       aria-expanded="{{ $isActive && $hasChildren ? 'true' : 'false' }}">
+       aria-expanded="{{ $isActive && $hasChildren ? 'true' : 'false' }}"
+       @foreach ($item['data'] ?? [] as $name => $value) data-{{ $name }}="{{ $value }}" @endforeach>
         @if ($depth === 0)
             <div class="menu-icon">
                 <i class="bi {{ $item['icon'] ?? 'bi-dot' }}"></i>

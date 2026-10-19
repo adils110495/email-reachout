@@ -241,12 +241,6 @@ th.sort-desc .sort-icon { color: var(--bs-primary) !important; }
 }
 
 /* ── Compose modal (Gmail-style) ─────────────────────────── */
-#compose_body:empty:before {
-    content: attr(data-placeholder);
-    color: var(--bs-body-color);
-    opacity: .55;
-    pointer-events: none;
-}
 .compose-row {
     background: var(--bs-body-bg);
 }
@@ -291,28 +285,140 @@ th.sort-desc .sort-icon { color: var(--bs-primary) !important; }
     color: var(--bs-danger);
 }
 
-/* ── Quill editor ────────────────────────────────────────── */
-#quill-wrapper {
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.625rem;
-    background: var(--bs-card-bg, #fff);
-    overflow: hidden;
-    height: 280px;
+/* ── Email editor (CKEditor 5, assets/js/email-editor.js) ───── */
+/* The editor's link / table balloons are attached to <body>; above a Bootstrap
+   modal (z-index 1055) they need a higher layer. Set on body, not :root, so
+   it wins over ckeditor5.css, which loads after this file. */
+body {
+    --ck-z-default: 100;
+    --ck-z-panel: calc(var(--ck-z-default) + 999);
 }
-#quill-wrapper .ql-toolbar {
-    border: none;
-    border-bottom: 1px solid var(--bs-border-color);
-    border-radius: 0;
-}
-#quill-wrapper .ql-container {
-    border: none;
-    font-size: .92rem;
-    height: calc(100% - 42px);
-    font-family: inherit;
-}
-#quill-wrapper .ql-editor {
-    height: 100%;
+.email-editor .ck.ck-editor__editable_inline {
+    min-height: 260px;
+    max-height: 480px;
     overflow-y: auto;
+    font-size: .92rem;
+    line-height: 1.6;
+}
+.email-editor .ck.ck-toolbar,
+.email-editor .ck.ck-editor__main > .ck-editor__editable {
+    border-color: var(--bs-border-color);
+}
+.email-editor .ck.ck-toolbar {
+    border-top-left-radius: 0.625rem;
+    border-top-right-radius: 0.625rem;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+.email-editor .ck.ck-editor__main > .ck-editor__editable {
+    border-bottom-left-radius: 0.625rem;
+    border-bottom-right-radius: 0.625rem;
+}
+/* Smaller editors inside modals (Leads compose, Bulk Send). */
+.email-editor-sm .ck.ck-editor__editable_inline {
+    min-height: 180px;
+    max-height: 320px;
+}
+/* The theme strips list markers from every <li>; the editor's lists need them. */
+.email-editor .ck-content ul > li { list-style: disc; }
+.email-editor .ck-content ol > li { list-style: decimal; }
+
+/* A sent email's body in the Leads "Sent Email" modal (safe HTML from the server). */
+.sent-email-body {
+    min-height: 120px;
+    font-size: .92rem;
+    line-height: 1.7;
+}
+.sent-email-body p { margin-bottom: .75rem; }
+.sent-email-body ul > li { list-style: disc; }
+.sent-email-body ol > li { list-style: decimal; }
+.sent-email-body ul,
+.sent-email-body ol { padding-left: 1.25rem; margin-bottom: .75rem; }
+.sent-email-body blockquote {
+    padding-left: .75rem;
+    border-left: 3px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+}
+.sent-email-body table { width: 100%; margin-bottom: .75rem; }
+.sent-email-body th,
+.sent-email-body td { padding: .25rem .5rem; border: 1px solid var(--bs-border-color); }
+
+/* Placeholder chips: a click inserts {{key}} where the cursor was. */
+.placeholder-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+}
+.placeholder-chip {
+    padding: 0.125rem 0.5rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: 1rem;
+    background: var(--bs-secondary-bg-subtle);
+    color: var(--bs-body-color);
+    font-family: var(--bs-font-monospace);
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+.placeholder-chip:hover,
+.placeholder-chip:focus-visible {
+    border-color: var(--bs-primary);
+    color: var(--bs-primary);
+}
+
+/* Saved template attachments: preview, name, open / download / remove. */
+.template-attachments {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+    gap: 0.5rem;
+}
+.template-attachment {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+    padding: 0.5rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    background: var(--bs-body-bg);
+}
+.template-attachment.is-missing {
+    border-color: var(--bs-danger-border-subtle, var(--bs-danger));
+    background: var(--bs-danger-bg-subtle);
+}
+.template-attachment-thumb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 3rem;
+    height: 3rem;
+    overflow: hidden;
+    border-radius: 0.375rem;
+    background: var(--bs-secondary-bg-subtle);
+    font-size: 1.5rem;
+}
+.template-attachment-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.template-attachment-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+.template-attachment-name {
+    overflow: hidden;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.template-attachment-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.25rem;
 }
 
 /* ── Misc ────────────────────────────────────────────────── */
@@ -801,11 +907,6 @@ video {
     .compose-label {
         width: auto;
         min-width: 3.25rem;
-    }
-
-    /* Quill editor: fixed 280px leaves no room once the toolbar wraps. */
-    #quill-wrapper {
-        height: 20rem;
     }
 
     .stat-chip {
@@ -1680,6 +1781,33 @@ body.mobile-nav-open {
     line-height: 1.55;
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+/* Bulk Send with WhatsApp and email: each channel's part gets a heading. */
+.bulk-section-title {
+    margin: 0 0 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bs-border-color);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* A template attachment kept on a bulk email; its × leaves it out. */
+.bulk-attachment {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.375rem 0.25rem 0.625rem;
+    border-radius: 1rem;
+    font-size: 0.8125rem;
+    background: var(--bs-secondary-bg-subtle);
+    color: var(--bs-body-color);
+}
+.bulk-attachment .btn-close {
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0.25rem;
+    background-size: 0.5rem;
 }
 
 /* Numbered how-to steps. The theme strips list markers from every <li>

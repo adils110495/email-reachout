@@ -33,4 +33,10 @@ class CashLead extends Model
     {
         return $this->hasMany(WhatsappMessage::class);
     }
+
+    /** Emails sent to this deal by a bulk send. */
+    public function leadEmails()
+    {
+        return $this->hasMany(LeadEmail::class);
+    }
 }

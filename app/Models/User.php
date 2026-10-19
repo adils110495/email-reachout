@@ -38,6 +38,7 @@ class User extends Authenticatable
         'categories'     => 'Categories',
         'addresses'      => 'Addresses',
         'mail_settings'  => 'Mail Settings',
+        'serpapi'        => 'SerpAPI',
     ];
 
     /** Platforms every new account starts with - lead searches file under "Google". */

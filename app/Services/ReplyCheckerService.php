@@ -76,7 +76,8 @@ class ReplyCheckerService
 
         foreach ($pending as $email) {
             // A reply may come from any address the lead has, not just the primary.
-            $leadAddresses = array_map('strtolower', $email->lead?->email_list ?? []);
+            // A bulk email (to a deal, maybe no lead at all) knows its own address.
+            $leadAddresses = array_map('strtolower', array_filter(array_merge($email->lead?->email_list ?? [], [$email->to_email])));
 
             foreach ($messages as $message) {
                 $byHeader = $email->message_id

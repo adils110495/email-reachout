@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ExportsCsv;
-use App\Http\Controllers\Concerns\QueuesWhatsappBulk;
+use App\Http\Controllers\Concerns\QueuesBulkSend;
 use App\Http\Controllers\Concerns\RedirectsBack;
 use App\Models\Category;
 use App\Models\GmbLead;
@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class GmbLeadController extends Controller
 {
     use ExportsCsv;
-    use QueuesWhatsappBulk;
+    use QueuesBulkSend;
     use RedirectsBack;
 
     /** Rating is a dropdown of "minimum stars". */
@@ -78,17 +78,18 @@ class GmbLeadController extends Controller
 
     /**
      * Bulk WhatsApp: an approved template to the selected leads, or to every
-     * lead matching the list's current filters.
+     * lead matching the list's current filters. GMB leads have no email, so
+     * WhatsApp is the only channel.
      */
     public function whatsapp(Request $request): JsonResponse
     {
         $query = $request->boolean('all') ? $this->filtered($this->filters($request)) : GmbLead::query();
 
-        return $this->queueWhatsappBulk($request, $query, fn (GmbLead $lead) => [
+        return $this->queueBulkSend($request, $query, fn (GmbLead $lead) => [
             'gmb_lead_id' => $lead->id,
             'name'        => $lead->name,
             'phone'       => $lead->phone,
-        ]);
+        ], ['whatsapp']);
     }
 
     public function destroy(Request $request, int $id): RedirectResponse
