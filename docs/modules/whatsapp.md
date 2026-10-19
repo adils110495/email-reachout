@@ -79,7 +79,7 @@ GMB Leads aur Deals ke card header me do button:
 |---|---|---|
 | GMB Leads | **WhatsApp N selected** / **Bulk WhatsApp** | Sirf WhatsApp — GMB lead ke paas email nahi hota |
 | Deals | **Send to N selected** / **Bulk Send** | WhatsApp **aur/ya Email** — modal me "Send by" se chuno |
-| Leads | **Email N selected** / **Bulk Email** | Sirf Email — lead ke paas phone nahi hota. Details: [leads.md](leads.md) › Bulk Email |
+| Leads | **Send Bulk Email (N)** — sirf tick karne par, selection toolbar me | Sirf Email, sirf tick ki hui leads ko (koi "send to all" nahi). Details: [leads.md](leads.md) › Bulk Email |
 
 "N selected" = checkbox wali rows (button tabhi dikhta hai jab kuch select ho). "Bulk …" =
 current filters se match hone wale **saare** contacts — sirf current page nahi.

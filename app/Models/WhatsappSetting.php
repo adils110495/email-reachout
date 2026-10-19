@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToUser;
+use App\Models\Concerns\ForgetsUnreadableSecrets;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
  */
 class WhatsappSetting extends Model
 {
-    use BelongsToUser;
+    use BelongsToUser, ForgetsUnreadableSecrets;
 
     // webhook_key is generated here and never posted. verify_token is generated
     // too; the user may replace it, but only through the webhook form (forceFill).

@@ -70,8 +70,13 @@ class MailSettingController extends Controller
             'port' => ['required', 'integer'],
         ]);
 
-        $saved    = MailSetting::mine()->where('type', $type)->first();
-        $password = $request->filled('password') ? $request->input('password') : (string) $saved?->password;
+        $saved = MailSetting::mine()->where('type', $type)->first();
+
+        if (! $request->filled('password') && $saved?->passwordUnreadable()) {
+            return response()->json(['ok' => false, 'message' => 'The saved password cannot be read on this server (it was saved with a different APP_KEY). Type the password in the form and test again.']);
+        }
+
+        $password = $request->filled('password') ? $request->input('password') : (string) $saved?->readablePassword();
         $username = (string) $request->input('username');
         $host     = $request->input('host');
         $port     = (int) $request->input('port');

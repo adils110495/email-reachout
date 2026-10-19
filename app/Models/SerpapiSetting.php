@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToUser;
+use App\Models\Concerns\ForgetsUnreadableSecrets;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class SerpapiSetting extends Model
 {
-    use BelongsToUser;
+    use BelongsToUser, ForgetsUnreadableSecrets;
 
     protected $fillable = ['api_key', 'country', 'language', 'is_active'];
 

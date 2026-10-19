@@ -72,8 +72,15 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Password</label>
-                                    <input type="password" name="password" class="form-control" autocomplete="new-password"
+                                    <input type="password" name="password" class="form-control {{ $smtp?->passwordUnreadable() ? 'is-invalid' : '' }}" autocomplete="new-password"
                                            placeholder="{{ $smtp?->getRawOriginal('password') ? '•••••••• (leave blank to keep current)' : '' }}">
+                                    @if($smtp?->passwordUnreadable())
+                                        {{-- Saved under another APP_KEY (e.g. a database from another server): no email can go out until it is typed again --}}
+                                        <div class="invalid-feedback d-block">
+                                            The saved password cannot be read on this server - it was saved with a different <code>APP_KEY</code>.
+                                            Enter it again and save, or no email can be sent.
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">From Email <span class="text-danger">*</span></label>
@@ -134,8 +141,14 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Password</label>
-                                    <input type="password" name="password" class="form-control" autocomplete="new-password"
+                                    <input type="password" name="password" class="form-control {{ $imap?->passwordUnreadable() ? 'is-invalid' : '' }}" autocomplete="new-password"
                                            placeholder="{{ $imap?->getRawOriginal('password') ? '•••••••• (leave blank to keep current)' : '' }}">
+                                    @if($imap?->passwordUnreadable())
+                                        <div class="invalid-feedback d-block">
+                                            The saved password cannot be read on this server - it was saved with a different <code>APP_KEY</code>.
+                                            Enter it again and save, or sent emails are not copied to the Sent folder and replies are not found.
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Sent Folder <span class="text-danger">*</span></label>

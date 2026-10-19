@@ -38,6 +38,11 @@ class EmailBulkService
         if (! $this->mailConfig->fromAddress()) {
             throw new RuntimeException('Bulk email needs a mailbox to send from, and none is set up for this account. Add your SMTP under Settings > Mail Settings.');
         }
+
+        // Otherwise every email of the send would fail on its turn, one by one.
+        if ($problem = $this->mailConfig->smtpProblem()) {
+            throw new RuntimeException($problem);
+        }
     }
 
     /**

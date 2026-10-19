@@ -181,11 +181,17 @@ class SendBulkEmailJob implements ShouldQueue
             return;
         }
 
+        // "4 failed" alone does not say what to fix - add the latest reason.
+        $reason = $progress['failed'] > 0
+            ? LeadEmail::where('batch_id', $email->batch_id)->where('status', LeadEmail::STATUS_FAILED)->latest('id')->value('error')
+            : null;
+
         AppNotification::raise(
-            $progress['failed'] > 0 ? 'info' : 'success',
+            $progress['failed'] > 0 ? ($progress['sent'] > 0 ? 'info' : 'error') : 'success',
             'Email bulk send finished',
             "{$progress['sent']} sent, {$progress['failed']} failed"
-                . ($progress['cancelled'] ? ", {$progress['cancelled']} cancelled" : '') . '.',
+                . ($progress['cancelled'] ? ", {$progress['cancelled']} cancelled" : '') . '.'
+                . ($reason ? ' ' . Str::limit($reason, 220) : ''),
             route('email-activity.index', ['batch' => $email->batch_id], false),
         );
     }

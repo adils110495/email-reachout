@@ -11,6 +11,8 @@
                                  (default: the ajax-filters.js list, [data-ajax-root] .ajax-content)
     @param string   $rowsRegion  element whose content is swapped when the list reloads
                                  (default: [data-ajax-root] .ajax-region)
+    @param bool     $selectedOnly  only the "selected" button - no "send to every match" (Leads:
+                                   email goes to the ticked leads and nobody else)
 --}}
 @php
     // WhatsApp needs its own module; email comes with the list.
@@ -27,7 +29,13 @@
       data-channels="{{ implode(',', $bulkChannels) }}"
       @isset($totalFrom) data-total-from="{{ $totalFrom }}" @endisset
       @isset($rowsRegion) data-rows-region="{{ $rowsRegion }}" @endisset>
-    @if($bulkMailOnly)
+    @if(! empty($selectedOnly))
+        {{-- Shown once rows are ticked (whatsapp/_compose updateSelection) --}}
+        <button type="button" class="btn btn-primary btn-sm m-1 btn-wa-bulk d-none" data-mode="selected">
+            <i class="bi {{ $bulkMailOnly ? 'bi-envelope' : 'bi-send' }} me-1"></i>{{ $bulkMailOnly ? 'Send Bulk Email' : 'Bulk Send' }}
+            (<span data-wa-selected-count>0</span>)
+        </button>
+    @elseif($bulkMailOnly)
         <button type="button" class="btn btn-primary btn-sm m-1 btn-wa-bulk d-none" data-mode="selected">
             <i class="bi bi-envelope me-1"></i>Email <span data-wa-selected-count>0</span> selected
         </button>

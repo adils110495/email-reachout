@@ -304,5 +304,17 @@ nahi. Naye jobs me bhi yahi pattern follow karo.
 | Bulk `pending` par atka | Worker band | `docker compose up -d queue` |
 | Sab verify `unknown` | Port 25 blocked | `VERIFY_SMTP_PROBE=false` |
 | `Undefined array key` view me | Controller/view key mismatch | Dono side check karo |
-| Leads nahi mil rahe | SerpAPI key / quota | `laravel.log` |
+| Leads nahi mil rahe | SerpAPI key / quota | Settings › SerpAPI › **Test Key**, `laravel.log` |
 | 404 naye routes par | Routes cached | `php artisan route:clear` |
+| Har email fail: **"The MAC is invalid."** / "The saved SMTP password cannot be read on this server" | Settings ke secrets (SMTP/IMAP password, SerpAPI key, WhatsApp token) **dusri `APP_KEY`** se encrypt hue the — DB kisi aur server se copy hua, ya `APP_KEY` badli | Us page par secret **dobara daal ke Save** karo (Mail Settings page laal warning dikhata hai). `APP_KEY` mat badlo — badli to sab saved secrets dobara daalne padenge |
+
+### Encrypted secrets aur `APP_KEY`
+
+SMTP/IMAP password, SerpAPI key, WhatsApp token / app secret `encrypted` cast se DB me jaate
+hain — `APP_KEY` se. Dusre server ka DB (jaise production ka dump local me) laaoge to wo yahan
+nahi khulte. App ab is haal me:
+
+- **Bulk Send / Send Email** — bhejne se pehle hi rok deta hai, saaf message ke saath (`MailConfigService::smtpProblem()`); kuch queue nahi hota, leads Failed nahi hote.
+- **Mail Settings** — password field laal + "cannot be read on this server, enter it again". Test Connection bhi yahi batata hai.
+- **Save** — naya secret purane na-khulne wale ke upar save ho jaata hai (`Concerns\ForgetsUnreadableSecrets`); pehle Laravel purani value decrypt karne me crash hota tha.
+- IMAP password na khule to Sent-folder copy / reply check skip + log — email phir bhi jaata hai.

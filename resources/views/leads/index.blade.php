@@ -74,15 +74,6 @@
                     </h4>
                 </div>
                 <div class="clearfix">
-                    {{-- Bulk Email: the checked rows, or every lead matching the filters --}}
-                    @include('whatsapp._bulk-bar', [
-                        'bulkUrl'     => route('leads.bulk-email'),
-                        'source'      => 'lead',
-                        'label'       => 'leads',
-                        'channels'    => ['email'],
-                        'totalFrom'   => '#leadsContent',
-                        'rowsRegion'  => '#leadsRegion',
-                    ])
                     <a href="{{ route('leads.export') }}" class="btn btn-light btn-sm m-1">
                         <i class="bi bi-download me-1"></i>Export CSV
                     </a>
@@ -159,6 +150,16 @@
                         <span class="fs-13 me-1">
                             <span id="selectedCount">0</span> selected
                         </span>
+
+                        {{-- Send Bulk Email: only to the ticked leads - there is no "send to all" --}}
+                        @include('whatsapp._bulk-bar', [
+                            'bulkUrl'      => route('leads.bulk-email'),
+                            'source'       => 'lead',
+                            'label'        => 'leads',
+                            'channels'     => ['email'],
+                            'rowsRegion'   => '#leadsRegion',
+                            'selectedOnly' => true,
+                        ])
 
                         {{-- Bulk status update --}}
                         <form method="POST" action="{{ route('leads.bulk-status') }}" id="bulkStatusForm" class="d-flex gap-2">
@@ -927,6 +928,22 @@ function updateBulkToolbar() {
 document.addEventListener('bulk-send:queued', function () {
     loadLeads(window.location.href, { push: false, quiet: true });
 });
+
+// The emails then go out in the background. Keep the rows current: reload when
+// the send finishes, and every 15 s while a row still says "Queued" - but never
+// while rows are ticked, a reload would drop the ticks.
+function refreshMailActivity() {
+    if (document.hidden || leadsRequest || document.querySelector('.row-check:checked')) return;
+    loadLeads(window.location.href, { push: false, quiet: true });
+}
+
+document.addEventListener('app:notification', function (e) {
+    if (/^Email bulk send/.test(e.detail.title || '')) refreshMailActivity();
+});
+
+window.setInterval(function () {
+    if (document.querySelector('#leadsContent [data-mail-pending]')) refreshMailActivity();
+}, 15000);
 
 // ── Status: sidebar links + filter in step ────────────────────
 // The sidebar's Leads > New / Sent / Failed / Replied / All links switch the

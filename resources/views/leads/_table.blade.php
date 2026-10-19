@@ -116,7 +116,9 @@
                                     };
                                 @endphp
                                 @if($activity)
+                                    {{-- data-mail-pending: the page refreshes the list until this email has gone --}}
                                     <div class="fs-12 mt-1 text-nowrap {{ $activity[1] }}"
+                                         @if(in_array($mail->status, \App\Models\LeadEmail::PENDING, true)) data-mail-pending @endif
                                          title="{{ $mail->status === \App\Models\LeadEmail::STATUS_FAILED ? $mail->error : ($mail->last_opened_at ? 'Last opened ' . $mail->last_opened_at->diffForHumans() : '') }}">
                                         <i class="bi {{ $activity[0] }} me-1"></i>{{ $activity[2] }}
                                     </div>

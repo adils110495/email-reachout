@@ -170,19 +170,31 @@ Sidebar me **Leads** ab group hai: **New Leads** (default) · Sent · Failed · 
 
 ### Bulk Email
 
-Card header me **Email N selected** (checkbox wali rows) aur **Bulk Email** (current filters ki
-saari leads). Wahi modal aur engine jo Deals ka Bulk Send hai — sirf Email channel
+**Sirf tick ki hui leads ko.** Checkbox tick karo → upar selection toolbar (Set Status /
+Delete Selected ke saath) me **Send Bulk Email (N)** aata hai. Kuch tick nahi = button nahi,
+email nahi. "Saari filtered leads ko bhejo" jaisa koi button **nahi** hai (jaan-boojh kar).
+Wahi modal aur engine jo Deals ka Bulk Send hai — sirf Email channel
 ([whatsapp.md](whatsapp.md) › Bulk send, `Concerns\QueuesBulkSend`, `EmailBulkService`).
+
+```
+☑ Contact Us             ┌────────────────────────────────────────────────────┐
+☐ Report Tree Problem    │ 1 selected  [✉ Send Bulk Email (1)] [Set Status] … │
+                         └────────────────────────────────────────────────────┘
+```
 
 | Cheez | Kaise |
 |---|---|
 | Endpoint | `POST /leads/bulk-email` (`leads.bulk-email`, `throttle:10,1`) → `LeadController::bulkEmail()` |
-| Kisko | Lead ka **main** email (`email` column). Bina email wali leads skip |
-| "All matching" | `filtered()` — jo list me dikh raha hai: default **New**, us category / platform ki. **Category zaroori** — bina category list khaali hai, to bulk bhi mana karta hai |
+| Kisko | Sirf posted `ids[]` (tick ki hui leads), owner scope ke andar. Lead ka **main** email (`email` column); bina email wali skip |
+| Bina selection | Server bhi mana karta hai: `ids` nahi → "Select at least one contact."; `all=1` → 422 "Tick the leads to email first" — koi email queue nahi hota |
+| Button | `whatsapp/_bulk-bar` with `'selectedOnly' => true` — `#bulkToolbar` ke andar; count `.wa-row-check` se (leads ke checkbox me `row-check` + `wa-row-check` dono). "Select all" ke baad leads JS `BulkSend.refresh()` bulata hai |
 | Skip already emailed | Default on — `sent` / `replied` leads aur jinhe pehle email gaya, skip |
 | Editor / placeholders | CKEditor + `{{client_name}}` = lead ka company name |
 | Lead status | Job email bhejte hi lead **Sent** (`SendBulkEmailJob::updateLead()`); fail ho aur lead New / Failed thi to **Failed**. `replied` kabhi nahi badalta |
 | Progress / Stop | Toast ka **Email progress** → Email Activity `?batch=`. List reload hoti hai, rows par "Queued" dikhta hai |
+| List live rehti hai | Jab tak koi row "Queued" hai (`data-mail-pending`) har 15 sec chupchaap reload, aur 🔔 "Email bulk send finished" aate hi reload — **lekin rows tick hon to nahi** (ticks na udein). Fail hone par row "Failed" + "Last email failed" (hover = reason) |
+| Notification | "X sent, Y failed." + fail ho to aakhri reason (jaise SMTP error). Sab fail = laal (error) toast |
+| Mailbox kharab | SMTP password na khule ([configuration.md](../configuration.md) › Encrypted secrets) to **queue hi nahi** hota — modal me saaf error, leads New hi rehti hain |
 | Log | `lead_emails` me `lead_id` + `to_email` ke saath — Email Activity, open tracking, reply check sab normal email jaisa |
 
 ---

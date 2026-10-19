@@ -100,23 +100,18 @@ class LeadController extends Controller
     }
 
     /**
-     * Bulk Email: one subject and body to the selected leads, or to every lead
-     * matching the list's current filters - queued and paced like Deals'
-     * Bulk Send (Concerns\QueuesBulkSend). Each email goes to the lead's main
-     * address; the lead turns Sent once its email is out.
+     * Send Bulk Email: one subject and body to the leads ticked in the list -
+     * those and no others; there is no "send to every match" here. Queued and
+     * paced like Deals' Bulk Send (Concerns\QueuesBulkSend). Each email goes
+     * to the lead's main address; the lead turns Sent once its email is out.
      */
     public function bulkEmail(Request $request): JsonResponse
     {
-        $filters = $this->filters($request);
-
-        // The list shows nothing until a category is picked, so "all matching" cannot either.
-        if ($request->boolean('all') && ! $filters['category']) {
-            return response()->json(['ok' => false, 'message' => 'Pick a category first - Bulk Email goes to the leads listed for it.'], 422);
+        if ($request->boolean('all')) {
+            return response()->json(['ok' => false, 'message' => 'Tick the leads to email first - Bulk Email only goes to the selected leads.'], 422);
         }
 
-        $query = $request->boolean('all') ? $this->filtered($filters) : Lead::query();
-
-        return $this->queueBulkSend($request, $query, fn (Lead $lead) => [
+        return $this->queueBulkSend($request, Lead::query(), fn (Lead $lead) => [
             'lead_id' => $lead->id,
             'name'    => $lead->company_name,
             'email'   => $lead->email,
@@ -125,8 +120,7 @@ class LeadController extends Controller
 
     /**
      * The list's filters from the query string. Status defaults to New - the
-     * leads still to email; "all" lifts it. Shared by the list and Bulk Email,
-     * so "all matching" is exactly the rows on screen.
+     * leads still to email; "all" lifts it.
      *
      * @return array{status: ?string, category: ?int, platform: ?int}
      */
@@ -522,6 +516,12 @@ class LeadController extends Controller
      */
     private function deliver(Request $request, Lead $lead, string $recipient, ?Address $address, array $redirectQuery): RedirectResponse
     {
+        // A mailbox that cannot work is a settings problem, not this lead's -
+        // say so without marking the lead failed.
+        if ($problem = app(MailConfigService::class)->smtpProblem()) {
+            return redirect()->route('leads.index', $redirectQuery)->with('error', $problem);
+        }
+
         $senderName    = env('SENDER_NAME', 'Sales Team');
         $senderCompany = AppSetting::companyName();
 

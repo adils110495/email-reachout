@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToUser;
+use App\Models\Concerns\ForgetsUnreadableSecrets;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
 class MailSetting extends Model
 {
-    use BelongsToUser;
+    use BelongsToUser, ForgetsUnreadableSecrets;
 
     public const TYPE_SMTP = 'smtp';
     public const TYPE_IMAP = 'imap';
@@ -26,6 +28,30 @@ class MailSetting extends Model
             'password'  => 'encrypted',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * The password, or null when there is none - or when this server cannot
+     * decrypt it: it was saved under another APP_KEY (a database copied from
+     * another server, a regenerated key). Reading $this->password would throw.
+     */
+    public function readablePassword(): ?string
+    {
+        if (blank($this->getRawOriginal('password'))) {
+            return null;
+        }
+
+        try {
+            return $this->password;
+        } catch (DecryptException) {
+            return null;
+        }
+    }
+
+    /** A password is saved, but this server cannot read it - it must be entered again. */
+    public function passwordUnreadable(): bool
+    {
+        return filled($this->getRawOriginal('password')) && $this->readablePassword() === null;
     }
 
     /**
