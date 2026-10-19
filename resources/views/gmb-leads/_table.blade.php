@@ -13,7 +13,7 @@
             @if($activeCategory || $search || $activeRating || $reviewsMin !== null || $reviewsMax !== null)
                 No GMB leads match. <a href="{{ route('gmb-leads.index') }}">Clear the filters</a>.
             @else
-                No GMB leads yet. Search above to find businesses without a website.
+                No GMB leads yet. Search above to find businesses without a website, or add one with the button above.
             @endif
         </div>
     </div>
@@ -51,6 +51,9 @@
                             <td>
                                 <h6 class="mb-0">{{ $lead->name }}</h6>
                                 <small class="text-muted">{{ $lead->type }}</small>
+                                @if($lead->isManual())
+                                    <span class="badge badge-light light fs-12 ms-1" title="Added by hand, not found by the Google Maps search">Added manually</span>
+                                @endif
                             </td>
                             <td>{{ $lead->category?->name ?? '—' }}</td>
                             <td>
@@ -81,6 +84,22 @@
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
+                                        {{-- Opens the Add / Edit modal in gmb-leads/index.blade.php --}}
+                                        <li>
+                                            <button type="button" class="dropdown-item btn-edit-gmb"
+                                                    data-id="{{ $lead->id }}"
+                                                    data-name="{{ $lead->name }}"
+                                                    data-type="{{ $lead->type }}"
+                                                    data-category="{{ $lead->category_id }}"
+                                                    data-phone="{{ $lead->phone }}"
+                                                    data-address="{{ $lead->address }}"
+                                                    data-rating="{{ $lead->rating }}"
+                                                    data-reviews="{{ $lead->reviews }}"
+                                                    data-maps="{{ $lead->maps_url }}"
+                                                    data-keyword="{{ $lead->keyword }}">
+                                                <i class="bi bi-pencil me-2 text-warning"></i>Edit
+                                            </button>
+                                        </li>
                                         @if($lead->phone)
                                             @can('module', 'whatsapp')
                                             <li>

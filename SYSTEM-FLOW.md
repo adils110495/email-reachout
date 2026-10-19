@@ -16,6 +16,7 @@ Ye documentation ab **[`docs/`](docs/) folder** me hai — module-wise alag file
 | Verifier | `/verifier` | [docs/modules/verifier.md](docs/modules/verifier.md) |
 | Bulks | `/bulks` | [docs/modules/bulks.md](docs/modules/bulks.md) |
 | Leads | `/leads` | [docs/modules/leads.md](docs/modules/leads.md) |
+| GMB Leads | `/gmb-leads` | [docs/modules/gmb-leads.md](docs/modules/gmb-leads.md) |
 | WhatsApp | `/whatsapp` | [docs/modules/whatsapp.md](docs/modules/whatsapp.md) |
 | Settings | `/settings/*` | [docs/modules/settings.md](docs/modules/settings.md) |
 

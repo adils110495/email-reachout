@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -77,6 +78,28 @@ class GmbLeadController extends Controller
     }
 
     /**
+     * Add a GMB lead by hand - a business found some other way than the search.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        GmbLead::create($this->validated($request) + [
+            // Google's place id keeps search results from being saved twice; a
+            // hand-made lead has none, so it gets its own that no search can match.
+            'place_id' => GmbLead::MANUAL_PREFIX . Str::uuid(),
+        ]);
+
+        return redirect()->route('gmb-leads.index', $this->redirectQuery($request))->with('success', 'GMB lead added.');
+    }
+
+    public function update(Request $request, int $id): RedirectResponse
+    {
+        $lead = GmbLead::findOrFail($id);
+        $lead->update($this->validated($request));
+
+        return redirect()->route('gmb-leads.index', $this->redirectQuery($request))->with('success', "\"{$lead->name}\" updated.");
+    }
+
+    /**
      * Bulk WhatsApp: an approved template to the selected leads, or to every
      * lead matching the list's current filters. GMB leads have no email, so
      * WhatsApp is the only channel.
@@ -110,6 +133,40 @@ class GmbLeadController extends Controller
                 $l->rating, $l->reviews, $l->keyword, $l->maps_url, $l->created_at->toDateTimeString(),
             ],
         );
+    }
+
+    /**
+     * The Add / Edit form. The form's keyword field is "lead_keyword" so a
+     * failed save cannot refill the search box above (also "keyword").
+     *
+     * @return array<string, mixed>
+     */
+    private function validated(Request $request): array
+    {
+        $data = $request->validate([
+            'name'         => ['required', 'string', 'max:255'],
+            'type'         => ['nullable', 'string', 'max:255'],
+            'category_id'  => ['nullable', $this->access()->existsRule('categories')],
+            'phone'        => ['nullable', 'string', 'max:50'],
+            'address'      => ['nullable', 'string', 'max:255'],
+            'rating'       => ['nullable', 'numeric', 'between:0,5'],
+            'reviews'      => ['nullable', 'integer', 'min:0', 'max:100000000'],
+            // Shown as the "View on Maps" link: http(s) only, never javascript:
+            'maps_url'     => ['nullable', 'url:http,https', 'max:2000'],
+            'lead_keyword' => ['nullable', 'string', 'max:255'],
+        ], [
+            'maps_url.url' => 'Enter the full Google Maps link, starting with https://',
+        ]);
+
+        // The form is the whole record: a field left empty clears it.
+        foreach (['type', 'category_id', 'phone', 'address', 'rating', 'reviews', 'maps_url'] as $field) {
+            $data[$field] = filled($data[$field] ?? null) ? $data[$field] : null;
+        }
+
+        $data['keyword'] = trim((string) ($data['lead_keyword'] ?? ''));
+        unset($data['lead_keyword']);
+
+        return $data;
     }
 
     /**

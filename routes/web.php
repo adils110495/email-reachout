@@ -134,6 +134,8 @@ Route::middleware('module:gmb_leads')->group(function () {
     Route::get('/gmb-leads',             [GmbLeadController::class, 'index'])->name('gmb-leads.index');
     Route::get('/gmb-leads/export',      [GmbLeadController::class, 'export'])->name('gmb-leads.export');
     Route::post('/gmb-leads/search',     [GmbLeadController::class, 'search'])->name('gmb-leads.search');
+    Route::post('/gmb-leads',            [GmbLeadController::class, 'store'])->name('gmb-leads.store');
+    Route::put('/gmb-leads/{id}',        [GmbLeadController::class, 'update'])->name('gmb-leads.update')->whereNumber('id');
 
     // Bulk WhatsApp to selected / all filtered leads - needs the WhatsApp module too
     Route::post('/gmb-leads/whatsapp',   [GmbLeadController::class, 'whatsapp'])
